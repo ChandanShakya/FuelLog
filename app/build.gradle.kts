@@ -53,9 +53,12 @@ android {
 
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.2"
+    }
+
+    kotlinOptions {
+        jvmTarget = "1.8"
         // Suppress Kotlin version compatibility check for Compose Compiler
-        // Kotlin 1.9.20 is compatible with Compose Compiler 1.5.2
-        suppressKotlinVersionCompatibilityCheck = true
+        freeCompilerArgs += ["-P", "plugin:androidx.compose.compiler.plugins.kotlin.suppressKotlinVersionCompatibilityCheck=true"]
     }
 
     packaging {

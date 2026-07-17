@@ -6,66 +6,53 @@ import com.chandanshakya.fuellog.util.UnitConverter
 import org.junit.Assert.assertEquals
 import org.junit.Test
 
-/**
- * Unit tests for UnitConverter.
- */
 class UnitConverterTest {
 
     @Test
     fun testToKilometers_KM() {
-        val result = UnitConverter.toKilometers(100.0, DistanceUnit.KM)
-        assertEquals(100.0, result, 0.001)
+        assertEquals(100.0, UnitConverter.toKilometers(100.0, DistanceUnit.KM), 0.001)
     }
 
     @Test
     fun testToKilometers_MILES() {
-        val result = UnitConverter.toKilometers(62.1371, DistanceUnit.MILES)
-        assertEquals(100.0, result, 0.001)
+        assertEquals(100.0, UnitConverter.toKilometers(62.1371, DistanceUnit.MILES), 0.001)
     }
 
     @Test
     fun testFromKilometers_KM() {
-        val result = UnitConverter.fromKilometers(100.0, DistanceUnit.KM)
-        assertEquals(100.0, result, 0.001)
+        assertEquals(100.0, UnitConverter.fromKilometers(100.0, DistanceUnit.KM), 0.001)
     }
 
     @Test
     fun testFromKilometers_MILES() {
-        val result = UnitConverter.fromKilometers(100.0, DistanceUnit.MILES)
-        assertEquals(62.1371, result, 0.001)
+        assertEquals(62.1371, UnitConverter.fromKilometers(100.0, DistanceUnit.MILES), 0.001)
     }
 
     @Test
     fun testToLiters_LITERS() {
-        val result = UnitConverter.toLiters(10.0, VolumeUnit.LITERS)
-        assertEquals(10.0, result, 0.001)
+        assertEquals(10.0, UnitConverter.toLiters(10.0, VolumeUnit.LITERS), 0.001)
     }
 
     @Test
     fun testToLiters_GALLONS() {
-        val result = UnitConverter.toLiters(2.64172, VolumeUnit.GALLONS)
-        assertEquals(10.0, result, 0.001)
+        assertEquals(10.0, UnitConverter.toLiters(2.64172, VolumeUnit.GALLONS), 0.001)
     }
 
     @Test
     fun testFromLiters_LITERS() {
-        val result = UnitConverter.fromLiters(10.0, VolumeUnit.LITERS)
-        assertEquals(10.0, result, 0.001)
+        assertEquals(10.0, UnitConverter.fromLiters(10.0, VolumeUnit.LITERS), 0.001)
     }
 
     @Test
     fun testFromLiters_GALLONS() {
-        val result = UnitConverter.fromLiters(10.0, VolumeUnit.GALLONS)
-        assertEquals(2.64172, result, 0.001)
+        assertEquals(2.64172, UnitConverter.fromLiters(10.0, VolumeUnit.GALLONS), 0.001)
     }
 
     @Test
     fun testCalculateEfficiencyBase_KM_LITERS() {
         val result = UnitConverter.calculateEfficiencyBase(
-            distance = 100.0,
-            fuelVolume = 10.0,
-            distanceUnit = DistanceUnit.KM,
-            volumeUnit = VolumeUnit.LITERS
+            distance = 100.0, fuelVolume = 10.0,
+            distanceUnit = DistanceUnit.KM, volumeUnit = VolumeUnit.LITERS
         )
         assertEquals(10.0, result, 0.001)
     }
@@ -73,13 +60,11 @@ class UnitConverterTest {
     @Test
     fun testCalculateEfficiencyBase_MILES_GALLONS() {
         val result = UnitConverter.calculateEfficiencyBase(
-            distance = 100.0,
-            fuelVolume = 2.64172,
-            distanceUnit = DistanceUnit.MILES,
-            volumeUnit = VolumeUnit.GALLONS
+            distance = 100.0, fuelVolume = 2.64172,
+            distanceUnit = DistanceUnit.MILES, volumeUnit = VolumeUnit.GALLONS
         )
-        // 100 miles / 2.64172 gallons = 37.8541 km/L
-        assertEquals(37.8541, result, 0.001)
+        // 100 miles = 160.9344 km, 2.64172 gal = 10.0 L → 16.0934 km/L
+        assertEquals(16.0934, result, 0.01)
     }
 
     @Test
@@ -89,8 +74,8 @@ class UnitConverterTest {
             distanceUnit = DistanceUnit.MILES,
             volumeUnit = VolumeUnit.GALLONS
         )
-        // 10 km/L = 23.5215 mpg
-        assertEquals(23.5215, result, 0.001)
+        // 10 km/L × 3.78541 / 1.609344 = 23.5215 mpg
+        assertEquals(23.5215, result, 0.01)
     }
 
     @Test

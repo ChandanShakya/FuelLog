@@ -13,57 +13,28 @@ class MileageCalculatorTest {
 
     @Test
     fun testCalculateMileage_WithPrevious() {
-        val previous = FuelEntry(
-            id = 1, vehicleId = 1,
-            date = LocalDate.now().minusDays(1),
-            odometer = 1000.0, fuelVolume = 50.0, fuelCost = 100.0
-        )
-        val current = FuelEntry(
-            id = 2, vehicleId = 1,
-            date = LocalDate.now(),
-            odometer = 1100.0, fuelVolume = 40.0, fuelCost = 80.0
-        )
+        val previous = FuelEntry(id = 1, vehicleId = 1, date = LocalDate.now().minusDays(1), odometer = 1000.0, fuelVolume = 50.0, fuelCost = 100.0)
+        val current = FuelEntry(id = 2, vehicleId = 1, date = LocalDate.now(), odometer = 1100.0, fuelVolume = 40.0, fuelCost = 80.0)
 
-        val result = MileageCalculator.calculateMileage(
-            current = current, previous = previous,
-            distanceUnit = DistanceUnit.KM, volumeUnit = VolumeUnit.LITERS
-        )
+        val result = MileageCalculator.calculateMileage(current, previous, DistanceUnit.KM, VolumeUnit.LITERS)
 
-        assertEquals(25.0, result!!, 0.001)
+        // (1100 - 1000) / 40 = 2.5 km/L
+        assertEquals(2.5, result!!, 0.001)
     }
 
     @Test
     fun testCalculateMileage_WithoutPrevious() {
-        val current = FuelEntry(
-            id = 1, vehicleId = 1,
-            date = LocalDate.now(),
-            odometer = 1000.0, fuelVolume = 50.0, fuelCost = 100.0
-        )
-
-        val result = MileageCalculator.calculateMileage(
-            current = current, previous = null,
-            distanceUnit = DistanceUnit.KM, volumeUnit = VolumeUnit.LITERS
-        )
-
-        assertNull(result)
+        val current = FuelEntry(id = 1, vehicleId = 1, date = LocalDate.now(), odometer = 1000.0, fuelVolume = 50.0, fuelCost = 100.0)
+        assertNull(MileageCalculator.calculateMileage(current, null, DistanceUnit.KM, VolumeUnit.LITERS))
     }
 
     @Test
     fun testCalculateMileageBase() {
-        val previous = FuelEntry(
-            id = 1, vehicleId = 1,
-            date = LocalDate.now().minusDays(1),
-            odometer = 1000.0, fuelVolume = 50.0, fuelCost = 100.0
-        )
-        val current = FuelEntry(
-            id = 2, vehicleId = 1,
-            date = LocalDate.now(),
-            odometer = 1100.0, fuelVolume = 40.0, fuelCost = 80.0
-        )
+        val previous = FuelEntry(id = 1, vehicleId = 1, date = LocalDate.now().minusDays(1), odometer = 1000.0, fuelVolume = 50.0, fuelCost = 100.0)
+        val current = FuelEntry(id = 2, vehicleId = 1, date = LocalDate.now(), odometer = 1100.0, fuelVolume = 40.0, fuelCost = 80.0)
 
-        val result = MileageCalculator.calculateMileageBase(current = current, previous = previous)
-
-        assertEquals(25.0, result!!, 0.001)
+        // (1100 - 1000) / 40 = 2.5 km/L
+        assertEquals(2.5, MileageCalculator.calculateMileageBase(current, previous)!!, 0.001)
     }
 
     @Test
@@ -74,11 +45,11 @@ class MileageCalculatorTest {
             FuelEntry(3, 1, LocalDate.now(), 1200.0, 30.0, 60.0)
         )
 
-        val result = MileageCalculator.calculateAverageMileage(
-            entries = entries, distanceUnit = DistanceUnit.KM, volumeUnit = VolumeUnit.LITERS
-        )
+        val result = MileageCalculator.calculateAverageMileage(entries, DistanceUnit.KM, VolumeUnit.LITERS)
 
-        assertEquals(29.1665, result!!, 0.001)
+        // Mileage 1: (1100-1000)/40 = 2.5, Mileage 2: (1200-1100)/30 = 3.333
+        // Average: (2.5 + 3.333) / 2 = 2.9165
+        assertEquals(2.9165, result!!, 0.01)
     }
 
     @Test
@@ -88,10 +59,7 @@ class MileageCalculatorTest {
             FuelEntry(2, 1, LocalDate.now().minusDays(1), 1100.0, 40.0, 80.0),
             FuelEntry(3, 1, LocalDate.now(), 1200.0, 30.0, 60.0)
         )
-
-        val result = MileageCalculator.calculateTotalDistance(entries = entries, distanceUnit = DistanceUnit.KM)
-
-        assertEquals(200.0, result, 0.001)
+        assertEquals(200.0, MileageCalculator.calculateTotalDistance(entries, DistanceUnit.KM), 0.001)
     }
 
     @Test
@@ -101,10 +69,7 @@ class MileageCalculatorTest {
             FuelEntry(2, 1, LocalDate.now().minusDays(1), 1100.0, 40.0, 80.0),
             FuelEntry(3, 1, LocalDate.now(), 1200.0, 30.0, 60.0)
         )
-
-        val result = MileageCalculator.calculateTotalFuel(entries = entries, volumeUnit = VolumeUnit.LITERS)
-
-        assertEquals(120.0, result, 0.001)
+        assertEquals(120.0, MileageCalculator.calculateTotalFuel(entries, VolumeUnit.LITERS), 0.001)
     }
 
     @Test
@@ -114,10 +79,7 @@ class MileageCalculatorTest {
             FuelEntry(2, 1, LocalDate.now().minusDays(1), 1100.0, 40.0, 80.0),
             FuelEntry(3, 1, LocalDate.now(), 1200.0, 30.0, 60.0)
         )
-
-        val result = MileageCalculator.calculateTotalCost(entries)
-
-        assertEquals(240.0, result, 0.001)
+        assertEquals(240.0, MileageCalculator.calculateTotalCost(entries), 0.001)
     }
 
     @Test
@@ -127,11 +89,7 @@ class MileageCalculatorTest {
             FuelEntry(2, 1, LocalDate.now().minusDays(1), 1100.0, 40.0, 80.0),
             FuelEntry(3, 1, LocalDate.now(), 1200.0, 30.0, 60.0)
         )
-
-        val result = MileageCalculator.calculateCostPerDistance(
-            entries = entries, distanceUnit = DistanceUnit.KM, volumeUnit = VolumeUnit.LITERS
-        )
-
-        assertEquals(1.2, result!!, 0.001)
+        // Total cost: 240, Total distance: 200 km → 1.2 per km
+        assertEquals(1.2, MileageCalculator.calculateCostPerDistance(entries, DistanceUnit.KM, VolumeUnit.LITERS)!!, 0.001)
     }
 }

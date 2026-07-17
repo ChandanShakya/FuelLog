@@ -19,22 +19,15 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
-/**
- * Hilt module providing database, DAOs, and repositories.
- * 
- * Single module for all data layer dependencies as per requirements.
- */
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
     @Provides
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
-        return Room.databaseBuilder(
-            context,
-            AppDatabase::class.java,
-            "fuellog-db"
-        ).build()
+        return Room.databaseBuilder(context, AppDatabase::class.java, "fuellog-db")
+            .fallbackToDestructiveMigration()
+            .build()
     }
 
     @Provides
@@ -51,16 +44,13 @@ object AppModule {
 
     @Provides
     @Singleton
-    fun provideVehicleRepository(vehicleDao: VehicleDao): VehicleRepository = 
-        VehicleRepositoryImpl(vehicleDao)
+    fun provideVehicleRepository(vehicleDao: VehicleDao): VehicleRepository = VehicleRepositoryImpl(vehicleDao)
 
     @Provides
     @Singleton
-    fun provideFuelRepository(fuelEntryDao: FuelEntryDao): FuelRepository = 
-        FuelRepositoryImpl(fuelEntryDao)
+    fun provideFuelRepository(fuelEntryDao: FuelEntryDao): FuelRepository = FuelRepositoryImpl(fuelEntryDao)
 
     @Provides
     @Singleton
-    fun provideSettingsRepository(userSettingsDao: UserSettingsDao): SettingsRepository = 
-        SettingsRepositoryImpl(userSettingsDao)
+    fun provideSettingsRepository(userSettingsDao: UserSettingsDao): SettingsRepository = SettingsRepositoryImpl(userSettingsDao)
 }

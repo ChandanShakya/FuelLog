@@ -68,121 +68,99 @@ fun FuelLogScreen(
         viewModel.setVehicleId(vehicleId)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(Dimens.spacingMd)
-    ) {
-        val vehicle = state.vehicle
-        if (vehicle != null) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.DirectionsCar,
-                    contentDescription = null,
-                    modifier = Modifier.size(Dimens.iconLarge),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-
-                Spacer(modifier = Modifier.size(Dimens.spacingMd))
-
-                Column {
-                    Text(
-                        text = vehicle.name,
-                        style = MaterialTheme.typography.titleLarge
+    Box(modifier = Modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(Dimens.spacingMd)
+        ) {
+            val vehicle = state.vehicle
+            if (vehicle != null) {
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = getVehicleIcon(vehicle.vehicleType),
+                        contentDescription = null,
+                        modifier = Modifier.size(Dimens.iconLarge),
+                        tint = MaterialTheme.colorScheme.primary
                     )
-                    Text(
-                        text = "${UnitConverter.getDistanceUnitLabel(vehicle.distanceUnit)} / ${UnitConverter.getVolumeUnitLabel(vehicle.volumeUnit)}",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+                    Spacer(modifier = Modifier.size(Dimens.spacingMd))
+                    Column {
+                        Text(text = vehicle.name, style = MaterialTheme.typography.titleLarge)
+                        Text(
+                            text = "${UnitConverter.getDistanceUnitLabel(vehicle.distanceUnit)} / ${UnitConverter.getVolumeUnitLabel(vehicle.volumeUnit)}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Spacer(modifier = Modifier.weight(1f))
+                    AppButtonOutlined(text = "Insights", onClick = onNavigateToInsights)
                 }
 
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(Dimens.spacingLg))
 
-                AppButtonOutlined(
-                    text = "Insights",
-                    onClick = onNavigateToInsights
+                SummaryStats(
+                    averageMileage = state.averageMileage,
+                    totalDistance = state.totalDistance,
+                    totalFuel = state.totalFuel,
+                    totalCost = state.totalCost,
+                    distanceUnit = vehicle.distanceUnit,
+                    volumeUnit = vehicle.volumeUnit,
+                    currency = vehicle.defaultCurrency
                 )
+
+                Spacer(modifier = Modifier.height(Dimens.spacingLg))
+                HorizontalDivider()
+                Spacer(modifier = Modifier.height(Dimens.spacingMd))
             }
 
-            Spacer(modifier = Modifier.height(Dimens.spacingLg))
-
-            SummaryStats(
-                averageMileage = state.averageMileage,
-                totalDistance = state.totalDistance,
-                totalFuel = state.totalFuel,
-                totalCost = state.totalCost,
-                distanceUnit = vehicle.distanceUnit,
-                volumeUnit = vehicle.volumeUnit,
-                currency = vehicle.defaultCurrency
-            )
-
-            Spacer(modifier = Modifier.height(Dimens.spacingLg))
-
-            HorizontalDivider()
-
-            Spacer(modifier = Modifier.height(Dimens.spacingMd))
-        }
-
-        if (state.entries.isEmpty()) {
-            EmptyState(
-                icon = Icons.Outlined.LocalGasStation,
-                title = "No Fuel Entries",
-                description = "Add your first fuel fill-up to start tracking"
-            )
-        } else {
-            val currentVehicle = vehicle
-            LazyColumn(
-                contentPadding = PaddingValues(bottom = Dimens.spacingXl),
-                verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
-            ) {
-                items(
-                    items = state.entries,
-                    key = { it.entry.id }
-                ) { entryWithMileage ->
-                    FuelEntryCard(
-                        entry = entryWithMileage.entry,
-                        mileage = entryWithMileage.mileage,
-                        distanceUnit = currentVehicle?.distanceUnit ?: DistanceUnit.KM,
-                        volumeUnit = currentVehicle?.volumeUnit ?: VolumeUnit.LITERS,
-                        currency = currentVehicle?.defaultCurrency ?: "USD",
-                        onEdit = { },
-                        onDelete = { viewModel.deleteFuelEntry(entryWithMileage.entry.id) }
-                    )
+            if (state.entries.isEmpty()) {
+                EmptyState(
+                    icon = Icons.Outlined.LocalGasStation,
+                    title = "No Fuel Entries",
+                    description = "Tap + to add your first fill-up"
+                )
+            } else {
+                val currentVehicle = vehicle
+                LazyColumn(
+                    contentPadding = PaddingValues(bottom = 80.dp),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
+                ) {
+                    items(items = state.entries, key = { it.entry.id }) { entryWithMileage ->
+                        FuelEntryCard(
+                            entry = entryWithMileage.entry,
+                            mileage = entryWithMileage.mileage,
+                            distanceUnit = currentVehicle?.distanceUnit ?: DistanceUnit.KM,
+                            volumeUnit = currentVehicle?.volumeUnit ?: VolumeUnit.LITERS,
+                            currency = currentVehicle?.defaultCurrency ?: "USD",
+                            onEdit = { },
+                            onDelete = { viewModel.deleteFuelEntry(entryWithMileage.entry.id) }
+                        )
+                    }
                 }
             }
         }
-    }
 
-    Box(
-        modifier = Modifier.fillMaxSize(),
-        contentAlignment = Alignment.BottomEnd
-    ) {
         FloatingActionButton(
             onClick = { showAddDialog = true },
-            modifier = Modifier.padding(Dimens.spacingLg),
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(Dimens.spacingMd),
             containerColor = MaterialTheme.colorScheme.primary,
             contentColor = MaterialTheme.colorScheme.onPrimary
         ) {
-            Icon(
-                imageVector = Icons.Outlined.Add,
-                contentDescription = "Add fuel entry"
-            )
+            Icon(Icons.Outlined.Add, contentDescription = "Add fuel entry")
         }
     }
 
     if (showAddDialog) {
-        AddFuelEntryDialog(
+        com.chandanshakya.fuellog.ui.components.AddFuelEntryDialog(
             vehicleId = vehicleId,
             distanceUnit = state.vehicle?.distanceUnit ?: DistanceUnit.KM,
             volumeUnit = state.vehicle?.volumeUnit ?: VolumeUnit.LITERS,
             currency = state.vehicle?.defaultCurrency ?: "USD",
             onDismiss = { showAddDialog = false },
-            onSave = { date, odometer, fuelVolume, fuelCost, isFullTank, notes ->
-                viewModel.addFuelEntry(date, odometer, fuelVolume, fuelCost, isFullTank, notes)
+            onSave = { date, odometer, fuelVolume, totalCost, notes ->
+                viewModel.addFuelEntry(date, odometer, fuelVolume, totalCost, notes)
                 showAddDialog = false
             }
         )
@@ -203,66 +181,23 @@ fun SummaryStats(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
     ) {
-        StatCard(
-            label = "Avg Mileage",
-            value = averageMileage?.let { "%.1f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}" } ?: "N/A",
-            icon = Icons.Outlined.Speed,
-            modifier = Modifier.weight(1f)
-        )
-
-        StatCard(
-            label = "Total Distance",
-            value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance),
-            icon = Icons.Outlined.DirectionsCar,
-            modifier = Modifier.weight(1f)
-        )
-
-        StatCard(
-            label = "Total Cost",
-            value = CurrencyFormatter.formatCurrency(totalCost, currency),
-            icon = Icons.Outlined.LocalGasStation,
-            modifier = Modifier.weight(1f)
-        )
+        StatCard(label = "Avg Mileage", value = averageMileage?.let { "%.1f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}" } ?: "N/A", icon = Icons.Outlined.Speed, modifier = Modifier.weight(1f))
+        StatCard(label = "Total Distance", value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance), icon = getVehicleIcon("car"), modifier = Modifier.weight(1f))
+        StatCard(label = "Total Cost", value = CurrencyFormatter.formatCurrency(totalCost, currency), icon = Icons.Outlined.LocalGasStation, modifier = Modifier.weight(1f))
     }
 }
 
 @Composable
-fun StatCard(
-    label: String,
-    value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.medium,
-        elevation = Dimens.cardElevation()
-    ) {
+fun StatCard(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector, modifier: Modifier = Modifier) {
+    Card(modifier = modifier, shape = MaterialTheme.shapes.medium, elevation = Dimens.cardElevation()) {
         Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.spacingMd),
+            modifier = Modifier.fillMaxWidth().padding(Dimens.spacingMd),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                modifier = Modifier.size(Dimens.iconMedium),
-                tint = MaterialTheme.colorScheme.primary
-            )
-
+            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(Dimens.iconMedium), tint = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(Dimens.spacingSm))
-
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium
-            )
-
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Text(text = value, style = MaterialTheme.typography.titleMedium)
+            Text(text = label, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
         }
     }
 }
@@ -279,117 +214,37 @@ fun FuelEntryCard(
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        elevation = Dimens.cardElevation()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.spacingMd)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.LocalGasStation,
-                    contentDescription = null,
-                    modifier = Modifier.size(Dimens.iconMedium),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-
+    Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, elevation = Dimens.cardElevation()) {
+        Column(modifier = Modifier.fillMaxWidth().padding(Dimens.spacingMd)) {
+            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                Icon(imageVector = Icons.Outlined.LocalGasStation, contentDescription = null, modifier = Modifier.size(Dimens.iconMedium), tint = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.size(Dimens.spacingMd))
-
-                Column(
-                    modifier = Modifier.weight(1f)
-                ) {
-                    Text(
-                        text = DateTimeFormatter.ISO_LOCAL_DATE.format(entry.date),
-                        style = MaterialTheme.typography.titleMedium
-                    )
-
+                Column(modifier = Modifier.weight(1f)) {
+                    Text(text = DateTimeFormatter.ISO_LOCAL_DATE.format(entry.date), style = MaterialTheme.typography.titleMedium)
                     Text(
                         text = "Odometer: ${"%.0f".format(entry.odometer)} ${UnitConverter.getDistanceUnitLabel(distanceUnit)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-
                 IconButton(onClick = { showMenu = true }) {
-                    Icon(
-                        imageVector = Icons.Outlined.MoreVert,
-                        contentDescription = "More options"
-                    )
+                    Icon(Icons.Outlined.MoreVert, contentDescription = "More options")
                 }
-
-                DropdownMenu(
-                    expanded = showMenu,
-                    onDismissRequest = { showMenu = false }
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("Edit") },
-                        onClick = {
-                            showMenu = false
-                            onEdit()
-                        },
-                        leadingIcon = {
-                            Icon(Icons.Outlined.Edit, contentDescription = null)
-                        }
-                    )
-                    DropdownMenuItem(
-                        text = { Text("Delete") },
-                        onClick = {
-                            showMenu = false
-                            onDelete()
-                        },
-                        leadingIcon = {
-                            Icon(Icons.Outlined.Delete, contentDescription = null)
-                        }
-                    )
+                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
+                    DropdownMenuItem(text = { Text("Edit") }, onClick = { showMenu = false; onEdit() }, leadingIcon = { Icon(Icons.Outlined.Edit, null) })
+                    DropdownMenuItem(text = { Text("Delete") }, onClick = { showMenu = false; onDelete() }, leadingIcon = { Icon(Icons.Outlined.Delete, null) })
                 }
             }
 
             Spacer(modifier = Modifier.height(Dimens.spacingSm))
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
-            ) {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)) {
                 mileage?.let { m ->
-                    AppBadge(
-                        text = "%.1f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(m)
-                    )
+                    AppBadge(text = "%.1f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(m))
                 }
-
-                AppBadge(
-                    text = "${"%.1f".format(entry.fuelVolume)} ${UnitConverter.getVolumeUnitLabel(volumeUnit)}"
-                )
-
-                AppBadge(
-                    text = CurrencyFormatter.formatCurrency(entry.fuelCost, currency)
-                )
+                AppBadge(text = "${"%.1f".format(entry.fuelVolume)} ${UnitConverter.getVolumeUnitLabel(volumeUnit)}")
+                AppBadge(text = CurrencyFormatter.formatCurrency(entry.fuelCost, currency))
             }
         }
     }
-}
-
-@Composable
-fun AddFuelEntryDialog(
-    vehicleId: Long,
-    distanceUnit: DistanceUnit,
-    volumeUnit: VolumeUnit,
-    currency: String,
-    onDismiss: () -> Unit,
-    onSave: (java.time.LocalDate, Double, Double, Double, Boolean, String?) -> Unit
-) {
-    com.chandanshakya.fuellog.ui.components.AddFuelEntryDialog(
-        vehicleId = vehicleId,
-        distanceUnit = distanceUnit,
-        volumeUnit = volumeUnit,
-        currency = currency,
-        onDismiss = onDismiss,
-        onSave = onSave
-    )
 }

@@ -7,14 +7,9 @@ import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.UserSettings
 import com.chandanshakya.fuellog.data.model.Vehicle
 
-/**
- * Room database for FuelLog application.
- * 
- * Version 1 - Initial schema with Vehicle, FuelEntry, and UserSettings tables.
- */
 @Database(
     entities = [Vehicle::class, FuelEntry::class, UserSettings::class],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

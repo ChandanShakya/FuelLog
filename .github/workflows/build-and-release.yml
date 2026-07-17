@@ -31,15 +31,15 @@ jobs:
         with:
           gradle-version: '8.4'
 
-      # Build and test
+      # Build and test - use gradle command directly
       - name: Build with Gradle
-        run: ./gradlew assembleDebug assembleRelease --no-daemon --stacktrace
+        run: gradle assembleDebug assembleRelease --no-daemon --stacktrace
 
       - name: Run Android lint
-        run: ./gradlew lintDebug --no-daemon
+        run: gradle lintDebug --no-daemon
 
       - name: Run unit tests
-        run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
+        run: gradle testDebugUnitTest --no-daemon --stacktrace
 
       - name: Upload test results
         if: always()
@@ -79,10 +79,10 @@ jobs:
           gradle-version: '8.4'
 
       - name: Build release APK
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        run: gradle assembleRelease --no-daemon --stacktrace
 
       - name: Build release bundle
-        run: ./gradlew bundleRelease --no-daemon --stacktrace
+        run: gradle bundleRelease --no-daemon --stacktrace
 
       - name: Get version info
         id: version

@@ -19,7 +19,7 @@ import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -245,7 +245,7 @@ fun SettingCard(
             
             Spacer(modifier = Modifier.height(Dimens.spacingMd))
             
-            Divider()
+            HorizontalDivider()
             
             Spacer(modifier = Modifier.height(Dimens.spacingMd))
             

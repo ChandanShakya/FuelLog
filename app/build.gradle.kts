@@ -44,6 +44,7 @@ android {
 
     kotlinOptions {
         jvmTarget = "1.8"
+        freeCompilerArgs += listOf("-P", "plugin:androidx.compose.compiler.plugins.kotlin.suppressKotlinVersionCompatibilityCheck=true")
     }
 
     buildFeatures {
@@ -55,19 +56,11 @@ android {
         kotlinCompilerExtensionVersion = "1.5.2"
     }
 
-    kotlinOptions {
-        jvmTarget = "1.8"
-        // Suppress Kotlin version compatibility check for Compose Compiler
-        freeCompilerArgs += listOf("-P", "plugin:androidx.compose.compiler.plugins.kotlin.suppressKotlinVersionCompatibilityCheck=true")
-    }
-
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-
-
 }
 
 dependencies {

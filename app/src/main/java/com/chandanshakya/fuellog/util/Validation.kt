@@ -105,4 +105,15 @@ object Validation {
         cost > 999999.99 -> "Cost value too large"
         else -> null
     }
+
+    /**
+     * Get validation error message for currency code.
+     */
+    fun getCurrencyCodeError(code: String): String? = when {
+        code.isBlank() -> "Currency code cannot be empty"
+        code.length != 3 -> "Currency code must be 3 characters"
+        !code.all { it.isLetter() } -> "Currency code must contain only letters"
+        !code.uppercase() in setOf("USD", "EUR", "INR", "NPR") -> "Currency must be USD, EUR, INR, or NPR"
+        else -> null
+    }
 }

@@ -23,7 +23,6 @@ import androidx.compose.material.icons.outlined.Monitor
 import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Divider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -36,6 +35,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.chandanshakya.fuellog.data.model.DistanceUnit
+import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.ui.chart.MileageChart
 import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.CurrencyFormatter
@@ -192,6 +193,10 @@ fun InsightsScreen(
             }
             
             // Statistics grid
+            val distanceUnit = vehicle?.distanceUnit ?: DistanceUnit.KM
+            val volumeUnit = vehicle?.volumeUnit ?: VolumeUnit.LITERS
+            val currency = vehicle?.defaultCurrency ?: "USD"
+            
             StatisticsGrid(
                 averageMileage = state.averageMileageKmPerLiter,
                 bestMileage = state.bestMileageKmPerLiter,
@@ -201,9 +206,9 @@ fun InsightsScreen(
                 totalCost = state.totalCost,
                 costPerKm = state.costPerKm,
                 entriesCount = state.entriesCount,
-                distanceUnit = vehicle?.distanceUnit ?: com.chandanshakya.fuellog.data.model.DistanceUnit.KM,
-                volumeUnit = vehicle?.volumeUnit ?: com.chandanshakya.fuellog.data.model.VolumeUnit.LITERS,
-                currency = vehicle?.defaultCurrency ?: "USD"
+                distanceUnit = distanceUnit,
+                volumeUnit = volumeUnit,
+                currency = currency
             )
         }
     }
@@ -222,10 +227,12 @@ fun StatisticsGrid(
     totalCost: Double,
     costPerKm: Double?,
     entriesCount: Int,
-    distanceUnit: com.chandanshakya.fuellog.data.model.DistanceUnit,
-    volumeUnit: com.chandanshakya.fuellog.data.model.VolumeUnit,
+    distanceUnit: DistanceUnit,
+    volumeUnit: VolumeUnit,
     currency: String
 ) {
+    val efficiencyLabel = UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)
+    
     LazyColumn(
         contentPadding = PaddingValues(bottom = Dimens.spacingXl),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
@@ -237,14 +244,14 @@ fun StatisticsGrid(
             ) {
                 InsightCard(
                     label = "Average Mileage",
-                    value = averageMileage?.let { "%.1f km/L".format(it) } ?: "N/A",
+                    value = averageMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
                     icon = Icons.Outlined.Speed,
                     modifier = Modifier.weight(1f)
                 )
                 
                 InsightCard(
                     label = "Best Mileage",
-                    value = bestMileage?.let { "%.1f km/L".format(it) } ?: "N/A",
+                    value = bestMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
                     icon = Icons.Outlined.ArrowUpward,
                     modifier = Modifier.weight(1f)
                 )
@@ -258,7 +265,7 @@ fun StatisticsGrid(
             ) {
                 InsightCard(
                     label = "Worst Mileage",
-                    value = worstMileage?.let { "%.1f km/L".format(it) } ?: "N/A",
+                    value = worstMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
                     icon = Icons.Outlined.ArrowDownward,
                     modifier = Modifier.weight(1f)
                 )
@@ -279,14 +286,14 @@ fun StatisticsGrid(
             ) {
                 InsightCard(
                     label = "Total Distance",
-                    value = "%.0f km".format(totalDistance),
+                    value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance),
                     icon = Icons.Outlined.LocalGasStation,
                     modifier = Modifier.weight(1f)
                 )
                 
                 InsightCard(
                     label = "Total Fuel",
-                    value = "%.1f L".format(totalFuel),
+                    value = "%.1f ${UnitConverter.getVolumeUnitLabel(volumeUnit)}".format(totalFuel),
                     icon = Icons.Outlined.GasStation,
                     modifier = Modifier.weight(1f)
                 )

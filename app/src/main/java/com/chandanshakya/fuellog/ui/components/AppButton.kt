@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -77,16 +78,13 @@ fun AppButtonOutlined(
     modifier: Modifier = Modifier,
     enabled: Boolean = true
 ) {
-    Button(
+    OutlinedButton(
         onClick = onClick,
         modifier = modifier.height(Dimens.buttonHeight),
         enabled = enabled,
         colors = ButtonDefaults.outlinedButtonColors(
             contentColor = MaterialTheme.colorScheme.primary,
             disabledContentColor = MaterialTheme.colorScheme.onSurfaceVariant
-        ),
-        border = ButtonDefaults.outlinedButtonBorder.copy(
-            width = Dimens.borderWidth
         ),
         contentPadding = PaddingValues(horizontal = Dimens.spacingLg)
     ) {

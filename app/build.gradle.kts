@@ -2,8 +2,8 @@ plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("org.jetbrains.kotlin.plugin.compose")
+    id("com.google.devtools.ksp")
     id("com.google.dagger.hilt.android")
-    id("kotlin-kapt")
     id("org.jetbrains.kotlin.plugin.serialization")
 }
 
@@ -102,7 +102,7 @@ dependencies {
     androidTestImplementation("androidx.compose.ui:ui-test-junit4")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    // KAPT dependencies
-    kapt("androidx.room:room-compiler:2.6.1")
-    kapt("com.google.dagger:hilt-compiler:2.53.1")
+    // KSP annotation processors
+    ksp("androidx.room:room-compiler:2.6.1")
+    ksp("com.google.dagger:hilt-compiler:2.53.1")
 }

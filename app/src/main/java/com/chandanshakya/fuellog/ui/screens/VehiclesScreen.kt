@@ -15,7 +15,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.DirectionsCar
@@ -40,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chandanshakya.fuellog.data.model.Vehicle
+import com.chandanshakya.fuellog.ui.components.AddVehicleDialog
 import com.chandanshakya.fuellog.ui.components.AppButton
 import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.UnitConverter
@@ -48,10 +48,11 @@ import com.chandanshakya.fuellog.viewmodel.VehiclesViewModel
 @Composable
 fun VehiclesScreen(
     onVehicleSelected: (Long) -> Unit,
-    onAddVehicle: () -> Unit,
+    onAddVehicle: () -> Unit = {},
     viewModel: VehiclesViewModel = hiltViewModel()
 ) {
     val state by viewModel.vehiclesState.collectAsStateWithLifecycle()
+    var showAddDialog by remember { mutableStateOf(false) }
 
     Column(
         modifier = Modifier
@@ -100,8 +101,21 @@ fun VehiclesScreen(
 
         AppButton(
             text = "Add Vehicle",
-            onClick = { onAddVehicle() },
+            onClick = { showAddDialog = true },
             modifier = Modifier.fillMaxWidth()
+        )
+    }
+
+    if (showAddDialog) {
+        AddVehicleDialog(
+            defaultCurrency = state.defaultCurrency,
+            defaultDistanceUnit = state.defaultDistanceUnit,
+            defaultVolumeUnit = state.defaultVolumeUnit,
+            onDismiss = { showAddDialog = false },
+            onSave = { name, currency, distanceUnit, volumeUnit ->
+                viewModel.addVehicle(name, currency, distanceUnit, volumeUnit)
+                showAddDialog = false
+            }
         )
     }
 }

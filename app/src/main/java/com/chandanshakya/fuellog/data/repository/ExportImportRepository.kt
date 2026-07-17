@@ -28,7 +28,7 @@ class ExportImportRepository(
     private val fuelRepository: FuelRepository,
     private val settingsRepository: SettingsRepository
 ) {
-    private val json = Json { 
+    private val json = Json {
         prettyPrint = true
         ignoreUnknownKeys = true
     }

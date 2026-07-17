@@ -13,7 +13,7 @@ jobs:
   build-and-test:
     name: Build and Test
     runs-on: ubuntu-latest
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -29,16 +29,16 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.2'
+          gradle-version: '8.11.1'
 
       - name: Build with Gradle
-        run: gradle assembleDebug assembleRelease --no-daemon --stacktrace
+        run: ./gradlew assembleDebug assembleRelease --no-daemon --stacktrace
 
       - name: Run Android lint
-        run: gradle lintDebug --no-daemon
+        run: ./gradlew lintDebug --no-daemon
 
       - name: Run unit tests
-        run: gradle testDebugUnitTest --no-daemon --stacktrace
+        run: ./gradlew testDebugUnitTest --no-daemon --stacktrace
 
       - name: Upload test results
         if: always()
@@ -53,13 +53,12 @@ jobs:
           name: app-build
           path: app/build/outputs/
 
-  # Separate job for release publishing (only on main branch pushes)
   publish-release:
     name: Publish Release
     needs: build-and-test
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    
+
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -75,19 +74,19 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.2'
+          gradle-version: '8.11.1'
 
       - name: Build release APK
-        run: gradle assembleRelease --no-daemon --stacktrace
+        run: ./gradlew assembleRelease --no-daemon --stacktrace
 
       - name: Build release bundle
-        run: gradle bundleRelease --no-daemon --stacktrace
+        run: ./gradlew bundleRelease --no-daemon --stacktrace
 
       - name: Get version info
         id: version
         run: |
-          VERSION_NAME=$(grep versionName app/build.gradle.kts | grep -o "[0-9.]\+" | head -1)
-          VERSION_CODE=$(grep versionCode app/build.gradle.kts | grep -o "[0-9]\+" | head -1)
+          VERSION_NAME=$(grep versionName app/build.gradle.kts | grep -o '"[0-9.]*"' | tr -d '"' | head -1)
+          VERSION_CODE=$(grep versionCode app/build.gradle.kts | grep -o '[0-9]\+' | head -1)
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
           echo "Release v$VERSION_NAME ($VERSION_CODE)"
@@ -99,10 +98,10 @@ jobs:
           name: FuelLog v${{ steps.version.outputs.VERSION_NAME }}
           body: |
             ## FuelLog Android Fuel Tracker v${{ steps.version.outputs.VERSION_NAME }}
-            
+
             ### Changes
             - See commit history for details
-            
+
             ### Downloads
             - APK and AAB files attached below
           files: |

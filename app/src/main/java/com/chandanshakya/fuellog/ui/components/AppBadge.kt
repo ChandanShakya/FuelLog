@@ -8,18 +8,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.text.style.TextStyle
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.unit.dp
 
-/**
- * Custom badge component to avoid naming conflicts with Material 3 components.
- * 
- * @param text Badge text
- * @param modifier Modifier for the component
- * @param backgroundColor Background color (defaults to primary container)
- * @param textColor Text color (defaults to on primary container)
- * @param textStyle Text style
- */
 @Composable
 fun AppBadge(
     text: String,

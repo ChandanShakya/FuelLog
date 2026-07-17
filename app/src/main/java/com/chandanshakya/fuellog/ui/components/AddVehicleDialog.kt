@@ -1,10 +1,13 @@
 package com.chandanshakya.fuellog.ui.components
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -20,15 +23,6 @@ import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.Validation
 
-/**
- * Dialog for adding a new vehicle.
- * 
- * @param defaultCurrency Default currency from settings
- * @param defaultDistanceUnit Default distance unit from settings
- * @param defaultVolumeUnit Default volume unit from settings
- * @param onDismiss Callback when dialog is dismissed
- * @param onSave Callback when vehicle is saved
- */
 @Composable
 fun AddVehicleDialog(
     defaultCurrency: String,
@@ -41,14 +35,14 @@ fun AddVehicleDialog(
     var currency by remember { mutableStateOf(defaultCurrency) }
     var distanceUnit by remember { mutableStateOf(defaultDistanceUnit) }
     var volumeUnit by remember { mutableStateOf(defaultVolumeUnit) }
-    
+
     var nameError by remember { mutableStateOf<String?>(null) }
     var currencyError by remember { mutableStateOf<String?>(null) }
-    
+
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { 
-            Text("Add Vehicle", style = MaterialTheme.typography.titleLarge) 
+        title = {
+            Text("Add Vehicle", style = MaterialTheme.typography.titleLarge)
         },
         text = {
             Column(
@@ -64,9 +58,9 @@ fun AddVehicleDialog(
                     error = nameError,
                     supportingText = "Enter a name for your vehicle"
                 )
-                
+
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
-                
+
                 AppTextField(
                     value = currency,
                     onValueChange = { newValue ->
@@ -76,17 +70,17 @@ fun AddVehicleDialog(
                     label = "Currency",
                     error = currencyError,
                     supportingText = "ISO 4217 code (e.g., USD, EUR, INR)",
-                    keyboardOptions = KeyboardType.Text
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                 )
-                
+
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
-                
+
                 Text(
                     text = "Distance Unit",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(Dimens.spacingSm))
-                
+
                 UnitSelector(
                     selectedUnit = distanceUnit,
                     units = DistanceUnit.entries.toList(),
@@ -98,15 +92,15 @@ fun AddVehicleDialog(
                         }
                     }
                 )
-                
+
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
-                
+
                 Text(
                     text = "Volume Unit",
                     style = MaterialTheme.typography.bodyMedium
                 )
                 Spacer(modifier = Modifier.height(Dimens.spacingSm))
-                
+
                 UnitSelector(
                     selectedUnit = volumeUnit,
                     units = VolumeUnit.entries.toList(),
@@ -140,9 +134,6 @@ fun AddVehicleDialog(
     )
 }
 
-/**
- * Generic unit selector component.
- */
 @Composable
 fun <T> UnitSelector(
     selectedUnit: T,
@@ -160,13 +151,13 @@ fun <T> UnitSelector(
             } else {
                 MaterialTheme.colorScheme.surfaceVariant
             }
-            
+
             val textColor = if (isSelected) {
                 MaterialTheme.colorScheme.onPrimaryContainer
             } else {
                 MaterialTheme.colorScheme.onSurfaceVariant
             }
-            
+
             Text(
                 text = labelProvider(unit),
                 modifier = Modifier
@@ -181,7 +172,7 @@ fun <T> UnitSelector(
                 color = textColor,
                 style = MaterialTheme.typography.bodyMedium
             )
-            
+
             if (unit != units.last()) {
                 Spacer(modifier = Modifier.height(Dimens.spacingSm))
             }

@@ -14,8 +14,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.CurrencyExchange
-import androidx.compose.material.icons.outlined.Ruler
-import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material.icons.outlined.Scale
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
@@ -42,24 +41,18 @@ import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.Validation
 import com.chandanshakya.fuellog.viewmodel.SettingsViewModel
 
-/**
- * Settings screen for managing global preferences.
- * 
- * @param onNavigateToVehicles Callback to navigate to vehicles
- */
 @Composable
 fun SettingsScreen(
     onNavigateToVehicles: () -> Unit,
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.settingsState.collectAsStateWithLifecycle()
-    
+
     var currency by remember { mutableStateOf("USD") }
     var distanceUnit by remember { mutableStateOf(DistanceUnit.KM) }
     var volumeUnit by remember { mutableStateOf(VolumeUnit.LITERS) }
     var currencyError by remember { mutableStateOf<String?>(null) }
-    
-    // Initialize from settings
+
     state.settings?.let { settings ->
         currency = settings.defaultCurrency
         distanceUnit = settings.defaultDistanceUnit
@@ -107,11 +100,11 @@ fun SettingsScreen(
                         )
                     }
                 }
-                
+
                 item {
                     SettingCard(
                         title = "Default Distance Unit",
-                        icon = Icons.Outlined.Ruler,
+                        icon = Icons.Outlined.Scale,
                         description = "Distance unit used for new vehicles"
                     ) {
                         Column {
@@ -140,7 +133,7 @@ fun SettingsScreen(
                         }
                     }
                 }
-                
+
                 item {
                     SettingCard(
                         title = "Default Volume Unit",
@@ -161,7 +154,7 @@ fun SettingsScreen(
                             }
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
-                                verticalArrangement = Arrangement.Center
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 RadioButton(
                                     selected = volumeUnit == VolumeUnit.GALLONS,
@@ -173,10 +166,10 @@ fun SettingsScreen(
                         }
                     }
                 }
-                
+
                 item {
                     Spacer(modifier = Modifier.height(Dimens.spacingLg))
-                    
+
                     AppButton(
                         text = "Save Settings",
                         onClick = {
@@ -197,9 +190,6 @@ fun SettingsScreen(
     }
 }
 
-/**
- * Setting card component.
- */
 @Composable
 fun SettingCard(
     title: String,
@@ -210,7 +200,7 @@ fun SettingCard(
     Card(
         modifier = Modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
-        elevation = Dimens.cardElevation
+        elevation = Dimens.cardElevation()
     ) {
         Column(
             modifier = Modifier
@@ -227,9 +217,9 @@ fun SettingCard(
                     modifier = Modifier.size(Dimens.iconMedium),
                     tint = MaterialTheme.colorScheme.primary
                 )
-                
+
                 Spacer(modifier = Modifier.size(Dimens.spacingMd))
-                
+
                 Column {
                     Text(
                         text = title,
@@ -242,13 +232,13 @@ fun SettingCard(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(Dimens.spacingMd))
-            
+
             HorizontalDivider()
-            
+
             Spacer(modifier = Modifier.height(Dimens.spacingMd))
-            
+
             content()
         }
     }

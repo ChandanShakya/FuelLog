@@ -16,8 +16,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
-import androidx.compose.material.icons.outlined.GasStation
-import androidx.compose.material.icons.outlined.HorizontalRule
 import androidx.compose.material.icons.outlined.LocalGasStation
 import androidx.compose.material.icons.outlined.Monitor
 import androidx.compose.material.icons.outlined.Speed
@@ -44,13 +42,6 @@ import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.viewmodel.InsightsViewModel
 import com.chandanshakya.fuellog.viewmodel.MileageTrend
 
-/**
- * Insights screen showing statistics and trends for a specific vehicle.
- * 
- * @param vehicleId ID of the vehicle to show insights for
- * @param onNavigateToLog Callback to navigate to fuel log
- * @param onNavigateToVehicles Callback to navigate to vehicles
- */
 @Composable
 fun InsightsScreen(
     vehicleId: Long,
@@ -59,7 +50,7 @@ fun InsightsScreen(
     viewModel: InsightsViewModel = hiltViewModel()
 ) {
     val state by viewModel.insightsState.collectAsStateWithLifecycle()
-    
+
     LaunchedEffect(vehicleId) {
         viewModel.setVehicleId(vehicleId)
     }
@@ -69,7 +60,6 @@ fun InsightsScreen(
             .fillMaxSize()
             .padding(Dimens.spacingMd)
     ) {
-        // Header
         val vehicle = state.vehicle
         if (vehicle != null) {
             Row(
@@ -82,9 +72,9 @@ fun InsightsScreen(
                     modifier = Modifier.size(Dimens.iconLarge),
                     tint = MaterialTheme.colorScheme.primary
                 )
-                
+
                 Spacer(modifier = Modifier.size(Dimens.spacingMd))
-                
+
                 Column {
                     Text(
                         text = "${vehicle.name} Insights",
@@ -97,7 +87,7 @@ fun InsightsScreen(
                     )
                 }
             }
-            
+
             Spacer(modifier = Modifier.height(Dimens.spacingLg))
         }
 
@@ -115,13 +105,12 @@ fun InsightsScreen(
                 description = "Add fuel entries to see insights and trends"
             )
         } else {
-            // Mileage trend chart
             val dataPoints = viewModel.getMileageDataPoints()
             if (dataPoints.isNotEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.medium,
-                    elevation = Dimens.cardElevation
+                    elevation = Dimens.cardElevation()
                 ) {
                     Column(
                         modifier = Modifier
@@ -132,71 +121,45 @@ fun InsightsScreen(
                             text = "Mileage Trend",
                             style = MaterialTheme.typography.titleMedium
                         )
-                        
+
                         Spacer(modifier = Modifier.height(Dimens.spacingMd))
-                        
+
                         MileageChart(
                             dataPoints = dataPoints,
                             modifier = Modifier.fillMaxWidth()
                         )
-                        
+
                         Spacer(modifier = Modifier.height(Dimens.spacingSm))
-                        
-                        // Trend indicator
+
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.Center
                         ) {
                             when (state.mileageTrend) {
                                 MileageTrend.IMPROVING -> {
-                                    Icon(
-                                        imageVector = Icons.Outlined.ArrowUpward,
-                                        contentDescription = null,
-                                        tint = Color.Green
-                                    )
-                                    Text(
-                                        text = "Improving",
-                                        color = Color.Green,
-                                        style = MaterialTheme.typography.bodySmall
-                                    )
+                                    Icon(Icons.Outlined.ArrowUpward, contentDescription = null, tint = Color.Green)
+                                    Text("Improving", color = Color.Green, style = MaterialTheme.typography.bodySmall)
                                 }
                                 MileageTrend.DECLINING -> {
-                                    Icon(
-                                        imageVector = Icons.Outlined.ArrowDownward,
-                                        contentDescription = null,
-                                        tint = Color.Red
-                                    )
-                                    Text(
-                                        text = "Declining",
-                                        color = Color.Red,
-                                        style = MaterialTheme.typography.bodySmall
-                                    )
+                                    Icon(Icons.Outlined.ArrowDownward, contentDescription = null, tint = Color.Red)
+                                    Text("Declining", color = Color.Red, style = MaterialTheme.typography.bodySmall)
                                 }
                                 MileageTrend.STABLE -> {
-                                    Icon(
-                                        imageVector = Icons.Outlined.HorizontalRule,
-                                        contentDescription = null,
-                                        tint = Color.Gray
-                                    )
-                                    Text(
-                                        text = "Stable",
-                                        color = Color.Gray,
-                                        style = MaterialTheme.typography.bodySmall
-                                    )
+                                    Icon(Icons.Outlined.Monitor, contentDescription = null, tint = Color.Gray)
+                                    Text("Stable", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }
                     }
                 }
-                
+
                 Spacer(modifier = Modifier.height(Dimens.spacingLg))
             }
-            
-            // Statistics grid
+
             val distanceUnit = vehicle?.distanceUnit ?: DistanceUnit.KM
             val volumeUnit = vehicle?.volumeUnit ?: VolumeUnit.LITERS
             val currency = vehicle?.defaultCurrency ?: "USD"
-            
+
             StatisticsGrid(
                 averageMileage = state.averageMileageKmPerLiter,
                 bestMileage = state.bestMileageKmPerLiter,
@@ -214,9 +177,6 @@ fun InsightsScreen(
     }
 }
 
-/**
- * Statistics grid showing various metrics.
- */
 @Composable
 fun StatisticsGrid(
     averageMileage: Double?,
@@ -232,7 +192,7 @@ fun StatisticsGrid(
     currency: String
 ) {
     val efficiencyLabel = UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)
-    
+
     LazyColumn(
         contentPadding = PaddingValues(bottom = Dimens.spacingXl),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
@@ -248,7 +208,7 @@ fun StatisticsGrid(
                     icon = Icons.Outlined.Speed,
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 InsightCard(
                     label = "Best Mileage",
                     value = bestMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
@@ -257,7 +217,7 @@ fun StatisticsGrid(
                 )
             }
         }
-        
+
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -269,7 +229,7 @@ fun StatisticsGrid(
                     icon = Icons.Outlined.ArrowDownward,
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 InsightCard(
                     label = "Total Entries",
                     value = entriesCount.toString(),
@@ -278,7 +238,7 @@ fun StatisticsGrid(
                 )
             }
         }
-        
+
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -290,16 +250,16 @@ fun StatisticsGrid(
                     icon = Icons.Outlined.LocalGasStation,
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 InsightCard(
                     label = "Total Fuel",
                     value = "%.1f ${UnitConverter.getVolumeUnitLabel(volumeUnit)}".format(totalFuel),
-                    icon = Icons.Outlined.GasStation,
+                    icon = Icons.Outlined.LocalGasStation,
                     modifier = Modifier.weight(1f)
                 )
             }
         }
-        
+
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -311,7 +271,7 @@ fun StatisticsGrid(
                     icon = Icons.Outlined.Monitor,
                     modifier = Modifier.weight(1f)
                 )
-                
+
                 InsightCard(
                     label = "Cost per km",
                     value = costPerKm?.let { CurrencyFormatter.formatCurrency(it, currency) } ?: "N/A",
@@ -323,9 +283,6 @@ fun StatisticsGrid(
     }
 }
 
-/**
- * Individual insight card.
- */
 @Composable
 fun InsightCard(
     label: String,
@@ -336,7 +293,7 @@ fun InsightCard(
     Card(
         modifier = modifier,
         shape = MaterialTheme.shapes.medium,
-        elevation = Dimens.cardElevation
+        elevation = Dimens.cardElevation()
     ) {
         Column(
             modifier = Modifier
@@ -350,14 +307,14 @@ fun InsightCard(
                 modifier = Modifier.size(Dimens.iconMedium),
                 tint = MaterialTheme.colorScheme.primary
             )
-            
+
             Spacer(modifier = Modifier.height(Dimens.spacingSm))
-            
+
             Text(
                 text = value,
                 style = MaterialTheme.typography.titleMedium
             )
-            
+
             Text(
                 text = label,
                 style = MaterialTheme.typography.bodySmall,

@@ -36,11 +36,11 @@ import java.time.LocalDate
 )
 data class FuelEntry(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val vehicleId: Long,
-    val date: LocalDate,
-    val odometer: Double,
-    val fuelVolume: Double,
-    val fuelCost: Double,
-    val isFullTank: Boolean = false,
-    val notes: String? = null
+    var vehicleId: Long,
+    var date: LocalDate,
+    var odometer: Double,
+    var fuelVolume: Double,
+    var fuelCost: Double,
+    var isFullTank: Boolean = false,
+    var notes: String? = null
 )

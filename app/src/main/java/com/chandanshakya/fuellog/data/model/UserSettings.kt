@@ -14,7 +14,7 @@ import androidx.room.PrimaryKey
 @Entity(tableName = "user_settings")
 data class UserSettings(
     @PrimaryKey val id: Long = 1,
-    val defaultCurrency: String = "USD",
-    val defaultDistanceUnit: DistanceUnit = DistanceUnit.KM,
-    val defaultVolumeUnit: VolumeUnit = VolumeUnit.LITERS
+    var defaultCurrency: String = "USD",
+    var defaultDistanceUnit: DistanceUnit = DistanceUnit.KM,
+    var defaultVolumeUnit: VolumeUnit = VolumeUnit.LITERS
 )

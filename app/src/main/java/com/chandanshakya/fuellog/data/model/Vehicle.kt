@@ -17,9 +17,9 @@ import java.time.LocalDate
 @Entity(tableName = "vehicles")
 data class Vehicle(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    val name: String,
-    val defaultCurrency: String = "USD",
-    val distanceUnit: DistanceUnit = DistanceUnit.KM,
-    val volumeUnit: VolumeUnit = VolumeUnit.LITERS,
-    val createdAt: LocalDate = LocalDate.now()
+    var name: String,
+    var defaultCurrency: String = "USD",
+    var distanceUnit: DistanceUnit = DistanceUnit.KM,
+    var volumeUnit: VolumeUnit = VolumeUnit.LITERS,
+    var createdAt: LocalDate = LocalDate.now()
 )

@@ -58,7 +58,7 @@ android {
     kotlinOptions {
         jvmTarget = "1.8"
         // Suppress Kotlin version compatibility check for Compose Compiler
-        freeCompilerArgs += ["-P", "plugin:androidx.compose.compiler.plugins.kotlin.suppressKotlinVersionCompatibilityCheck=true"]
+        freeCompilerArgs += listOf("-P", "plugin:androidx.compose.compiler.plugins.kotlin.suppressKotlinVersionCompatibilityCheck=true")
     }
 
     packaging {

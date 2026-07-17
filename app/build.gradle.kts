@@ -85,11 +85,9 @@ dependencies {
     // Room
     implementation("androidx.room:room-runtime:2.5.2")
     implementation("androidx.room:room-ktx:2.5.2")
-    kapt("androidx.room:room-compiler:2.5.2")
     
     // Hilt
     implementation("com.google.dagger:hilt-android:2.48.1")
-    kapt("com.google.dagger:hilt-compiler:2.48.1")
     
     // Kotlin Coroutines
     implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3")
@@ -107,4 +105,8 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
     androidTestImplementation("androidx.compose.ui:ui-test-junit4:1.5.3")
     debugImplementation("androidx.compose.ui:ui-test-manifest:1.5.3")
+    
+    // KAPT dependencies
+    kapt("androidx.room:room-compiler:2.5.2")
+    kapt("com.google.dagger:hilt-compiler:2.48.1")
 }

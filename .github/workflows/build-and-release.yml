@@ -29,9 +29,8 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.1.2'
+          gradle-version: '8.2'
 
-      # Build and test - use gradle command directly
       - name: Build with Gradle
         run: gradle assembleDebug assembleRelease --no-daemon --stacktrace
 
@@ -76,7 +75,7 @@ jobs:
       - name: Setup Gradle
         uses: gradle/actions/setup-gradle@v4
         with:
-          gradle-version: '8.1.2'
+          gradle-version: '8.2'
 
       - name: Build release APK
         run: gradle assembleRelease --no-daemon --stacktrace

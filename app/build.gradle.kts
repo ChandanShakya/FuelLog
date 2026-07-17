@@ -61,9 +61,7 @@ android {
         }
     }
 
-    kapt {
-        correctErrorTypes = true
-    }
+
 }
 
 dependencies {

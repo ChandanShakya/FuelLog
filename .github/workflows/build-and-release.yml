@@ -9,6 +9,9 @@ on:
 env:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.parallel=true"
 
+permissions:
+  contents: write
+
 jobs:
   build-and-test:
     name: Build and Test
@@ -17,8 +20,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -62,8 +63,6 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - name: Set up JDK 17
         uses: actions/setup-java@v4
@@ -85,11 +84,20 @@ jobs:
       - name: Get version info
         id: version
         run: |
-          VERSION_NAME=$(grep versionName app/build.gradle.kts | grep -o '"[0-9.]*"' | tr -d '"' | head -1)
-          VERSION_CODE=$(grep versionCode app/build.gradle.kts | grep -o '[0-9]\+' | head -1)
+          VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | grep -o '"[0-9.]*"' | tr -d '"' | head -1)
+          VERSION_CODE=$(grep 'versionCode' app/build.gradle.kts | grep -o '[0-9]\+' | head -1)
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
           echo "VERSION_CODE=$VERSION_CODE" >> $GITHUB_OUTPUT
-          echo "Release v$VERSION_NAME ($VERSION_CODE)"
+
+      - name: Find APK and AAB paths
+        id: paths
+        run: |
+          APK_PATH=$(find app/build/outputs -name "*.apk" -path "*/release/*" | head -1)
+          AAB_PATH=$(find app/build/outputs -name "*.aab" -path "*/release/*" | head -1)
+          echo "APK_PATH=$APK_PATH" >> $GITHUB_OUTPUT
+          echo "AAB_PATH=$AAB_PATH" >> $GITHUB_OUTPUT
+          echo "APK: $APK_PATH"
+          echo "AAB: $AAB_PATH"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
@@ -98,15 +106,9 @@ jobs:
           name: FuelLog v${{ steps.version.outputs.VERSION_NAME }}
           body: |
             ## FuelLog Android Fuel Tracker v${{ steps.version.outputs.VERSION_NAME }}
-
-            ### Changes
-            - See commit history for details
-
-            ### Downloads
-            - APK and AAB files attached below
           files: |
-            app/build/outputs/apk/release/app-release.apk
-            app/build/outputs/bundle/release/app-release.aab
+            ${{ steps.paths.outputs.APK_PATH }}
+            ${{ steps.paths.outputs.AAB_PATH }}
           fail_on_unmatched_files: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

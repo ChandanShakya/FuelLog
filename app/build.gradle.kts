@@ -85,11 +85,11 @@ dependencies {
     // Room
     implementation("androidx.room:room-runtime:2.5.2")
     implementation("androidx.room:room-ktx:2.5.2")
-    // kapt("androidx.room:room-compiler:2.5.2")
+    add("kapt", "androidx.room:room-compiler:2.5.2")
     
     // Hilt
     implementation("com.google.dagger:hilt-android:2.48.1")
-    // kapt("com.google.dagger:hilt-compiler:2.48.1")
+    add("kapt", "com.google.dagger:hilt-compiler:2.48.1")
     
     // Kotlinx Serialization
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")

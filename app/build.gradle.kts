@@ -1,7 +1,10 @@
+import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
     id("com.google.dagger.hilt.android")
+    id("kotlin-kapt")
     kotlin("plugin.serialization")
 }
 
@@ -57,10 +60,10 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
-}
 
-kapt {
-    correctErrorTypes = true
+    kapt {
+        correctErrorTypes = true
+    }
 }
 
 dependencies {

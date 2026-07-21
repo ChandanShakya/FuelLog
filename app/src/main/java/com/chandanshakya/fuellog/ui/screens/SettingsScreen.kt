@@ -13,16 +13,21 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.CurrencyExchange
 import androidx.compose.material.icons.outlined.Scale
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -41,6 +46,7 @@ import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.Validation
 import com.chandanshakya.fuellog.viewmodel.SettingsViewModel
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(
     onNavigateToVehicles: () -> Unit,
@@ -53,35 +59,44 @@ fun SettingsScreen(
     var volumeUnit by remember { mutableStateOf(VolumeUnit.LITERS) }
     var currencyError by remember { mutableStateOf<String?>(null) }
 
-    state.settings?.let { settings ->
-        currency = settings.defaultCurrency
-        distanceUnit = settings.defaultDistanceUnit
-        volumeUnit = settings.defaultVolumeUnit
+    androidx.compose.runtime.LaunchedEffect(state.settings) {
+        state.settings?.let { settings ->
+            currency = settings.defaultCurrency
+            distanceUnit = settings.defaultDistanceUnit
+            volumeUnit = settings.defaultVolumeUnit
+        }
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(Dimens.spacingMd)
-    ) {
-        Text(
-            text = "Settings",
-            style = MaterialTheme.typography.headlineMedium,
-            modifier = Modifier.padding(bottom = Dimens.spacingLg)
-        )
-
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else {
-            LazyColumn(
-                contentPadding = PaddingValues(bottom = Dimens.spacingXl),
-                verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
-            ) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Settings") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateToVehicles) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
+                }
+            )
+        }
+    ) { paddingValues ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(Dimens.spacingMd)
+        ) {
+            if (state.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else {
+                LazyColumn(
+                    contentPadding = PaddingValues(bottom = Dimens.spacingXl),
+                    verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
+                ) {
                 item {
                     SettingCard(
                         title = "Default Currency",
@@ -187,6 +202,7 @@ fun SettingsScreen(
                 }
             }
         }
+    }
     }
 }
 

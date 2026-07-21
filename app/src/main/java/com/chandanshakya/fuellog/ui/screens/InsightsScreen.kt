@@ -1,29 +1,26 @@
 package com.chandanshakya.fuellog.ui.screens
 
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.LocalGasStation
-import androidx.compose.material.icons.outlined.Monitor
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.TrendingFlat
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -35,18 +32,22 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.VolumeUnit
+import com.chandanshakya.fuellog.ui.chart.FuelPriceChart
 import com.chandanshakya.fuellog.ui.chart.MileageChart
 import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.CurrencyFormatter
 import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.viewmodel.InsightsViewModel
 import com.chandanshakya.fuellog.viewmodel.MileageTrend
+import com.chandanshakya.fuellog.viewmodel.PriceChartDataPoint
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun InsightsScreen(
     vehicleId: Long,
     onNavigateToLog: () -> Unit,
     onNavigateToVehicles: () -> Unit,
+    onNavigateToSettings: () -> Unit = {},
     viewModel: InsightsViewModel = hiltViewModel()
 ) {
     val state by viewModel.insightsState.collectAsStateWithLifecycle()
@@ -55,58 +56,92 @@ fun InsightsScreen(
         viewModel.setVehicleId(vehicleId)
     }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(Dimens.spacingMd)
-    ) {
-        val vehicle = state.vehicle
-        if (vehicle != null) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    imageVector = Icons.Outlined.Analytics,
-                    contentDescription = null,
-                    modifier = Modifier.size(Dimens.iconLarge),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-
-                Spacer(modifier = Modifier.size(Dimens.spacingMd))
-
-                Column {
-                    Text(
-                        text = "${vehicle.name} Insights",
-                        style = MaterialTheme.typography.titleLarge
-                    )
-                    Text(
-                        text = "Fuel efficiency analysis",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(state.vehicle?.let { "${it.name} Insights" } ?: "Insights") },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateToLog) {
+                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                    }
                 }
-            }
-
-            Spacer(modifier = Modifier.height(Dimens.spacingLg))
-        }
-
-        if (state.isLoading) {
-            Box(
-                modifier = Modifier.fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator()
-            }
-        } else if (state.entries.isEmpty()) {
-            EmptyState(
-                icon = Icons.Outlined.Analytics,
-                title = "No Data Available",
-                description = "Add fuel entries to see insights and trends"
             )
-        } else {
-            val dataPoints = viewModel.getMileageDataPoints()
-            if (dataPoints.isNotEmpty()) {
+        }
+    ) { paddingValues ->
+        val vehicle = state.vehicle
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues)
+                .padding(Dimens.spacingMd)
+        ) {
+            if (state.isLoading) {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            } else if (state.entries.isEmpty()) {
+                EmptyState(
+                    icon = Icons.Outlined.Analytics,
+                    title = "No Data Available",
+                    description = "Add fuel entries to see insights and trends"
+                )
+            } else {
+                val distanceUnit = vehicle?.distanceUnit ?: DistanceUnit.KM
+                val volumeUnit = vehicle?.volumeUnit ?: VolumeUnit.LITERS
+                val currency = vehicle?.defaultCurrency ?: "USD"
+
+                StatisticsGrid(
+                    averageMileage = state.averageMileageKmPerLiter,
+                    bestMileage = state.bestMileageKmPerLiter,
+                    worstMileage = state.worstMileageKmPerLiter,
+                    totalDistance = state.totalDistanceKm,
+                    totalFuel = state.totalFuelLiters,
+                    totalCost = state.totalCost,
+                    costPerKm = state.costPerKm,
+                    entriesCount = state.entriesCount,
+                    distanceUnit = distanceUnit,
+                    volumeUnit = volumeUnit,
+                    currency = currency,
+                    mileageDataPoints = state.mileageDataPoints,
+                    priceDataPoints = state.priceDataPoints,
+                    mileageTrend = state.mileageTrend,
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun StatisticsGrid(
+    averageMileage: Double?,
+    bestMileage: Double?,
+    worstMileage: Double?,
+    totalDistance: Double,
+    totalFuel: Double,
+    totalCost: Double,
+    costPerKm: Double?,
+    entriesCount: Int,
+    distanceUnit: DistanceUnit,
+    volumeUnit: VolumeUnit,
+    currency: String,
+    mileageDataPoints: List<com.chandanshakya.fuellog.viewmodel.ChartDataPoint>,
+    priceDataPoints: List<PriceChartDataPoint>,
+    mileageTrend: MileageTrend,
+    modifier: Modifier = Modifier
+) {
+    val efficiencyLabel = UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)
+
+    LazyColumn(
+        modifier = modifier,
+        contentPadding = PaddingValues(bottom = Dimens.spacingXl),
+        verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
+    ) {
+        if (mileageDataPoints.isNotEmpty()) {
+            item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.medium,
@@ -125,7 +160,7 @@ fun InsightsScreen(
                         Spacer(modifier = Modifier.height(Dimens.spacingMd))
 
                         MileageChart(
-                            dataPoints = dataPoints,
+                            dataPoints = mileageDataPoints,
                             modifier = Modifier.fillMaxWidth()
                         )
 
@@ -133,70 +168,32 @@ fun InsightsScreen(
 
                         Row(
                             modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.Center
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            when (state.mileageTrend) {
+                            when (mileageTrend) {
                                 MileageTrend.IMPROVING -> {
                                     Icon(Icons.Outlined.ArrowUpward, contentDescription = null, tint = Color.Green)
+                                    Spacer(modifier = Modifier.width(Dimens.spacingXs))
                                     Text("Improving", color = Color.Green, style = MaterialTheme.typography.bodySmall)
                                 }
                                 MileageTrend.DECLINING -> {
                                     Icon(Icons.Outlined.ArrowDownward, contentDescription = null, tint = Color.Red)
+                                    Spacer(modifier = Modifier.width(Dimens.spacingXs))
                                     Text("Declining", color = Color.Red, style = MaterialTheme.typography.bodySmall)
                                 }
                                 MileageTrend.STABLE -> {
-                                    Icon(Icons.Outlined.Monitor, contentDescription = null, tint = Color.Gray)
+                                    Icon(Icons.Outlined.TrendingFlat, contentDescription = null, tint = Color.Gray)
+                                    Spacer(modifier = Modifier.width(Dimens.spacingXs))
                                     Text("Stable", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }
                     }
                 }
-
-                Spacer(modifier = Modifier.height(Dimens.spacingLg))
             }
-
-            val distanceUnit = vehicle?.distanceUnit ?: DistanceUnit.KM
-            val volumeUnit = vehicle?.volumeUnit ?: VolumeUnit.LITERS
-            val currency = vehicle?.defaultCurrency ?: "USD"
-
-            StatisticsGrid(
-                averageMileage = state.averageMileageKmPerLiter,
-                bestMileage = state.bestMileageKmPerLiter,
-                worstMileage = state.worstMileageKmPerLiter,
-                totalDistance = state.totalDistanceKm,
-                totalFuel = state.totalFuelLiters,
-                totalCost = state.totalCost,
-                costPerKm = state.costPerKm,
-                entriesCount = state.entriesCount,
-                distanceUnit = distanceUnit,
-                volumeUnit = volumeUnit,
-                currency = currency
-            )
         }
-    }
-}
 
-@Composable
-fun StatisticsGrid(
-    averageMileage: Double?,
-    bestMileage: Double?,
-    worstMileage: Double?,
-    totalDistance: Double,
-    totalFuel: Double,
-    totalCost: Double,
-    costPerKm: Double?,
-    entriesCount: Int,
-    distanceUnit: DistanceUnit,
-    volumeUnit: VolumeUnit,
-    currency: String
-) {
-    val efficiencyLabel = UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)
-
-    LazyColumn(
-        contentPadding = PaddingValues(bottom = Dimens.spacingXl),
-        verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
-    ) {
         item {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -233,7 +230,7 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Total Entries",
                     value = entriesCount.toString(),
-                    icon = Icons.Outlined.Monitor,
+                    icon = Icons.Outlined.Analytics,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -268,7 +265,7 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Total Cost",
                     value = CurrencyFormatter.formatCurrency(totalCost, currency),
-                    icon = Icons.Outlined.Monitor,
+                    icon = Icons.Outlined.Payments,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -278,6 +275,35 @@ fun StatisticsGrid(
                     icon = Icons.Outlined.Speed,
                     modifier = Modifier.weight(1f)
                 )
+            }
+        }
+
+        if (priceDataPoints.isNotEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    elevation = Dimens.cardElevation()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(Dimens.spacingMd)
+                    ) {
+                        Text(
+                            text = "Fuel Price Trend (${UnitConverter.getVolumeUnitLabel(volumeUnit)})",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(Dimens.spacingMd))
+
+                        FuelPriceChart(
+                            dataPoints = priceDataPoints,
+                            currencyCode = currency,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
             }
         }
     }
@@ -298,7 +324,7 @@ fun InsightCard(
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(Dimens.spacingMd),
+                .padding(horizontal = Dimens.spacingSm, vertical = Dimens.spacingMd),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
@@ -310,15 +336,21 @@ fun InsightCard(
 
             Spacer(modifier = Modifier.height(Dimens.spacingSm))
 
-            Text(
+            androidx.compose.material3.Text(
                 text = value,
-                style = MaterialTheme.typography.titleMedium
+                style = MaterialTheme.typography.titleMedium.copy(
+                    fontSize = if (value.length > 8) MaterialTheme.typography.titleSmall.fontSize else MaterialTheme.typography.titleMedium.fontSize
+                ),
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
 
-            Text(
+            androidx.compose.material3.Text(
                 text = label,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
         }
     }

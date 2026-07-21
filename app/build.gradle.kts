@@ -12,13 +12,22 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.chandanshakya.fuellog"
+        applicationId = "com.aistudio.fuellog.gfkwdz"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+    }
+
+    signingConfigs {
+        create("debugConfig") {
+            storeFile = file("${rootDir}/debug.keystore")
+            storePassword = "android"
+            keyAlias = "androiddebugkey"
+            keyPassword = "android"
+        }
     }
 
     buildTypes {
@@ -33,6 +42,7 @@ android {
         debug {
             isMinifyEnabled = false
             isShrinkResources = false
+            signingConfig = signingConfigs.getByName("debugConfig")
         }
     }
 
@@ -62,8 +72,8 @@ dependencies {
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
     implementation("androidx.activity:activity-compose:1.9.3")
 
-    // Material Components (for XML themes)
-    implementation("com.google.android.material:material:1.12.0")
+    // Material Components (for XML themes) - commented out to minimize app size (using platform theme instead)
+    // implementation("com.google.android.material:material:1.12.0")
 
     // Compose BOM
     implementation(platform("androidx.compose:compose-bom:2024.12.01"))

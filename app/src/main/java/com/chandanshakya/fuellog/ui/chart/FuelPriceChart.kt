@@ -16,14 +16,16 @@ import androidx.compose.ui.text.drawText
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.dp
 import com.chandanshakya.fuellog.ui.theme.Dimens
-import com.chandanshakya.fuellog.viewmodel.ChartDataPoint
+import com.chandanshakya.fuellog.util.CurrencyFormatter
+import com.chandanshakya.fuellog.viewmodel.PriceChartDataPoint
 import java.time.format.DateTimeFormatter
 
 @Composable
-fun MileageChart(
-    dataPoints: List<ChartDataPoint>,
+fun FuelPriceChart(
+    dataPoints: List<PriceChartDataPoint>,
+    currencyCode: String,
     modifier: Modifier = Modifier,
-    lineColor: Color = Color(0xFF625B77)
+    lineColor: Color = MaterialTheme.colorScheme.secondary
 ) {
     if (dataPoints.isEmpty()) return
 
@@ -31,7 +33,7 @@ fun MileageChart(
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM") }
     
     val textStyleLabel = MaterialTheme.typography.labelSmall.copy(
-        color = MaterialTheme.colorScheme.primary
+        color = MaterialTheme.colorScheme.secondary
     )
     val textStyleBody = MaterialTheme.typography.bodySmall.copy(
         color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -66,12 +68,12 @@ fun MileageChart(
         val yPositions = if (dataPoints.size == 1) {
             listOf(topMargin + usableHeight / 2f)
         } else {
-            val mileages = dataPoints.map { it.mileage }
-            val minMileage = mileages.minOrNull() ?: 0.0
-            val maxMileage = mileages.maxOrNull() ?: 1.0
-            val mileageRange = maxMileage - minMileage
+            val prices = dataPoints.map { it.pricePerUnit }
+            val minPrice = prices.minOrNull() ?: 0.0
+            val maxPrice = prices.maxOrNull() ?: 1.0
+            val priceRange = maxPrice - minPrice
             dataPoints.map { point ->
-                val normalized = if (mileageRange > 0) (point.mileage - minMileage) / mileageRange else 0.5
+                val normalized = if (priceRange > 0) (point.pricePerUnit - minPrice) / priceRange else 0.5
                 topMargin + usableHeight - (normalized * usableHeight).toFloat()
             }
         }
@@ -111,6 +113,7 @@ fun MileageChart(
         }
 
         // 3. Draw circles, value labels, and date labels
+        val symbol = CurrencyFormatter.getCurrencySymbol(currencyCode)
         for (i in xPositions.indices) {
             val point = dataPoints[i]
             val x = xPositions[i]
@@ -130,17 +133,17 @@ fun MileageChart(
                 center = Offset(x, y)
             )
 
-            // Draw mileage value above circle
-            val mileageText = "%.1f".format(point.mileage)
-            val mileageLayoutResult = textMeasurer.measure(
-                text = mileageText,
+            // Draw price value above circle
+            val priceText = "$symbol%.2f".format(point.pricePerUnit)
+            val priceLayoutResult = textMeasurer.measure(
+                text = priceText,
                 style = textStyleLabel
             )
             drawText(
-                textLayoutResult = mileageLayoutResult,
+                textLayoutResult = priceLayoutResult,
                 topLeft = Offset(
-                    x = x - mileageLayoutResult.size.width / 2f,
-                    y = y - mileageLayoutResult.size.height - 4.dp.toPx()
+                    x = x - priceLayoutResult.size.width / 2f,
+                    y = y - priceLayoutResult.size.height - 4.dp.toPx()
                 )
             )
 

@@ -1,5 +1,7 @@
 package com.chandanshakya.fuellog.ui.navigation
 
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -19,7 +21,11 @@ fun AppNavHost(
 ) {
     NavHost(
         navController = navController,
-        startDestination = NavRoutes.VEHICLES
+        startDestination = NavRoutes.VEHICLES,
+        enterTransition = { EnterTransition.None },
+        exitTransition = { ExitTransition.None },
+        popEnterTransition = { EnterTransition.None },
+        popExitTransition = { ExitTransition.None }
     ) {
         composable(NavRoutes.VEHICLES) {
             VehiclesScreen(
@@ -34,6 +40,11 @@ fun AppNavHost(
                         }
                         launchSingleTop = true
                         restoreState = true
+                    }
+                },
+                onNavigateToSettings = {
+                    navController.navigate(NavRoutes.SETTINGS) {
+                        launchSingleTop = true
                     }
                 }
             )
@@ -56,24 +67,22 @@ fun AppNavHost(
                             "{vehicleId}",
                             vehicleId.toString()
                         )
-                    ) {
-                        popUpTo(NavRoutes.FUEL_LOG_WITH_ARG.replace(
-                            "{vehicleId}",
-                            vehicleId.toString()
-                        )) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+                    )
                 },
                 onNavigateToVehicles = {
-                    navController.navigate(NavRoutes.VEHICLES) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
+                    if (!navController.popBackStack()) {
+                        navController.navigate(NavRoutes.VEHICLES) {
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
                         }
+                    }
+                },
+                onNavigateToSettings = {
+                    navController.navigate(NavRoutes.SETTINGS) {
                         launchSingleTop = true
-                        restoreState = true
                     }
                 }
             )
@@ -91,21 +100,7 @@ fun AppNavHost(
             InsightsScreen(
                 vehicleId = vehicleId,
                 onNavigateToLog = {
-                    navController.navigate(
-                        NavRoutes.FUEL_LOG_WITH_ARG.replace(
-                            "{vehicleId}",
-                            vehicleId.toString()
-                        )
-                    ) {
-                        popUpTo(NavRoutes.INSIGHTS_WITH_ARG.replace(
-                            "{vehicleId}",
-                            vehicleId.toString()
-                        )) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+                    navController.popBackStack()
                 },
                 onNavigateToVehicles = {
                     navController.navigate(NavRoutes.VEHICLES) {
@@ -115,6 +110,11 @@ fun AppNavHost(
                         launchSingleTop = true
                         restoreState = true
                     }
+                },
+                onNavigateToSettings = {
+                    navController.navigate(NavRoutes.SETTINGS) {
+                        launchSingleTop = true
+                    }
                 }
             )
         }
@@ -122,13 +122,7 @@ fun AppNavHost(
         composable(NavRoutes.SETTINGS) {
             SettingsScreen(
                 onNavigateToVehicles = {
-                    navController.navigate(NavRoutes.VEHICLES) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+                    navController.popBackStack()
                 }
             )
         }

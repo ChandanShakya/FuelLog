@@ -19,13 +19,17 @@ import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
 
+import androidx.lifecycle.SavedStateHandle
+import com.chandanshakya.fuellog.ui.navigation.NavArgs
+
 @HiltViewModel
 class FuelLogViewModel @Inject constructor(
     private val fuelRepository: FuelRepository,
-    private val vehicleRepository: VehicleRepository
+    private val vehicleRepository: VehicleRepository,
+    savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val currentVehicleId = MutableStateFlow(-1L)
+    private val currentVehicleId = MutableStateFlow(savedStateHandle.get<Long>(NavArgs.VEHICLE_ID) ?: -1L)
     private var currentVehicle: Vehicle? = null
 
     val fuelLogState: StateFlow<FuelLogState> = currentVehicleId.flatMapLatest { vehicleId ->
@@ -42,7 +46,7 @@ class FuelLogViewModel @Inject constructor(
                     MileageCalculator.calculateMileage(entry, previous, vehicle.distanceUnit, vehicle.volumeUnit)
                 } else null
                 EntryWithMileage(entry = entry, mileage = mileage)
-            }
+            }.reversed()
 
             FuelLogState(
                 vehicle = vehicle,

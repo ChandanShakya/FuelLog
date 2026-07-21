@@ -25,6 +25,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.chandanshakya.fuellog.data.model.DistanceUnit
+import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.ui.screens.getVehicleIcon
 import com.chandanshakya.fuellog.ui.theme.Dimens
@@ -34,23 +35,24 @@ private val VEHICLE_TYPES = listOf("car", "bus", "bike", "scooter", "truck")
 
 @Composable
 fun AddVehicleDialog(
+    vehicle: Vehicle? = null,
     defaultCurrency: String,
     defaultDistanceUnit: DistanceUnit,
     defaultVolumeUnit: VolumeUnit,
     onDismiss: () -> Unit,
     onSave: (name: String, vehicleType: String, currency: String, distanceUnit: DistanceUnit, volumeUnit: VolumeUnit) -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var vehicleType by remember { mutableStateOf("car") }
-    var currency by remember { mutableStateOf(defaultCurrency) }
-    var distanceUnit by remember { mutableStateOf(defaultDistanceUnit) }
-    var volumeUnit by remember { mutableStateOf(defaultVolumeUnit) }
+    var name by remember { mutableStateOf(vehicle?.name ?: "") }
+    var vehicleType by remember { mutableStateOf(vehicle?.vehicleType ?: "car") }
+    var currency by remember { mutableStateOf(vehicle?.defaultCurrency ?: defaultCurrency) }
+    var distanceUnit by remember { mutableStateOf(vehicle?.distanceUnit ?: defaultDistanceUnit) }
+    var volumeUnit by remember { mutableStateOf(vehicle?.volumeUnit ?: defaultVolumeUnit) }
     var nameError by remember { mutableStateOf<String?>(null) }
     var currencyError by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Vehicle", style = MaterialTheme.typography.titleLarge) },
+        title = { Text(if (vehicle != null) "Edit Vehicle" else "Add Vehicle", style = MaterialTheme.typography.titleLarge) },
         text = {
             Column(modifier = Modifier.padding(vertical = Dimens.spacingSm)) {
                 AppTextField(

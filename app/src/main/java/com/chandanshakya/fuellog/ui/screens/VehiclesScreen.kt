@@ -22,17 +22,22 @@ import androidx.compose.material.icons.outlined.DirectionsBus
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.LocalShipping
+import androidx.compose.material.icons.outlined.Moped
 import androidx.compose.material.icons.outlined.MoreVert
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.TwoWheeler
 import androidx.compose.material3.Card
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,68 +59,80 @@ import com.chandanshakya.fuellog.viewmodel.VehiclesViewModel
 fun getVehicleIcon(type: String): ImageVector = when (type) {
     "bus" -> Icons.Outlined.DirectionsBus
     "bike" -> Icons.Outlined.DirectionsBike
-    "scooter" -> Icons.Outlined.TwoWheeler
+    "scooter" -> Icons.Outlined.Moped
     "truck" -> Icons.Outlined.LocalShipping
     else -> Icons.Outlined.DirectionsCar
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VehiclesScreen(
     onVehicleSelected: (Long) -> Unit,
+    onNavigateToSettings: () -> Unit = {},
     onAddVehicle: () -> Unit = {},
     viewModel: VehiclesViewModel = hiltViewModel()
 ) {
     val state by viewModel.vehiclesState.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
+    var vehicleToEdit by remember { mutableStateOf<Vehicle?>(null) }
 
-    Box(modifier = Modifier.fillMaxSize()) {
-        Column(
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Vehicles") },
+                actions = {
+                    IconButton(onClick = onNavigateToSettings) {
+                        Icon(imageVector = Icons.Outlined.Settings, contentDescription = "Settings")
+                    }
+                }
+            )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary,
+                contentColor = MaterialTheme.colorScheme.onPrimary
+            ) {
+                Icon(Icons.Outlined.Add, contentDescription = "Add Vehicle")
+            }
+        }
+    ) { paddingValues ->
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(Dimens.spacingMd)
+                .padding(paddingValues)
         ) {
-            Text(
-                text = "Vehicles",
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.padding(bottom = Dimens.spacingLg)
-            )
-
-            if (state.isLoading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
-                }
-            } else if (state.vehicles.isEmpty()) {
-                EmptyState(
-                    icon = Icons.Outlined.DirectionsCar,
-                    title = "No Vehicles",
-                    description = "Tap + to add your first vehicle"
-                )
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(bottom = 80.dp),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
-                ) {
-                    items(items = state.vehicles, key = { it.id }) { vehicle ->
-                        VehicleCard(
-                            vehicle = vehicle,
-                            onClick = { onVehicleSelected(vehicle.id) },
-                            onEdit = { },
-                            onDelete = { viewModel.deleteVehicle(vehicle.id) }
-                        )
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(Dimens.spacingMd)
+            ) {
+                if (state.isLoading) {
+                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                        CircularProgressIndicator()
+                    }
+                } else if (state.vehicles.isEmpty()) {
+                    EmptyState(
+                        icon = Icons.Outlined.DirectionsCar,
+                        title = "No Vehicles",
+                        description = "Tap + to add your first vehicle"
+                    )
+                } else {
+                    LazyColumn(
+                        contentPadding = PaddingValues(bottom = 80.dp),
+                        verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
+                    ) {
+                        items(items = state.vehicles, key = { it.id }) { vehicle ->
+                            VehicleCard(
+                                vehicle = vehicle,
+                                onClick = { onVehicleSelected(vehicle.id) },
+                                onEdit = { vehicleToEdit = vehicle },
+                                onDelete = { viewModel.deleteVehicle(vehicle.id) }
+                            )
+                        }
                     }
                 }
             }
-        }
-
-        FloatingActionButton(
-            onClick = { showAddDialog = true },
-            modifier = Modifier
-                .align(Alignment.BottomEnd)
-                .padding(Dimens.spacingMd),
-            containerColor = MaterialTheme.colorScheme.primary,
-            contentColor = MaterialTheme.colorScheme.onPrimary
-        ) {
-            Icon(Icons.Outlined.Add, contentDescription = "Add Vehicle")
         }
     }
 
@@ -128,6 +145,28 @@ fun VehiclesScreen(
             onSave = { name, vehicleType, currency, distanceUnit, volumeUnit ->
                 viewModel.addVehicle(name, vehicleType, currency, distanceUnit, volumeUnit)
                 showAddDialog = false
+            }
+        )
+    }
+
+    if (vehicleToEdit != null) {
+        AddVehicleDialog(
+            vehicle = vehicleToEdit,
+            defaultCurrency = state.defaultCurrency,
+            defaultDistanceUnit = state.defaultDistanceUnit,
+            defaultVolumeUnit = state.defaultVolumeUnit,
+            onDismiss = { vehicleToEdit = null },
+            onSave = { name, vehicleType, currency, distanceUnit, volumeUnit ->
+                vehicleToEdit?.let { existing ->
+                    viewModel.updateVehicle(existing.copy(
+                        name = name,
+                        vehicleType = vehicleType,
+                        defaultCurrency = currency,
+                        distanceUnit = distanceUnit,
+                        volumeUnit = volumeUnit
+                    ))
+                }
+                vehicleToEdit = null
             }
         )
     }

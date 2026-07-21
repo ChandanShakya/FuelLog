@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import com.chandanshakya.fuellog.data.model.DistanceUnit
+import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.Validation
@@ -25,17 +26,18 @@ import java.time.LocalDate
 @Composable
 fun AddFuelEntryDialog(
     vehicleId: Long,
+    entry: FuelEntry? = null,
     distanceUnit: DistanceUnit,
     volumeUnit: VolumeUnit,
     currency: String,
     onDismiss: () -> Unit,
     onSave: (LocalDate, Double, Double, Double, String?) -> Unit
 ) {
-    var date by remember { mutableStateOf(LocalDate.now()) }
-    var odometer by remember { mutableStateOf("") }
-    var fuelVolume by remember { mutableStateOf("") }
-    var totalCost by remember { mutableStateOf("") }
-    var notes by remember { mutableStateOf("") }
+    var date by remember { mutableStateOf(entry?.date ?: LocalDate.now()) }
+    var odometer by remember { mutableStateOf(entry?.odometer?.toString() ?: "") }
+    var fuelVolume by remember { mutableStateOf(entry?.fuelVolume?.toString() ?: "") }
+    var totalCost by remember { mutableStateOf(entry?.fuelCost?.toString() ?: "") }
+    var notes by remember { mutableStateOf(entry?.notes ?: "") }
 
     var odometerError by remember { mutableStateOf<String?>(null) }
     var fuelVolumeError by remember { mutableStateOf<String?>(null) }
@@ -43,7 +45,7 @@ fun AddFuelEntryDialog(
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Add Fuel Entry", style = MaterialTheme.typography.titleLarge) },
+        title = { Text(if (entry != null) "Edit Fuel Entry" else "Add Fuel Entry", style = MaterialTheme.typography.titleLarge) },
         text = {
             Column(modifier = Modifier.padding(vertical = Dimens.spacingSm)) {
                 Text(text = "Date: ${date}", style = MaterialTheme.typography.bodyMedium)

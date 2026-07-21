@@ -5,6 +5,7 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.time.LocalDate
+import java.time.LocalTime
 
 /**
  * Represents a single fuel fill-up entry for a vehicle.
@@ -17,6 +18,7 @@ import java.time.LocalDate
  * @param fuelCost Total cost of the fuel
  * @param isFullTank Whether this was a full tank fill-up
  * @param notes Optional notes about this entry
+ * @param time Time of the fill-up
  */
 @Entity(
     tableName = "fuel_entries",
@@ -42,5 +44,6 @@ data class FuelEntry(
     var fuelVolume: Double,
     var fuelCost: Double,
     var isFullTank: Boolean = false,
-    var notes: String? = null
+    var notes: String? = null,
+    var time: LocalTime = LocalTime.now()
 )

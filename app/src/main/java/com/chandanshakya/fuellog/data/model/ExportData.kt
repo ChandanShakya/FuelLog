@@ -44,7 +44,8 @@ data class ExportFuelEntry(
     val fuelVolume: Double,
     val fuelCost: Double,
     val isFullTank: Boolean,
-    val notes: String?
+    val notes: String?,
+    val time: String? = null
 )
 
 /**
@@ -77,7 +78,8 @@ fun FuelEntry.toExport(): ExportFuelEntry = ExportFuelEntry(
     fuelVolume = fuelVolume,
     fuelCost = fuelCost,
     isFullTank = isFullTank,
-    notes = notes
+    notes = notes,
+    time = time.toString()
 )
 
 fun UserSettings.toExport(): ExportUserSettings = ExportUserSettings(
@@ -103,7 +105,8 @@ fun ExportFuelEntry.toFuelEntry(): FuelEntry = FuelEntry(
     fuelVolume = fuelVolume,
     fuelCost = fuelCost,
     isFullTank = isFullTank,
-    notes = notes
+    notes = notes,
+    time = time?.let { java.time.LocalTime.parse(it) } ?: java.time.LocalTime.now()
 )
 
 fun ExportUserSettings.toUserSettings(): UserSettings = UserSettings(

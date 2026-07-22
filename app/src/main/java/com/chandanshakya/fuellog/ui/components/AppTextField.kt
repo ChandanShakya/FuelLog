@@ -33,6 +33,7 @@ fun AppTextField(
     onValueChange: (String) -> Unit,
     label: String,
     modifier: Modifier = Modifier,
+    enabled: Boolean = true,
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     error: String? = null,
@@ -45,6 +46,7 @@ fun AppTextField(
         modifier = modifier
             .fillMaxWidth()
             .padding(vertical = 4.dp),
+        enabled = enabled,
         keyboardOptions = keyboardOptions,
         visualTransformation = visualTransformation,
         isError = error != null,

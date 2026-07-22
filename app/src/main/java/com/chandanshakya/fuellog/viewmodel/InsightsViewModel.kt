@@ -16,10 +16,12 @@ import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import javax.inject.Inject
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 import androidx.lifecycle.SavedStateHandle
 import com.chandanshakya.fuellog.ui.navigation.NavArgs
 
+@OptIn(ExperimentalCoroutinesApi::class)
 @HiltViewModel
 class InsightsViewModel @Inject constructor(
     private val fuelEntryDao: FuelEntryDao,

@@ -10,7 +10,7 @@ import androidx.compose.material.icons.outlined.ArrowUpward
 import androidx.compose.material.icons.outlined.LocalGasStation
 import androidx.compose.material.icons.outlined.Payments
 import androidx.compose.material.icons.outlined.Speed
-import androidx.compose.material.icons.outlined.TrendingFlat
+import androidx.compose.material.icons.automirrored.outlined.TrendingFlat
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -169,7 +169,7 @@ fun StatisticsGrid(
                                     Text("Declining", color = Color.Red, style = MaterialTheme.typography.bodySmall)
                                 }
                                 MileageTrend.STABLE -> {
-                                    Icon(Icons.Outlined.TrendingFlat, contentDescription = null, tint = Color.Gray)
+                                    Icon(Icons.AutoMirrored.Outlined.TrendingFlat, contentDescription = null, tint = Color.Gray)
                                     Spacer(modifier = Modifier.width(Dimens.spacingXs))
                                     Text("Stable", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                                 }

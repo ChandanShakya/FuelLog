@@ -98,10 +98,15 @@ fun AddFuelEntryDialog(
                         rate = newValue
                         val vol = fuelVolume.toDoubleOrNull()
                         val r = newValue.toDoubleOrNull()
-                        if (vol != null && vol > 0 && r != null && r > 0) {
-                            val cost = "%.2f".format(vol * r)
-                            totalCost = cost
-                            totalCostError = Validation.getFuelCostError(cost.toDoubleOrNull() ?: 0.0)
+                        val cost = totalCost.toDoubleOrNull()
+                        if (r != null && r > 0) {
+                            if (vol != null && vol > 0 && (cost == null || cost <= 0)) {
+                                val calculatedCost = "%.2f".format(vol * r)
+                                totalCost = calculatedCost
+                                totalCostError = Validation.getFuelCostError(calculatedCost.toDoubleOrNull() ?: 0.0)
+                            } else if (cost != null && cost > 0 && (vol == null || vol <= 0)) {
+                                fuelVolume = "%.2f".format(cost / r)
+                            }
                         }
                     },
                     label = "Rate ($currency/$volumeLabel)",
@@ -116,9 +121,14 @@ fun AddFuelEntryDialog(
                         totalCost = newValue
                         totalCostError = Validation.getFuelCostError(newValue.toDoubleOrNull() ?: 0.0)
                         val vol = fuelVolume.toDoubleOrNull()
+                        val r = rate.toDoubleOrNull()
                         val cost = newValue.toDoubleOrNull()
-                        if (vol != null && vol > 0 && cost != null && cost > 0) {
-                            rate = "%.2f".format(cost / vol)
+                        if (cost != null && cost > 0) {
+                            if (vol != null && vol > 0 && (r == null || r <= 0)) {
+                                rate = "%.2f".format(cost / vol)
+                            } else if (r != null && r > 0 && (vol == null || vol <= 0)) {
+                                fuelVolume = "%.2f".format(cost / r)
+                            }
                         }
                     },
                     label = "Total Cost ($currency)",

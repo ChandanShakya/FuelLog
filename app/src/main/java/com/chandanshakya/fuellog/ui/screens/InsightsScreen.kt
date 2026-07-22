@@ -222,7 +222,7 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Total Distance",
                     value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance),
-                    icon = painterResource(R.drawable.ic_local_gas_station),
+                    icon = painterResource(R.drawable.ic_road),
                     modifier = Modifier.weight(1f)
                 )
 

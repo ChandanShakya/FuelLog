@@ -98,15 +98,10 @@ fun AddFuelEntryDialog(
                         rate = newValue
                         val vol = fuelVolume.toDoubleOrNull()
                         val r = newValue.toDoubleOrNull()
-                        val cost = totalCost.toDoubleOrNull()
-                        if (r != null && r > 0) {
-                            if (vol != null && vol > 0 && (cost == null || cost <= 0)) {
-                                val calculatedCost = "%.2f".format(vol * r)
-                                totalCost = calculatedCost
-                                totalCostError = Validation.getFuelCostError(calculatedCost.toDoubleOrNull() ?: 0.0)
-                            } else if (cost != null && cost > 0 && (vol == null || vol <= 0)) {
-                                fuelVolume = "%.2f".format(cost / r)
-                            }
+                        if (r != null && r > 0 && vol != null && vol > 0) {
+                            val calculatedCost = "%.2f".format(vol * r)
+                            totalCost = calculatedCost
+                            totalCostError = Validation.getFuelCostError(calculatedCost.toDoubleOrNull() ?: 0.0)
                         }
                     },
                     label = "Rate ($currency/$volumeLabel)",

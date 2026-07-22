@@ -15,7 +15,7 @@ import com.chandanshakya.fuellog.ui.theme.Dimens
 
 /**
  * Custom button component to avoid naming conflicts with Material 3 components.
- * 
+ *
  * @param text Button text
  * @param onClick Click callback
  * @param modifier Modifier for the component
@@ -34,7 +34,7 @@ fun AppButton(
 ) {
     Button(
         onClick = onClick,
-        modifier = modifier.height(Dimens.buttonHeight),
+        modifier = modifier.height(48.dp),
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
             containerColor = containerColor,
@@ -80,7 +80,7 @@ fun AppButtonOutlined(
 ) {
     OutlinedButton(
         onClick = onClick,
-        modifier = modifier.height(Dimens.buttonHeight),
+        modifier = modifier.height(48.dp),
         enabled = enabled,
         colors = ButtonDefaults.outlinedButtonColors(
             contentColor = MaterialTheme.colorScheme.primary,

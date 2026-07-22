@@ -4,12 +4,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
-import androidx.compose.material.icons.outlined.AttachMoney
-import androidx.compose.material.icons.outlined.Insights
-import androidx.compose.material.icons.outlined.Timer
-import androidx.compose.material.icons.outlined.WaterDrop
+import androidx.compose.material.icons.outlined.LocalGasStation
+import androidx.compose.material.icons.outlined.Payments
+import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.TrendingFlat
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -69,7 +70,7 @@ fun InsightsScreen(
         ) {
             if (state.entries.isEmpty()) {
                 EmptyState(
-                    icon = Icons.Outlined.Insights,
+                    icon = Icons.Outlined.Analytics,
                     title = "No Data Available",
                     description = "Add fuel entries to see insights and trends"
                 )
@@ -168,7 +169,7 @@ fun StatisticsGrid(
                                     Text("Declining", color = Color.Red, style = MaterialTheme.typography.bodySmall)
                                 }
                                 MileageTrend.STABLE -> {
-                                    Icon(Icons.Outlined.Remove, contentDescription = null, tint = Color.Gray)
+                                    Icon(Icons.Outlined.TrendingFlat, contentDescription = null, tint = Color.Gray)
                                     Spacer(modifier = Modifier.width(Dimens.spacingXs))
                                     Text("Stable", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                                 }
@@ -187,7 +188,7 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Average Mileage",
                     value = averageMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
-                    icon = Icons.Outlined.Timer,
+                    icon = Icons.Outlined.Speed,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -215,7 +216,7 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Total Entries",
                     value = entriesCount.toString(),
-                    icon = Icons.Outlined.Insights,
+                    icon = Icons.Outlined.Analytics,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -229,14 +230,14 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Total Distance",
                     value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance),
-                    icon = Icons.Outlined.WaterDrop,
+                    icon = Icons.Outlined.LocalGasStation,
                     modifier = Modifier.weight(1f)
                 )
 
                 InsightCard(
                     label = "Total Fuel",
                     value = "%.1f ${UnitConverter.getVolumeUnitLabel(volumeUnit)}".format(totalFuel),
-                    icon = Icons.Outlined.WaterDrop,
+                    icon = Icons.Outlined.LocalGasStation,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -250,14 +251,14 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Total Cost",
                     value = CurrencyFormatter.formatCurrency(totalCost, currency),
-                    icon = Icons.Outlined.AttachMoney,
+                    icon = Icons.Outlined.Payments,
                     modifier = Modifier.weight(1f)
                 )
 
                 InsightCard(
                     label = "Cost per km",
                     value = costPerKm?.let { CurrencyFormatter.formatCurrency(it, currency) } ?: "N/A",
-                    icon = Icons.Outlined.Timer,
+                    icon = Icons.Outlined.Speed,
                     modifier = Modifier.weight(1f)
                 )
             }

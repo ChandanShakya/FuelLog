@@ -13,7 +13,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.AttachMoney
+import androidx.compose.material.icons.outlined.CurrencyExchange
+import androidx.compose.material.icons.outlined.Scale
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -90,7 +91,7 @@ fun SettingsScreen(
                 item {
                     SettingCard(
                         title = "Default Currency",
-                        icon = Icons.Outlined.AttachMoney,
+                        icon = Icons.Outlined.CurrencyExchange,
                         description = "Currency used for new vehicles"
                     ) {
                         AppTextField(
@@ -109,7 +110,7 @@ fun SettingsScreen(
                 item {
                     SettingCard(
                         title = "Default Distance Unit",
-                        icon = Icons.Outlined.Straighten,
+                        icon = Icons.Outlined.Scale,
                         description = "Distance unit used for new vehicles"
                     ) {
                         Column {
@@ -142,7 +143,7 @@ fun SettingsScreen(
                 item {
                     SettingCard(
                         title = "Default Volume Unit",
-                        icon = Icons.Outlined.Straighten,
+                        icon = Icons.Outlined.Scale,
                         description = "Volume unit used for new vehicles"
                     ) {
                         Column {

@@ -1,19 +1,23 @@
 package com.chandanshakya.fuellog.ui.components
 
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import com.chandanshakya.fuellog.data.model.DistanceUnit
@@ -23,6 +27,12 @@ import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.util.Validation
 import java.time.LocalDate
+
+enum class FuelInputMode {
+    VOLUME_RATE,
+    VOLUME_COST,
+    RATE_COST
+}
 
 @Composable
 fun AddFuelEntryDialog(
@@ -45,6 +55,15 @@ fun AddFuelEntryDialog(
     }
     var totalCost by remember { mutableStateOf(entry?.fuelCost?.toString() ?: "") }
     var notes by remember { mutableStateOf(entry?.notes ?: "") }
+
+    var inputMode by remember {
+        mutableStateOf(
+            when {
+                entry != null && entry.fuelVolume > 0 && entry.fuelCost > 0 -> FuelInputMode.VOLUME_RATE
+                else -> FuelInputMode.VOLUME_RATE
+            }
+        )
+    }
 
     var odometerError by remember { mutableStateOf<String?>(null) }
     var fuelVolumeError by remember { mutableStateOf<String?>(null) }
@@ -71,65 +90,154 @@ fun AddFuelEntryDialog(
                 )
 
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
+                Text("How do you want to enter fuel cost?", style = MaterialTheme.typography.bodyMedium)
+                Spacer(modifier = Modifier.height(Dimens.spacingSm))
 
-                AppTextField(
-                    value = fuelVolume,
-                    onValueChange = { newValue ->
-                        fuelVolume = newValue
-                        fuelVolumeError = Validation.getFuelVolumeError(newValue.toDoubleOrNull() ?: 0.0)
-                        val vol = newValue.toDoubleOrNull()
-                        val r = rate.toDoubleOrNull()
-                        if (vol != null && vol > 0 && r != null && r > 0) {
-                            val cost = "%.2f".format(vol * r)
-                            totalCost = cost
-                            totalCostError = Validation.getFuelCostError(cost.toDoubleOrNull() ?: 0.0)
-                        }
-                    },
-                    label = "Fuel Volume ($volumeLabel)",
-                    error = fuelVolumeError,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
-
-                Spacer(modifier = Modifier.height(Dimens.spacingMd))
-
-                AppTextField(
-                    value = rate,
-                    onValueChange = { newValue ->
-                        rate = newValue
-                        val vol = fuelVolume.toDoubleOrNull()
-                        val r = newValue.toDoubleOrNull()
-                        if (r != null && r > 0 && vol != null && vol > 0) {
-                            val calculatedCost = "%.2f".format(vol * r)
-                            totalCost = calculatedCost
-                            totalCostError = Validation.getFuelCostError(calculatedCost.toDoubleOrNull() ?: 0.0)
-                        }
-                    },
-                    label = "Rate ($currency/$volumeLabel)",
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = inputMode == FuelInputMode.VOLUME_RATE,
+                        onClick = { inputMode = FuelInputMode.VOLUME_RATE }
+                    )
+                    Text("Volume + Rate")
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = inputMode == FuelInputMode.VOLUME_COST,
+                        onClick = { inputMode = FuelInputMode.VOLUME_COST }
+                    )
+                    Text("Volume + Cost")
+                }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    RadioButton(
+                        selected = inputMode == FuelInputMode.RATE_COST,
+                        onClick = { inputMode = FuelInputMode.RATE_COST }
+                    )
+                    Text("Rate + Cost")
+                }
 
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
 
-                AppTextField(
-                    value = totalCost,
-                    onValueChange = { newValue ->
-                        totalCost = newValue
-                        totalCostError = Validation.getFuelCostError(newValue.toDoubleOrNull() ?: 0.0)
-                        val vol = fuelVolume.toDoubleOrNull()
-                        val r = rate.toDoubleOrNull()
-                        val cost = newValue.toDoubleOrNull()
-                        if (cost != null && cost > 0) {
-                            if (vol != null && vol > 0 && (r == null || r <= 0)) {
-                                rate = "%.2f".format(cost / vol)
-                            } else if (r != null && r > 0 && (vol == null || vol <= 0)) {
-                                fuelVolume = "%.2f".format(cost / r)
-                            }
-                        }
-                    },
-                    label = "Total Cost ($currency)",
-                    error = totalCostError,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
-                )
+                when (inputMode) {
+                    FuelInputMode.VOLUME_RATE -> {
+                        AppTextField(
+                            value = fuelVolume,
+                            onValueChange = { newValue ->
+                                fuelVolume = newValue
+                                fuelVolumeError = Validation.getFuelVolumeError(newValue.toDoubleOrNull() ?: 0.0)
+                                val vol = newValue.toDoubleOrNull()
+                                val r = rate.toDoubleOrNull()
+                                if (vol != null && vol > 0 && r != null && r > 0) {
+                                    totalCost = "%.2f".format(vol * r)
+                                }
+                            },
+                            label = "Fuel Volume ($volumeLabel)",
+                            error = fuelVolumeError,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.spacingMd))
+                        AppTextField(
+                            value = rate,
+                            onValueChange = { newValue ->
+                                rate = newValue
+                                val vol = fuelVolume.toDoubleOrNull()
+                                val r = newValue.toDoubleOrNull()
+                                if (vol != null && vol > 0 && r != null && r > 0) {
+                                    totalCost = "%.2f".format(vol * r)
+                                }
+                            },
+                            label = "Rate ($currency/$volumeLabel)",
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.spacingMd))
+                        AppTextField(
+                            value = totalCost,
+                            onValueChange = {},
+                            label = "Total Cost ($currency) (calculated)",
+                            enabled = false,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                    }
+                    FuelInputMode.VOLUME_COST -> {
+                        AppTextField(
+                            value = fuelVolume,
+                            onValueChange = { newValue ->
+                                fuelVolume = newValue
+                                fuelVolumeError = Validation.getFuelVolumeError(newValue.toDoubleOrNull() ?: 0.0)
+                                val vol = newValue.toDoubleOrNull()
+                                val cost = totalCost.toDoubleOrNull()
+                                if (vol != null && vol > 0 && cost != null && cost > 0) {
+                                    rate = "%.2f".format(cost / vol)
+                                }
+                            },
+                            label = "Fuel Volume ($volumeLabel)",
+                            error = fuelVolumeError,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.spacingMd))
+                        AppTextField(
+                            value = totalCost,
+                            onValueChange = { newValue ->
+                                totalCost = newValue
+                                totalCostError = Validation.getFuelCostError(newValue.toDoubleOrNull() ?: 0.0)
+                                val vol = fuelVolume.toDoubleOrNull()
+                                val cost = newValue.toDoubleOrNull()
+                                if (vol != null && vol > 0 && cost != null && cost > 0) {
+                                    rate = "%.2f".format(cost / vol)
+                                }
+                            },
+                            label = "Total Cost ($currency)",
+                            error = totalCostError,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.spacingMd))
+                        AppTextField(
+                            value = rate,
+                            onValueChange = {},
+                            label = "Rate ($currency/$volumeLabel) (calculated)",
+                            enabled = false,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                    }
+                    FuelInputMode.RATE_COST -> {
+                        AppTextField(
+                            value = rate,
+                            onValueChange = { newValue ->
+                                rate = newValue
+                                val r = newValue.toDoubleOrNull()
+                                val cost = totalCost.toDoubleOrNull()
+                                if (r != null && r > 0 && cost != null && cost > 0) {
+                                    fuelVolume = "%.2f".format(cost / r)
+                                }
+                            },
+                            label = "Rate ($currency/$volumeLabel)",
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.spacingMd))
+                        AppTextField(
+                            value = totalCost,
+                            onValueChange = { newValue ->
+                                totalCost = newValue
+                                totalCostError = Validation.getFuelCostError(newValue.toDoubleOrNull() ?: 0.0)
+                                val r = rate.toDoubleOrNull()
+                                val cost = newValue.toDoubleOrNull()
+                                if (r != null && r > 0 && cost != null && cost > 0) {
+                                    fuelVolume = "%.2f".format(cost / r)
+                                }
+                            },
+                            label = "Total Cost ($currency)",
+                            error = totalCostError,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.spacingMd))
+                        AppTextField(
+                            value = fuelVolume,
+                            onValueChange = {},
+                            label = "Fuel Volume ($volumeLabel) (calculated)",
+                            enabled = false,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        )
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
 

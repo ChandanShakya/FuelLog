@@ -11,11 +11,11 @@ android {
     compileSdk = 35
 
     defaultConfig {
-        applicationId = "com.aistudio.fuellog.gfkwdz"
+        applicationId = "com.chandanshakya.fuellog"
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "1.0.0"
+        versionName = "1.0.1"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -52,6 +52,7 @@ android {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
+        jniLibs.keepDebugSymbols += "**/libandroidx.graphics.path.so"
     }
 }
 

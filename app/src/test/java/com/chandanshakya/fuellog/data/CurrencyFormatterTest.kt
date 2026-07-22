@@ -31,8 +31,8 @@ class CurrencyFormatterTest {
     @Test
     fun testFormatCurrency_NPR() {
         val result = CurrencyFormatter.formatCurrency(123.456, "NPR")
-        // JDK may return "NPR" or "₨" depending on version
-        assertTrue(result == "\u20A8123.46" || result == "NPR 123.46")
+        // JDK may return "₨" symbol or "NPR" as symbol depending on locale data
+        assertTrue(result == "\u20A8123.46" || result == "NPR123.46")
     }
 
     @Test

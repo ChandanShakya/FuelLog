@@ -1,21 +1,58 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# FuelLog
 
-# Run and deploy your AI Studio app
+A lightweight Android fuel tracking app built with Jetpack Compose, Room, and Hilt.
 
-This contains everything you need to run your app locally.
+## Features
 
-View your app in AI Studio: https://ai.studio/apps/81ff8bfe-a6d1-4b9b-a315-383f2e688132
+- **Vehicle Management** - Add multiple vehicles with custom types (Car, Bus, Scooter, Bike, Truck, Jeep)
+- **Fuel Entry Tracking** - Log fuel fills with odometer, volume, cost, and notes
+- **Auto-Calculation** - Enter any 2 of {volume, rate, cost} and the third is calculated automatically
+- **Unit Conversion** - Supports km/miles and liters/gallons with automatic data conversion when units change
+- **Global Currency** - Set your currency once, applies to all vehicles
+- **Insights & Charts** - Mileage trends, cost analysis, and fuel price tracking
+- **Minimal Size** - ~1.2MB release APK
+
+## Tech Stack
+
+- **UI:** Jetpack Compose + Material 3
+- **Database:** Room
+- **DI:** Hilt
+- **Architecture:** MVVM with Kotlin Flows
 
 ## Run Locally
 
-**Prerequisites:**  [Android Studio](https://developer.android.com/studio)
+**Prerequisites:** [Android Studio](https://developer.android.com/studio)
 
+1. Clone the repository
+2. Open in Android Studio
+3. Run on emulator or physical device (minSdk 26)
 
-1. Open Android Studio
-2. Select **Open** and choose the directory containing this project
-3. Allow Android Studio to fix any incompatibilities as it imports the project.
-4. Create a file named `.env` in the project directory and set `GEMINI_API_KEY` in that file to your Gemini API key (see `.env.example` for an example)
-5. Remove this line from the app's `build.gradle.kts` file: `signingConfig = signingConfigs.getByName("debugConfig")`
-6. Run the app on an emulator or physical device
+## Build
+
+```bash
+# Debug
+./gradlew assembleDebug
+
+# Release
+./gradlew assembleRelease
+```
+
+## Project Structure
+
+```
+app/src/main/java/com/chandanshakya/fuellog/
+├── data/
+│   ├── db/          # Room DAOs and database
+│   └── model/       # Data classes (Vehicle, FuelEntry, UserSettings)
+├── ui/
+│   ├── components/  # Reusable composables
+│   ├── screens/     # Screen composables
+│   └── chart/       # Chart composables
+├── viewmodel/       # ViewModels
+├── util/            # Helpers (UnitConverter, CurrencyFormatter, etc.)
+└── di/              # Hilt modules
+```
+
+## License
+
+MIT

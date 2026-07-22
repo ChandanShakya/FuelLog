@@ -20,6 +20,7 @@ import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.ui.theme.Dimens
+import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.util.Validation
 import java.time.LocalDate
 
@@ -36,12 +37,21 @@ fun AddFuelEntryDialog(
     var date by remember { mutableStateOf(entry?.date ?: LocalDate.now()) }
     var odometer by remember { mutableStateOf(entry?.odometer?.toString() ?: "") }
     var fuelVolume by remember { mutableStateOf(entry?.fuelVolume?.toString() ?: "") }
+    var rate by remember {
+        mutableStateOf(
+            if (entry != null && entry.fuelVolume > 0) (entry.fuelCost / entry.fuelVolume).toString()
+            else ""
+        )
+    }
     var totalCost by remember { mutableStateOf(entry?.fuelCost?.toString() ?: "") }
     var notes by remember { mutableStateOf(entry?.notes ?: "") }
 
     var odometerError by remember { mutableStateOf<String?>(null) }
     var fuelVolumeError by remember { mutableStateOf<String?>(null) }
     var totalCostError by remember { mutableStateOf<String?>(null) }
+
+    val volumeLabel = UnitConverter.getVolumeUnitLabel(volumeUnit)
+    val distanceLabel = UnitConverter.getDistanceUnitLabel(distanceUnit)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -55,7 +65,7 @@ fun AddFuelEntryDialog(
                 AppTextField(
                     value = odometer,
                     onValueChange = { odometer = it; odometerError = Validation.getOdometerError(it.toDoubleOrNull() ?: 0.0) },
-                    label = "Odometer (${if (distanceUnit == DistanceUnit.KM) "km" else "mi"})",
+                    label = "Odometer ($distanceLabel)",
                     error = odometerError,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
@@ -64,8 +74,18 @@ fun AddFuelEntryDialog(
 
                 AppTextField(
                     value = fuelVolume,
-                    onValueChange = { fuelVolume = it; fuelVolumeError = Validation.getFuelVolumeError(it.toDoubleOrNull() ?: 0.0) },
-                    label = "Fuel Volume (${if (volumeUnit == VolumeUnit.LITERS) "L" else "gal"})",
+                    onValueChange = { newValue ->
+                        fuelVolume = newValue
+                        fuelVolumeError = Validation.getFuelVolumeError(newValue.toDoubleOrNull() ?: 0.0)
+                        val vol = newValue.toDoubleOrNull()
+                        val r = rate.toDoubleOrNull()
+                        if (vol != null && vol > 0 && r != null && r > 0) {
+                            val cost = "%.2f".format(vol * r)
+                            totalCost = cost
+                            totalCostError = Validation.getFuelCostError(cost.toDoubleOrNull() ?: 0.0)
+                        }
+                    },
+                    label = "Fuel Volume ($volumeLabel)",
                     error = fuelVolumeError,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
                 )
@@ -73,8 +93,34 @@ fun AddFuelEntryDialog(
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
 
                 AppTextField(
+                    value = rate,
+                    onValueChange = { newValue ->
+                        rate = newValue
+                        val vol = fuelVolume.toDoubleOrNull()
+                        val r = newValue.toDoubleOrNull()
+                        if (vol != null && vol > 0 && r != null && r > 0) {
+                            val cost = "%.2f".format(vol * r)
+                            totalCost = cost
+                            totalCostError = Validation.getFuelCostError(cost.toDoubleOrNull() ?: 0.0)
+                        }
+                    },
+                    label = "Rate ($currency/$volumeLabel)",
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                )
+
+                Spacer(modifier = Modifier.height(Dimens.spacingMd))
+
+                AppTextField(
                     value = totalCost,
-                    onValueChange = { totalCost = it; totalCostError = Validation.getFuelCostError(it.toDoubleOrNull() ?: 0.0) },
+                    onValueChange = { newValue ->
+                        totalCost = newValue
+                        totalCostError = Validation.getFuelCostError(newValue.toDoubleOrNull() ?: 0.0)
+                        val vol = fuelVolume.toDoubleOrNull()
+                        val cost = newValue.toDoubleOrNull()
+                        if (vol != null && vol > 0 && cost != null && cost > 0) {
+                            rate = "%.2f".format(cost / vol)
+                        }
+                    },
                     label = "Total Cost ($currency)",
                     error = totalCostError,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)

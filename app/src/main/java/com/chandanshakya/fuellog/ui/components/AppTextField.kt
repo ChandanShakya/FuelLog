@@ -3,17 +3,17 @@ package com.chandanshakya.fuellog.ui.components
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Error
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.chandanshakya.fuellog.R
 
 /**
  * Custom text field wrapper to avoid naming conflicts with Material 3 components.
@@ -61,7 +61,7 @@ fun AppTextField(
         trailingIcon = {
             if (error != null) {
                 Icon(
-                    imageVector = Icons.Outlined.Error,
+                    painter = painterResource(R.drawable.ic_error),
                     contentDescription = null,
                     tint = MaterialTheme.colorScheme.error
                 )

@@ -2,11 +2,14 @@ package com.chandanshakya.fuellog.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.chandanshakya.fuellog.data.db.FuelEntryDao
 import com.chandanshakya.fuellog.data.db.UserSettingsDao
 import com.chandanshakya.fuellog.data.db.VehicleDao
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.Vehicle
+import com.chandanshakya.fuellog.data.model.VehicleType
 import com.chandanshakya.fuellog.data.model.VolumeUnit
+import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.util.Validation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -19,7 +22,8 @@ import javax.inject.Inject
 @HiltViewModel
 class VehiclesViewModel @Inject constructor(
     private val vehicleDao: VehicleDao,
-    private val userSettingsDao: UserSettingsDao
+    private val userSettingsDao: UserSettingsDao,
+    private val fuelEntryDao: FuelEntryDao
 ) : ViewModel() {
 
     val vehiclesState: StateFlow<VehiclesState> = combine(
@@ -39,6 +43,7 @@ class VehiclesViewModel @Inject constructor(
 
     fun addVehicle(
         name: String,
+        vehicleType: VehicleType = VehicleType.CAR,
         distanceUnit: DistanceUnit? = null,
         volumeUnit: VolumeUnit? = null
     ) {
@@ -48,6 +53,7 @@ class VehiclesViewModel @Inject constructor(
             val settings = userSettingsDao.getSettingsSuspend()
             val vehicle = Vehicle(
                 name = name,
+                vehicleType = vehicleType,
                 distanceUnit = distanceUnit ?: settings?.defaultDistanceUnit ?: DistanceUnit.KM,
                 volumeUnit = volumeUnit ?: settings?.defaultVolumeUnit ?: VolumeUnit.LITERS
             )
@@ -57,7 +63,28 @@ class VehiclesViewModel @Inject constructor(
 
     fun updateVehicle(vehicle: Vehicle) {
         if (!Validation.validateVehicleName(vehicle.name)) return
-        viewModelScope.launch { vehicleDao.update(vehicle) }
+        viewModelScope.launch {
+            val oldVehicle = vehicleDao.getById(vehicle.id)
+            if (oldVehicle != null) {
+                val distanceChanged = oldVehicle.distanceUnit != vehicle.distanceUnit
+                val volumeChanged = oldVehicle.volumeUnit != vehicle.volumeUnit
+
+                if (distanceChanged || volumeChanged) {
+                    val entries = fuelEntryDao.getAllByVehicleList(vehicle.id)
+                    val convertedEntries = entries.map { entry ->
+                        val newOdometer = if (distanceChanged) {
+                            UnitConverter.convertDistance(entry.odometer, oldVehicle.distanceUnit, vehicle.distanceUnit)
+                        } else entry.odometer
+                        val newFuelVolume = if (volumeChanged) {
+                            UnitConverter.convertVolume(entry.fuelVolume, oldVehicle.volumeUnit, vehicle.volumeUnit)
+                        } else entry.fuelVolume
+                        entry.copy(odometer = newOdometer, fuelVolume = newFuelVolume)
+                    }
+                    fuelEntryDao.updateAll(convertedEntries)
+                }
+            }
+            vehicleDao.update(vehicle)
+        }
     }
 
     fun deleteVehicle(id: Long) {

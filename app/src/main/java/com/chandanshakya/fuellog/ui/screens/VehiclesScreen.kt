@@ -14,13 +14,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.DirectionsCar
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.Card
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -39,11 +32,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.ui.components.AddVehicleDialog
 import com.chandanshakya.fuellog.ui.theme.Dimens
@@ -67,7 +61,7 @@ fun VehiclesScreen(
                 title = { Text("Vehicles") },
                 actions = {
                     IconButton(onClick = onNavigateToSettings) {
-                        Icon(imageVector = Icons.Outlined.Settings, contentDescription = "Settings")
+                        Icon(painter = painterResource(R.drawable.ic_settings), contentDescription = "Settings")
                     }
                 }
             )
@@ -78,7 +72,7 @@ fun VehiclesScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
-                Icon(Icons.Outlined.Add, contentDescription = "Add Vehicle")
+                Icon(painter = painterResource(R.drawable.ic_add), contentDescription = "Add Vehicle")
             }
         }
     ) { paddingValues ->
@@ -94,7 +88,7 @@ fun VehiclesScreen(
             ) {
                 if (state.vehicles.isEmpty()) {
                     EmptyState(
-                        icon = Icons.Outlined.DirectionsCar,
+                        icon = painterResource(R.drawable.ic_directions_car),
                         title = "No Vehicles",
                         description = "Tap + to add your first vehicle"
                     )
@@ -122,8 +116,8 @@ fun VehiclesScreen(
             defaultDistanceUnit = state.defaultDistanceUnit,
             defaultVolumeUnit = state.defaultVolumeUnit,
             onDismiss = { showAddDialog = false },
-            onSave = { name, distanceUnit, volumeUnit ->
-                viewModel.addVehicle(name, distanceUnit, volumeUnit)
+            onSave = { name, vehicleType, distanceUnit, volumeUnit ->
+                viewModel.addVehicle(name, vehicleType, distanceUnit, volumeUnit)
                 showAddDialog = false
             }
         )
@@ -135,10 +129,11 @@ fun VehiclesScreen(
             defaultDistanceUnit = state.defaultDistanceUnit,
             defaultVolumeUnit = state.defaultVolumeUnit,
             onDismiss = { vehicleToEdit = null },
-            onSave = { name, distanceUnit, volumeUnit ->
+            onSave = { name, vehicleType, distanceUnit, volumeUnit ->
                 vehicleToEdit?.let { existing ->
                     viewModel.updateVehicle(existing.copy(
                         name = name,
+                        vehicleType = vehicleType,
                         distanceUnit = distanceUnit,
                         volumeUnit = volumeUnit
                     ))
@@ -168,8 +163,8 @@ fun VehicleCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Outlined.DirectionsCar,
-                contentDescription = null,
+                painter = painterResource(vehicle.vehicleType.iconRes),
+                contentDescription = vehicle.vehicleType.label,
                 modifier = Modifier.size(Dimens.iconLarge),
                 tint = MaterialTheme.colorScheme.primary
             )
@@ -179,32 +174,32 @@ fun VehicleCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = vehicle.name, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
-                    text = "${UnitConverter.getDistanceUnitLabel(vehicle.distanceUnit)} / ${UnitConverter.getVolumeUnitLabel(vehicle.volumeUnit)}",
+                    text = "${vehicle.vehicleType.label} • ${UnitConverter.getDistanceUnitLabel(vehicle.distanceUnit)} / ${UnitConverter.getVolumeUnitLabel(vehicle.volumeUnit)}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
             IconButton(onClick = { showMenu = true }) {
-                Icon(Icons.Outlined.MoreVert, contentDescription = "More options")
+                Icon(painter = painterResource(R.drawable.ic_more_vert), contentDescription = "More options")
             }
 
             DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                DropdownMenuItem(text = { Text("Edit") }, onClick = { showMenu = false; onEdit() }, leadingIcon = { Icon(Icons.Outlined.Edit, null) })
-                DropdownMenuItem(text = { Text("Delete") }, onClick = { showMenu = false; onDelete() }, leadingIcon = { Icon(Icons.Outlined.Delete, null) })
+                DropdownMenuItem(text = { Text("Edit") }, onClick = { showMenu = false; onEdit() }, leadingIcon = { Icon(painter = painterResource(R.drawable.ic_edit), null) })
+                DropdownMenuItem(text = { Text("Delete") }, onClick = { showMenu = false; onDelete() }, leadingIcon = { Icon(painter = painterResource(R.drawable.ic_delete), null) })
             }
         }
     }
 }
 
 @Composable
-fun EmptyState(icon: ImageVector, title: String, description: String) {
+fun EmptyState(icon: androidx.compose.ui.graphics.painter.Painter, title: String, description: String) {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
+        Icon(painter = icon, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(Dimens.spacingLg))
         Text(text = title, style = MaterialTheme.typography.titleLarge)
         Spacer(modifier = Modifier.height(Dimens.spacingSm))

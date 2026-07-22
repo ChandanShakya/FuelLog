@@ -68,4 +68,14 @@ object UnitConverter {
         distanceUnit: DistanceUnit,
         volumeUnit: VolumeUnit
     ): String = "${getDistanceUnitLabel(distanceUnit)}/${getVolumeUnitLabel(volumeUnit)}"
+
+    fun convertDistance(value: Double, from: DistanceUnit, to: DistanceUnit): Double {
+        val km = toKilometers(value, from)
+        return fromKilometers(km, to)
+    }
+
+    fun convertVolume(value: Double, from: VolumeUnit, to: VolumeUnit): Double {
+        val liters = toLiters(value, from)
+        return fromLiters(liters, to)
+    }
 }

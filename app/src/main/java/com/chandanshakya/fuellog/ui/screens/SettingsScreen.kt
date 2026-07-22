@@ -11,11 +11,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.CurrencyExchange
-import androidx.compose.material.icons.outlined.Scale
-import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -24,6 +19,8 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
@@ -31,12 +28,15 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.ui.components.AppButton
@@ -44,6 +44,7 @@ import com.chandanshakya.fuellog.ui.components.AppTextField
 import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.Validation
 import com.chandanshakya.fuellog.viewmodel.SettingsViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -52,6 +53,8 @@ fun SettingsScreen(
     viewModel: SettingsViewModel = hiltViewModel()
 ) {
     val state by viewModel.settingsState.collectAsStateWithLifecycle()
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     var currency by remember { mutableStateOf("USD") }
     var distanceUnit by remember { mutableStateOf(DistanceUnit.KM) }
@@ -72,11 +75,12 @@ fun SettingsScreen(
                 title = { Text("Settings") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateToVehicles) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(painter = painterResource(R.drawable.ic_arrow_back), contentDescription = "Back")
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { paddingValues ->
         Column(
             modifier = Modifier
@@ -91,7 +95,7 @@ fun SettingsScreen(
                 item {
                     SettingCard(
                         title = "Default Currency",
-                        icon = Icons.Outlined.CurrencyExchange,
+                        icon = painterResource(R.drawable.ic_currency_exchange),
                         description = "Currency used for new vehicles"
                     ) {
                         AppTextField(
@@ -110,7 +114,7 @@ fun SettingsScreen(
                 item {
                     SettingCard(
                         title = "Default Distance Unit",
-                        icon = Icons.Outlined.Scale,
+                        icon = painterResource(R.drawable.ic_scale),
                         description = "Distance unit used for new vehicles"
                     ) {
                         Column {
@@ -143,7 +147,7 @@ fun SettingsScreen(
                 item {
                     SettingCard(
                         title = "Default Volume Unit",
-                        icon = Icons.Outlined.Scale,
+                        icon = painterResource(R.drawable.ic_scale),
                         description = "Volume unit used for new vehicles"
                     ) {
                         Column {
@@ -185,6 +189,9 @@ fun SettingsScreen(
                                     distanceUnit = distanceUnit,
                                     volumeUnit = volumeUnit
                                 )
+                                scope.launch {
+                                    snackbarHostState.showSnackbar("Settings saved")
+                                }
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
@@ -199,7 +206,7 @@ fun SettingsScreen(
 @Composable
 fun SettingCard(
     title: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: androidx.compose.ui.graphics.painter.Painter,
     description: String,
     content: @Composable () -> Unit
 ) {
@@ -218,7 +225,7 @@ fun SettingCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Icon(
-                    imageVector = icon,
+                    painter = icon,
                     contentDescription = null,
                     modifier = Modifier.size(Dimens.iconMedium),
                     tint = MaterialTheme.colorScheme.primary

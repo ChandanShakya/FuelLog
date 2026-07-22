@@ -14,6 +14,9 @@ interface FuelEntryDao {
     @Query("SELECT * FROM fuel_entries WHERE vehicleId = :vehicleId ORDER BY odometer ASC, date ASC")
     fun getAllByVehicle(vehicleId: Long): Flow<List<FuelEntry>>
 
+    @Query("SELECT * FROM fuel_entries WHERE vehicleId = :vehicleId ORDER BY odometer ASC, date ASC")
+    suspend fun getAllByVehicleList(vehicleId: Long): List<FuelEntry>
+
     @Query("SELECT * FROM fuel_entries WHERE id = :id")
     suspend fun getById(id: Long): FuelEntry?
 
@@ -22,6 +25,9 @@ interface FuelEntryDao {
 
     @Update
     suspend fun update(entry: FuelEntry)
+
+    @Update
+    suspend fun updateAll(entries: List<FuelEntry>)
 
     @Delete
     suspend fun delete(entry: FuelEntry)

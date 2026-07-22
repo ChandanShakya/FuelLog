@@ -13,17 +13,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Analytics
-import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.DirectionsCar
-import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.LocalGasStation
-import androidx.compose.material.icons.outlined.MoreVert
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Speed
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
@@ -44,9 +33,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.VolumeUnit
@@ -82,12 +73,12 @@ fun FuelLogScreen(
                 title = { Text(state.vehicle?.name ?: "Fuel Log") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateToVehicles) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(painter = painterResource(R.drawable.ic_arrow_back), contentDescription = "Back")
                     }
                 },
                 actions = {
                     IconButton(onClick = onNavigateToInsights) {
-                        Icon(imageVector = Icons.Outlined.Analytics, contentDescription = "Insights")
+                        Icon(painter = painterResource(R.drawable.ic_analytics), contentDescription = "Insights")
                     }
                 }
             )
@@ -98,7 +89,7 @@ fun FuelLogScreen(
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary
             ) {
-                Icon(Icons.Outlined.Add, contentDescription = "Add fuel entry")
+                Icon(painter = painterResource(R.drawable.ic_add), contentDescription = "Add fuel entry")
             }
         }
     ) { paddingValues ->
@@ -131,7 +122,7 @@ fun FuelLogScreen(
 
                 if (state.entries.isEmpty()) {
                     EmptyState(
-                        icon = Icons.Outlined.LocalGasStation,
+                        icon = painterResource(R.drawable.ic_local_gas_station),
                         title = "No Fuel Entries",
                         description = "Tap + to add your first fill-up"
                     )
@@ -211,14 +202,14 @@ fun SummaryStats(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
     ) {
-        StatCard(label = "Avg Mileage", value = averageMileage?.let { "%.1f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(it) } ?: "N/A", icon = Icons.Outlined.Speed, modifier = Modifier.weight(1f))
-        StatCard(label = "Total Distance", value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance), icon = Icons.Outlined.DirectionsCar, modifier = Modifier.weight(1f))
-        StatCard(label = "Total Cost", value = CurrencyFormatter.formatCurrency(totalCost, currency), icon = Icons.Outlined.LocalGasStation, modifier = Modifier.weight(1f))
+        StatCard(label = "Avg Mileage", value = averageMileage?.let { "%.1f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(it) } ?: "N/A", icon = painterResource(R.drawable.ic_speed), modifier = Modifier.weight(1f))
+        StatCard(label = "Total Distance", value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance), icon = painterResource(R.drawable.ic_directions_car), modifier = Modifier.weight(1f))
+        StatCard(label = "Total Cost", value = CurrencyFormatter.formatCurrency(totalCost, currency), icon = painterResource(R.drawable.ic_local_gas_station), modifier = Modifier.weight(1f))
     }
 }
 
 @Composable
-fun StatCard(label: String, value: String, icon: androidx.compose.ui.graphics.vector.ImageVector, modifier: Modifier = Modifier) {
+fun StatCard(label: String, value: String, icon: androidx.compose.ui.graphics.painter.Painter, modifier: Modifier = Modifier) {
     Card(modifier = modifier, shape = MaterialTheme.shapes.medium, elevation = Dimens.cardElevation()) {
         Column(
             modifier = Modifier
@@ -226,7 +217,7 @@ fun StatCard(label: String, value: String, icon: androidx.compose.ui.graphics.ve
                 .padding(horizontal = Dimens.spacingXs, vertical = Dimens.spacingMd),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Icon(imageVector = icon, contentDescription = null, modifier = Modifier.size(Dimens.iconMedium), tint = MaterialTheme.colorScheme.primary)
+            Icon(painter = icon, contentDescription = null, modifier = Modifier.size(Dimens.iconMedium), tint = MaterialTheme.colorScheme.primary)
             Spacer(modifier = Modifier.height(Dimens.spacingSm))
             Text(
                 text = value,
@@ -264,7 +255,7 @@ fun FuelEntryCard(
     Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, elevation = Dimens.cardElevation()) {
         Column(modifier = Modifier.fillMaxWidth().padding(Dimens.spacingMd)) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Outlined.LocalGasStation, contentDescription = null, modifier = Modifier.size(Dimens.iconMedium), tint = MaterialTheme.colorScheme.primary)
+                Icon(painter = painterResource(R.drawable.ic_local_gas_station), contentDescription = null, modifier = Modifier.size(Dimens.iconMedium), tint = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.size(Dimens.spacingMd))
                 Column(modifier = Modifier.weight(1f)) {
                     Row(
@@ -286,11 +277,11 @@ fun FuelEntryCard(
                     )
                 }
                 IconButton(onClick = { showMenu = true }) {
-                    Icon(Icons.Outlined.MoreVert, contentDescription = "More options")
+                    Icon(painter = painterResource(R.drawable.ic_more_vert), contentDescription = "More options")
                 }
                 DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                    DropdownMenuItem(text = { Text("Edit") }, onClick = { showMenu = false; onEdit() }, leadingIcon = { Icon(Icons.Outlined.Edit, null) })
-                    DropdownMenuItem(text = { Text("Delete") }, onClick = { showMenu = false; onDelete() }, leadingIcon = { Icon(Icons.Outlined.Delete, null) })
+                    DropdownMenuItem(text = { Text("Edit") }, onClick = { showMenu = false; onEdit() }, leadingIcon = { Icon(painter = painterResource(R.drawable.ic_edit), null) })
+                    DropdownMenuItem(text = { Text("Delete") }, onClick = { showMenu = false; onDelete() }, leadingIcon = { Icon(painter = painterResource(R.drawable.ic_delete), null) })
                 }
             }
 

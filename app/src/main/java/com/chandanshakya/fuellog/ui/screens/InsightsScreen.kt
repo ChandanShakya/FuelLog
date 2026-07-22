@@ -2,15 +2,6 @@ package com.chandanshakya.fuellog.ui.screens
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Analytics
-import androidx.compose.material.icons.outlined.ArrowDownward
-import androidx.compose.material.icons.outlined.ArrowUpward
-import androidx.compose.material.icons.outlined.LocalGasStation
-import androidx.compose.material.icons.outlined.Payments
-import androidx.compose.material.icons.outlined.Speed
-import androidx.compose.material.icons.automirrored.outlined.TrendingFlat
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -24,9 +15,11 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.ui.chart.FuelPriceChart
@@ -55,7 +48,7 @@ fun InsightsScreen(
                 title = { Text(state.vehicle?.let { "${it.name} Insights" } ?: "Insights") },
                 navigationIcon = {
                     IconButton(onClick = onNavigateToLog) {
-                        Icon(imageVector = Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Back")
+                        Icon(painter = painterResource(R.drawable.ic_arrow_back), contentDescription = "Back")
                     }
                 }
             )
@@ -70,7 +63,7 @@ fun InsightsScreen(
         ) {
             if (state.entries.isEmpty()) {
                 EmptyState(
-                    icon = Icons.Outlined.Analytics,
+                    icon = painterResource(R.drawable.ic_analytics),
                     title = "No Data Available",
                     description = "Add fuel entries to see insights and trends"
                 )
@@ -158,17 +151,17 @@ fun StatisticsGrid(
                         ) {
                             when (mileageTrend) {
                                 MileageTrend.IMPROVING -> {
-                                    Icon(Icons.Outlined.ArrowUpward, contentDescription = null, tint = Color.Green)
+                                    Icon(painter = painterResource(R.drawable.ic_arrow_upward), contentDescription = null, tint = Color.Green)
                                     Spacer(modifier = Modifier.width(Dimens.spacingXs))
                                     Text("Improving", color = Color.Green, style = MaterialTheme.typography.bodySmall)
                                 }
                                 MileageTrend.DECLINING -> {
-                                    Icon(Icons.Outlined.ArrowDownward, contentDescription = null, tint = Color.Red)
+                                    Icon(painter = painterResource(R.drawable.ic_arrow_downward), contentDescription = null, tint = Color.Red)
                                     Spacer(modifier = Modifier.width(Dimens.spacingXs))
                                     Text("Declining", color = Color.Red, style = MaterialTheme.typography.bodySmall)
                                 }
                                 MileageTrend.STABLE -> {
-                                    Icon(Icons.AutoMirrored.Outlined.TrendingFlat, contentDescription = null, tint = Color.Gray)
+                                    Icon(painter = painterResource(R.drawable.ic_trending_flat), contentDescription = null, tint = Color.Gray)
                                     Spacer(modifier = Modifier.width(Dimens.spacingXs))
                                     Text("Stable", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                                 }
@@ -187,14 +180,14 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Average Mileage",
                     value = averageMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
-                    icon = Icons.Outlined.Speed,
+                    icon = painterResource(R.drawable.ic_speed),
                     modifier = Modifier.weight(1f)
                 )
 
                 InsightCard(
                     label = "Best Mileage",
                     value = bestMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
-                    icon = Icons.Outlined.ArrowUpward,
+                    icon = painterResource(R.drawable.ic_arrow_upward),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -208,14 +201,14 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Worst Mileage",
                     value = worstMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
-                    icon = Icons.Outlined.ArrowDownward,
+                    icon = painterResource(R.drawable.ic_arrow_downward),
                     modifier = Modifier.weight(1f)
                 )
 
                 InsightCard(
                     label = "Total Entries",
                     value = entriesCount.toString(),
-                    icon = Icons.Outlined.Analytics,
+                    icon = painterResource(R.drawable.ic_analytics),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -229,14 +222,14 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Total Distance",
                     value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance),
-                    icon = Icons.Outlined.LocalGasStation,
+                    icon = painterResource(R.drawable.ic_local_gas_station),
                     modifier = Modifier.weight(1f)
                 )
 
                 InsightCard(
                     label = "Total Fuel",
                     value = "%.1f ${UnitConverter.getVolumeUnitLabel(volumeUnit)}".format(totalFuel),
-                    icon = Icons.Outlined.LocalGasStation,
+                    icon = painterResource(R.drawable.ic_local_gas_station),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -250,14 +243,14 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Total Cost",
                     value = CurrencyFormatter.formatCurrency(totalCost, currency),
-                    icon = Icons.Outlined.Payments,
+                    icon = painterResource(R.drawable.ic_payments),
                     modifier = Modifier.weight(1f)
                 )
 
                 InsightCard(
                     label = "Cost per km",
                     value = costPerKm?.let { CurrencyFormatter.formatCurrency(it, currency) } ?: "N/A",
-                    icon = Icons.Outlined.Speed,
+                    icon = painterResource(R.drawable.ic_speed),
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -298,7 +291,7 @@ fun StatisticsGrid(
 fun InsightCard(
     label: String,
     value: String,
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: androidx.compose.ui.graphics.painter.Painter,
     modifier: Modifier = Modifier
 ) {
     Card(
@@ -313,7 +306,7 @@ fun InsightCard(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(
-                imageVector = icon,
+                painter = icon,
                 contentDescription = null,
                 modifier = Modifier.size(Dimens.iconMedium),
                 tint = MaterialTheme.colorScheme.primary

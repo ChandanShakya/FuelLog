@@ -63,36 +63,41 @@ fun AddVehicleDialog(
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
                 Text("Vehicle Type", style = MaterialTheme.typography.bodyMedium)
                 Spacer(modifier = Modifier.height(Dimens.spacingSm))
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    VehicleType.entries.forEach { type ->
-                        val isSelected = vehicleType == type
-                        OutlinedButton(
-                            onClick = { vehicleType = type },
-                            modifier = Modifier.weight(1f).height(56.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            border = BorderStroke(
-                                width = if (isSelected) 2.dp else 1.dp,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary
-                                       else MaterialTheme.colorScheme.outline
-                            )
+                Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                    val rows = VehicleType.entries.chunked(3)
+                    rows.forEach { row ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                Icon(
-                                    painter = painterResource(type.iconRes),
-                                    contentDescription = type.label,
-                                    modifier = Modifier.size(20.dp),
-                                    tint = if (isSelected) MaterialTheme.colorScheme.primary
-                                          else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Text(
-                                    text = type.label,
-                                    style = MaterialTheme.typography.labelSmall,
-                                    color = if (isSelected) MaterialTheme.colorScheme.primary
-                                          else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
+                            row.forEach { type ->
+                                val isSelected = vehicleType == type
+                                OutlinedButton(
+                                    onClick = { vehicleType = type },
+                                    modifier = Modifier.weight(1f).height(64.dp),
+                                    shape = RoundedCornerShape(8.dp),
+                                    border = BorderStroke(
+                                        width = if (isSelected) 2.dp else 1.dp,
+                                        color = if (isSelected) MaterialTheme.colorScheme.primary
+                                               else MaterialTheme.colorScheme.outline
+                                    )
+                                ) {
+                                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                        Icon(
+                                            painter = painterResource(type.iconRes),
+                                            contentDescription = type.label,
+                                            modifier = Modifier.size(24.dp),
+                                            tint = if (isSelected) MaterialTheme.colorScheme.primary
+                                                  else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        Text(
+                                            text = type.label,
+                                            style = MaterialTheme.typography.labelSmall,
+                                            color = if (isSelected) MaterialTheme.colorScheme.primary
+                                                  else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
                             }
                         }
                     }

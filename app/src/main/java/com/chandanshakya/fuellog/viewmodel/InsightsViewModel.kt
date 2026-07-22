@@ -9,15 +9,14 @@ import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.util.MileageCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
-import kotlinx.coroutines.launch
 import javax.inject.Inject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 import androidx.lifecycle.SavedStateHandle
 import com.chandanshakya.fuellog.ui.navigation.NavArgs
@@ -32,72 +31,71 @@ class InsightsViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val currentVehicleId = MutableStateFlow(savedStateHandle.get<Long>(NavArgs.VEHICLE_ID) ?: -1L)
-    private val vehicle = MutableStateFlow<Vehicle?>(null)
-    private val currency = MutableStateFlow("USD")
+    private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }
+    private val settingsFlow = userSettingsDao.getSettings()
 
-    val insightsState: StateFlow<InsightsState> = currentVehicleId.flatMapLatest { vehicleId ->
-        combine(
-            fuelEntryDao.getAllByVehicle(vehicleId),
-            vehicle
-        ) { entries, v ->
-            val sortedEntries = entries.sortedBy { it.odometer }
+    val insightsState: StateFlow<InsightsState> = combine(
+        currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
+        vehicleFlow,
+        settingsFlow
+    ) { entries, v, settings ->
+        val sortedEntries = entries.sortedBy { it.odometer }
 
-            val mileages = mutableListOf<Double>()
-            val dataPoints = mutableListOf<ChartDataPoint>()
-            for (i in 1 until sortedEntries.size) {
-                val mileage = MileageCalculator.calculateMileageBase(
-                    sortedEntries[i],
-                    sortedEntries[i - 1]
-                )
-                mileage?.let {
-                    mileages.add(it)
-                    dataPoints.add(
-                        ChartDataPoint(
-                            odometer = sortedEntries[i].odometer,
-                            mileage = it,
-                            date = sortedEntries[i].date
-                        )
+        val mileages = mutableListOf<Double>()
+        val dataPoints = mutableListOf<ChartDataPoint>()
+        for (i in 1 until sortedEntries.size) {
+            val mileage = MileageCalculator.calculateMileageBase(
+                sortedEntries[i],
+                sortedEntries[i - 1]
+            )
+            mileage?.let {
+                mileages.add(it)
+                dataPoints.add(
+                    ChartDataPoint(
+                        odometer = sortedEntries[i].odometer,
+                        mileage = it,
+                        date = sortedEntries[i].date
                     )
-                }
-            }
-
-            val priceDataPoints = sortedEntries.map { entry ->
-                PriceChartDataPoint(
-                    pricePerUnit = if (entry.fuelVolume > 0) entry.fuelCost / entry.fuelVolume else 0.0,
-                    date = entry.date
                 )
             }
+        }
 
-            val averageMileage = mileages.average().takeIf { mileages.isNotEmpty() }
-            val bestMileage = mileages.maxOrNull()
-            val worstMileage = mileages.minOrNull()
-
-            val totalDistanceKm = if (sortedEntries.isNotEmpty()) {
-                sortedEntries.last().odometer - sortedEntries.first().odometer
-            } else 0.0
-
-            val totalFuelLiters = sortedEntries.sumOf { it.fuelVolume }
-            val totalCost = sortedEntries.sumOf { it.fuelCost }
-
-            val costPerKm = if (totalDistanceKm > 0) totalCost / totalDistanceKm else null
-
-            InsightsState(
-                vehicle = v,
-                entries = sortedEntries,
-                averageMileageKmPerLiter = averageMileage,
-                bestMileageKmPerLiter = bestMileage,
-                worstMileageKmPerLiter = worstMileage,
-                totalDistanceKm = totalDistanceKm,
-                totalFuelLiters = totalFuelLiters,
-                totalCost = totalCost,
-                costPerKm = costPerKm,
-                mileageTrend = calculateTrend(mileages),
-                entriesCount = sortedEntries.size,
-                mileageDataPoints = dataPoints,
-                priceDataPoints = priceDataPoints,
-                currency = currency.value
+        val priceDataPoints = sortedEntries.map { entry ->
+            PriceChartDataPoint(
+                pricePerUnit = if (entry.fuelVolume > 0) entry.fuelCost / entry.fuelVolume else 0.0,
+                date = entry.date
             )
         }
+
+        val averageMileage = mileages.average().takeIf { mileages.isNotEmpty() }
+        val bestMileage = mileages.maxOrNull()
+        val worstMileage = mileages.minOrNull()
+
+        val totalDistanceKm = if (sortedEntries.isNotEmpty()) {
+            sortedEntries.last().odometer - sortedEntries.first().odometer
+        } else 0.0
+
+        val totalFuelLiters = sortedEntries.sumOf { it.fuelVolume }
+        val totalCost = sortedEntries.sumOf { it.fuelCost }
+
+        val costPerKm = if (totalDistanceKm > 0) totalCost / totalDistanceKm else null
+
+        InsightsState(
+            vehicle = v,
+            entries = sortedEntries,
+            averageMileageKmPerLiter = averageMileage,
+            bestMileageKmPerLiter = bestMileage,
+            worstMileageKmPerLiter = worstMileage,
+            totalDistanceKm = totalDistanceKm,
+            totalFuelLiters = totalFuelLiters,
+            totalCost = totalCost,
+            costPerKm = costPerKm,
+            mileageTrend = calculateTrend(mileages),
+            entriesCount = sortedEntries.size,
+            mileageDataPoints = dataPoints,
+            priceDataPoints = priceDataPoints,
+            currency = settings?.defaultCurrency ?: "USD"
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -105,14 +103,7 @@ class InsightsViewModel @Inject constructor(
     )
 
     fun setVehicleId(vehicleId: Long) {
-        if (currentVehicleId.value != vehicleId) {
-            currentVehicleId.value = vehicleId
-            viewModelScope.launch {
-                vehicle.value = vehicleDao.getById(vehicleId)
-                val settings = userSettingsDao.getSettingsSuspend()
-                currency.value = settings?.defaultCurrency ?: "USD"
-            }
-        }
+        currentVehicleId.value = vehicleId
     }
 
     private fun calculateTrend(mileages: List<Double>): MileageTrend {

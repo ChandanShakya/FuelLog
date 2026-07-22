@@ -10,15 +10,16 @@ import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.util.MileageCalculator
 import com.chandanshakya.fuellog.util.Validation
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import javax.inject.Inject
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 
 import androidx.lifecycle.SavedStateHandle
 import com.chandanshakya.fuellog.ui.navigation.NavArgs
@@ -33,34 +34,33 @@ class FuelLogViewModel @Inject constructor(
 ) : ViewModel() {
 
     private val currentVehicleId = MutableStateFlow(savedStateHandle.get<Long>(NavArgs.VEHICLE_ID) ?: -1L)
-    private val vehicle = MutableStateFlow<Vehicle?>(null)
-    private val currency = MutableStateFlow("USD")
+    private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }
+    private val settingsFlow = userSettingsDao.getSettings()
 
-    val fuelLogState: StateFlow<FuelLogState> = currentVehicleId.flatMapLatest { vehicleId ->
-        kotlinx.coroutines.flow.combine(
-            fuelEntryDao.getAllByVehicle(vehicleId),
-            vehicle
-        ) { entries, v ->
-            val sortedEntries = entries.sortedBy { it.odometer }
+    val fuelLogState: StateFlow<FuelLogState> = combine(
+        currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
+        vehicleFlow,
+        settingsFlow
+    ) { entries, v, settings ->
+        val sortedEntries = entries.sortedBy { it.odometer }
 
-            val entriesWithMileage = sortedEntries.mapIndexed { index, entry ->
-                val previous = if (index > 0) sortedEntries[index - 1] else null
-                val mileage = if (previous != null && v != null) {
-                    MileageCalculator.calculateMileage(entry, previous, v.distanceUnit, v.volumeUnit)
-                } else null
-                EntryWithMileage(entry = entry, mileage = mileage)
-            }.reversed()
+        val entriesWithMileage = sortedEntries.mapIndexed { index, entry ->
+            val previous = if (index > 0) sortedEntries[index - 1] else null
+            val mileage = if (previous != null && v != null) {
+                MileageCalculator.calculateMileage(entry, previous, v.distanceUnit, v.volumeUnit)
+            } else null
+            EntryWithMileage(entry = entry, mileage = mileage)
+        }.reversed()
 
-            FuelLogState(
-                vehicle = v,
-                entries = entriesWithMileage,
-                averageMileage = if (v != null) MileageCalculator.calculateAverageMileage(sortedEntries, v.distanceUnit, v.volumeUnit) else null,
-                totalDistance = if (v != null) MileageCalculator.calculateTotalDistance(sortedEntries, v.distanceUnit) else 0.0,
-                totalFuel = if (v != null) MileageCalculator.calculateTotalFuel(sortedEntries, v.volumeUnit) else 0.0,
-                totalCost = MileageCalculator.calculateTotalCost(sortedEntries),
-                currency = currency.value
-            )
-        }
+        FuelLogState(
+            vehicle = v,
+            entries = entriesWithMileage,
+            averageMileage = if (v != null) MileageCalculator.calculateAverageMileage(sortedEntries, v.distanceUnit, v.volumeUnit) else null,
+            totalDistance = if (v != null) MileageCalculator.calculateTotalDistance(sortedEntries, v.distanceUnit) else 0.0,
+            totalFuel = if (v != null) MileageCalculator.calculateTotalFuel(sortedEntries, v.volumeUnit) else 0.0,
+            totalCost = MileageCalculator.calculateTotalCost(sortedEntries),
+            currency = settings?.defaultCurrency ?: "USD"
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
@@ -68,14 +68,7 @@ class FuelLogViewModel @Inject constructor(
     )
 
     fun setVehicleId(vehicleId: Long) {
-        if (currentVehicleId.value != vehicleId) {
-            currentVehicleId.value = vehicleId
-            viewModelScope.launch {
-                vehicle.value = vehicleDao.getById(vehicleId)
-                val settings = userSettingsDao.getSettingsSuspend()
-                currency.value = settings?.defaultCurrency ?: "USD"
-            }
-        }
+        currentVehicleId.value = vehicleId
     }
 
     fun addFuelEntry(

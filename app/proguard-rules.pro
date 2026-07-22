@@ -1,9 +1,8 @@
-# Room
+# Room - keep only what's needed
 -keep class * extends androidx.room.RoomDatabase { *; }
 -keep class * extends androidx.room.Dao { *; }
--keep class * extends androidx.room.Entity { *; }
 -keepclassmembers class * {
-    @androidx.room.* <fields>;
+    @androidx.room.Entity <fields>;
 }
 
 # Hilt
@@ -15,9 +14,6 @@
 -keepclassmembers class **$WhenMappings {
     <fields>;
 }
--keepclassmembers class kotlin.Metadata {
-    public <methods>;
-}
 
-# App models
--keep class com.chandanshakya.fuellog.data.model.** { *; }
+# Keep Room entities (needed for reflection)
+-keep @androidx.room.Entity class * { *; }

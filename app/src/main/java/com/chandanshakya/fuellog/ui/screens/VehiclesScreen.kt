@@ -119,12 +119,11 @@ fun VehiclesScreen(
 
     if (showAddDialog) {
         AddVehicleDialog(
-            defaultCurrency = state.defaultCurrency,
             defaultDistanceUnit = state.defaultDistanceUnit,
             defaultVolumeUnit = state.defaultVolumeUnit,
             onDismiss = { showAddDialog = false },
-            onSave = { name, currency, distanceUnit, volumeUnit ->
-                viewModel.addVehicle(name, currency, distanceUnit, volumeUnit)
+            onSave = { name, distanceUnit, volumeUnit ->
+                viewModel.addVehicle(name, distanceUnit, volumeUnit)
                 showAddDialog = false
             }
         )
@@ -133,15 +132,13 @@ fun VehiclesScreen(
     if (vehicleToEdit != null) {
         AddVehicleDialog(
             vehicle = vehicleToEdit,
-            defaultCurrency = state.defaultCurrency,
             defaultDistanceUnit = state.defaultDistanceUnit,
             defaultVolumeUnit = state.defaultVolumeUnit,
             onDismiss = { vehicleToEdit = null },
-            onSave = { name, currency, distanceUnit, volumeUnit ->
+            onSave = { name, distanceUnit, volumeUnit ->
                 vehicleToEdit?.let { existing ->
                     viewModel.updateVehicle(existing.copy(
                         name = name,
-                        defaultCurrency = currency,
                         distanceUnit = distanceUnit,
                         volumeUnit = volumeUnit
                     ))

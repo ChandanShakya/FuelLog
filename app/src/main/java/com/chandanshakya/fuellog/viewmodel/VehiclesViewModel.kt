@@ -28,7 +28,6 @@ class VehiclesViewModel @Inject constructor(
     ) { vehicles, settings ->
         VehiclesState(
             vehicles = vehicles,
-            defaultCurrency = settings?.defaultCurrency ?: "USD",
             defaultDistanceUnit = settings?.defaultDistanceUnit ?: DistanceUnit.KM,
             defaultVolumeUnit = settings?.defaultVolumeUnit ?: VolumeUnit.LITERS
         )
@@ -40,7 +39,6 @@ class VehiclesViewModel @Inject constructor(
 
     fun addVehicle(
         name: String,
-        currency: String? = null,
         distanceUnit: DistanceUnit? = null,
         volumeUnit: VolumeUnit? = null
     ) {
@@ -50,7 +48,6 @@ class VehiclesViewModel @Inject constructor(
             val settings = userSettingsDao.getSettingsSuspend()
             val vehicle = Vehicle(
                 name = name,
-                defaultCurrency = currency ?: settings?.defaultCurrency ?: "USD",
                 distanceUnit = distanceUnit ?: settings?.defaultDistanceUnit ?: DistanceUnit.KM,
                 volumeUnit = volumeUnit ?: settings?.defaultVolumeUnit ?: VolumeUnit.LITERS
             )
@@ -72,7 +69,6 @@ class VehiclesViewModel @Inject constructor(
 
 data class VehiclesState(
     val vehicles: List<Vehicle> = emptyList(),
-    val defaultCurrency: String = "USD",
     val defaultDistanceUnit: DistanceUnit = DistanceUnit.KM,
     val defaultVolumeUnit: VolumeUnit = VolumeUnit.LITERS
 )

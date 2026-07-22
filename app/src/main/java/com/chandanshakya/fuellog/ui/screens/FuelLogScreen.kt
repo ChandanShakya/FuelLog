@@ -121,7 +121,7 @@ fun FuelLogScreen(
                         totalCost = state.totalCost,
                         distanceUnit = vehicle.distanceUnit,
                         volumeUnit = vehicle.volumeUnit,
-                        currency = vehicle.defaultCurrency
+                        currency = state.currency
                     )
 
                     Spacer(modifier = Modifier.height(Dimens.spacingLg))
@@ -147,7 +147,7 @@ fun FuelLogScreen(
                                 mileage = entryWithMileage.mileage,
                                 distanceUnit = currentVehicle?.distanceUnit ?: DistanceUnit.KM,
                                 volumeUnit = currentVehicle?.volumeUnit ?: VolumeUnit.LITERS,
-                                currency = currentVehicle?.defaultCurrency ?: "USD",
+                                currency = state.currency,
                                 onEdit = { entryToEdit = entryWithMileage.entry },
                                 onDelete = { viewModel.deleteFuelEntry(entryWithMileage.entry.id) }
                             )
@@ -163,7 +163,7 @@ fun FuelLogScreen(
             vehicleId = vehicleId,
             distanceUnit = state.vehicle?.distanceUnit ?: DistanceUnit.KM,
             volumeUnit = state.vehicle?.volumeUnit ?: VolumeUnit.LITERS,
-            currency = state.vehicle?.defaultCurrency ?: "USD",
+            currency = state.currency,
             onDismiss = { showAddDialog = false },
             onSave = { date, odometer, fuelVolume, totalCost, notes ->
                 viewModel.addFuelEntry(date, odometer, fuelVolume, totalCost, notes)
@@ -178,7 +178,7 @@ fun FuelLogScreen(
             entry = entryToEdit,
             distanceUnit = state.vehicle?.distanceUnit ?: DistanceUnit.KM,
             volumeUnit = state.vehicle?.volumeUnit ?: VolumeUnit.LITERS,
-            currency = state.vehicle?.defaultCurrency ?: "USD",
+            currency = state.currency,
             onDismiss = { entryToEdit = null },
             onSave = { date, odometer, fuelVolume, totalCost, notes ->
                 entryToEdit?.let { existing ->

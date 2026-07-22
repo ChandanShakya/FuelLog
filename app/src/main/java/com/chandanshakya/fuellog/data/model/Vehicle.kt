@@ -8,7 +8,6 @@ import java.time.LocalDate
 data class Vehicle(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     var name: String,
-    var defaultCurrency: String = "USD",
     var distanceUnit: DistanceUnit = DistanceUnit.KM,
     var volumeUnit: VolumeUnit = VolumeUnit.LITERS,
     var createdAt: LocalDate = LocalDate.now()

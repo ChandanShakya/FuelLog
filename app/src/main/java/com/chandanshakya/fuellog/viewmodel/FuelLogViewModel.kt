@@ -3,6 +3,7 @@ package com.chandanshakya.fuellog.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chandanshakya.fuellog.data.db.FuelEntryDao
+import com.chandanshakya.fuellog.data.db.UserSettingsDao
 import com.chandanshakya.fuellog.data.db.VehicleDao
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.Vehicle
@@ -27,11 +28,13 @@ import com.chandanshakya.fuellog.ui.navigation.NavArgs
 class FuelLogViewModel @Inject constructor(
     private val fuelEntryDao: FuelEntryDao,
     private val vehicleDao: VehicleDao,
+    private val userSettingsDao: UserSettingsDao,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val currentVehicleId = MutableStateFlow(savedStateHandle.get<Long>(NavArgs.VEHICLE_ID) ?: -1L)
     private val vehicle = MutableStateFlow<Vehicle?>(null)
+    private val currency = MutableStateFlow("USD")
 
     val fuelLogState: StateFlow<FuelLogState> = currentVehicleId.flatMapLatest { vehicleId ->
         kotlinx.coroutines.flow.combine(
@@ -54,7 +57,8 @@ class FuelLogViewModel @Inject constructor(
                 averageMileage = if (v != null) MileageCalculator.calculateAverageMileage(sortedEntries, v.distanceUnit, v.volumeUnit) else null,
                 totalDistance = if (v != null) MileageCalculator.calculateTotalDistance(sortedEntries, v.distanceUnit) else 0.0,
                 totalFuel = if (v != null) MileageCalculator.calculateTotalFuel(sortedEntries, v.volumeUnit) else 0.0,
-                totalCost = MileageCalculator.calculateTotalCost(sortedEntries)
+                totalCost = MileageCalculator.calculateTotalCost(sortedEntries),
+                currency = currency.value
             )
         }
     }.stateIn(
@@ -68,6 +72,8 @@ class FuelLogViewModel @Inject constructor(
             currentVehicleId.value = vehicleId
             viewModelScope.launch {
                 vehicle.value = vehicleDao.getById(vehicleId)
+                val settings = userSettingsDao.getSettingsSuspend()
+                currency.value = settings?.defaultCurrency ?: "USD"
             }
         }
     }
@@ -117,7 +123,8 @@ data class FuelLogState(
     val averageMileage: Double? = null,
     val totalDistance: Double = 0.0,
     val totalFuel: Double = 0.0,
-    val totalCost: Double = 0.0
+    val totalCost: Double = 0.0,
+    val currency: String = "USD"
 )
 
 data class EntryWithMileage(

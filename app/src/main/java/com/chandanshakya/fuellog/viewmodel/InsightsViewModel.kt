@@ -3,6 +3,7 @@ package com.chandanshakya.fuellog.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chandanshakya.fuellog.data.db.FuelEntryDao
+import com.chandanshakya.fuellog.data.db.UserSettingsDao
 import com.chandanshakya.fuellog.data.db.VehicleDao
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.Vehicle
@@ -26,11 +27,13 @@ import com.chandanshakya.fuellog.ui.navigation.NavArgs
 class InsightsViewModel @Inject constructor(
     private val fuelEntryDao: FuelEntryDao,
     private val vehicleDao: VehicleDao,
+    private val userSettingsDao: UserSettingsDao,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val currentVehicleId = MutableStateFlow(savedStateHandle.get<Long>(NavArgs.VEHICLE_ID) ?: -1L)
     private val vehicle = MutableStateFlow<Vehicle?>(null)
+    private val currency = MutableStateFlow("USD")
 
     val insightsState: StateFlow<InsightsState> = currentVehicleId.flatMapLatest { vehicleId ->
         combine(
@@ -91,7 +94,8 @@ class InsightsViewModel @Inject constructor(
                 mileageTrend = calculateTrend(mileages),
                 entriesCount = sortedEntries.size,
                 mileageDataPoints = dataPoints,
-                priceDataPoints = priceDataPoints
+                priceDataPoints = priceDataPoints,
+                currency = currency.value
             )
         }
     }.stateIn(
@@ -105,6 +109,8 @@ class InsightsViewModel @Inject constructor(
             currentVehicleId.value = vehicleId
             viewModelScope.launch {
                 vehicle.value = vehicleDao.getById(vehicleId)
+                val settings = userSettingsDao.getSettingsSuspend()
+                currency.value = settings?.defaultCurrency ?: "USD"
             }
         }
     }
@@ -139,7 +145,8 @@ data class InsightsState(
     val mileageTrend: MileageTrend = MileageTrend.STABLE,
     val entriesCount: Int = 0,
     val mileageDataPoints: List<ChartDataPoint> = emptyList(),
-    val priceDataPoints: List<PriceChartDataPoint> = emptyList()
+    val priceDataPoints: List<PriceChartDataPoint> = emptyList(),
+    val currency: String = "USD"
 )
 
 enum class MileageTrend {

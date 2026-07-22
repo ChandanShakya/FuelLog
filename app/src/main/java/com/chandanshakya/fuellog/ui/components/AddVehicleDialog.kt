@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -19,7 +18,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.Vehicle
@@ -30,18 +28,15 @@ import com.chandanshakya.fuellog.util.Validation
 @Composable
 fun AddVehicleDialog(
     vehicle: Vehicle? = null,
-    defaultCurrency: String,
     defaultDistanceUnit: DistanceUnit,
     defaultVolumeUnit: VolumeUnit,
     onDismiss: () -> Unit,
-    onSave: (name: String, currency: String, distanceUnit: DistanceUnit, volumeUnit: VolumeUnit) -> Unit
+    onSave: (name: String, distanceUnit: DistanceUnit, volumeUnit: VolumeUnit) -> Unit
 ) {
     var name by remember { mutableStateOf(vehicle?.name ?: "") }
-    var currency by remember { mutableStateOf(vehicle?.defaultCurrency ?: defaultCurrency) }
     var distanceUnit by remember { mutableStateOf(vehicle?.distanceUnit ?: defaultDistanceUnit) }
     var volumeUnit by remember { mutableStateOf(vehicle?.volumeUnit ?: defaultVolumeUnit) }
     var nameError by remember { mutableStateOf<String?>(null) }
-    var currencyError by remember { mutableStateOf<String?>(null) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -54,17 +49,6 @@ fun AddVehicleDialog(
                     label = "Vehicle Name",
                     error = nameError,
                     supportingText = "e.g. My Car, Honda Activa"
-                )
-
-                Spacer(modifier = Modifier.height(Dimens.spacingMd))
-
-                AppTextField(
-                    value = currency,
-                    onValueChange = { currency = it.uppercase(); currencyError = Validation.getCurrencyCodeError(it) },
-                    label = "Currency",
-                    error = currencyError,
-                    supportingText = "ISO 4217 (e.g. USD, EUR, INR)",
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
                 )
 
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
@@ -94,11 +78,11 @@ fun AddVehicleDialog(
             AppButton(
                 text = "Save",
                 onClick = {
-                    if (nameError == null && currencyError == null) {
-                        onSave(name, currency, distanceUnit, volumeUnit)
+                    if (nameError == null) {
+                        onSave(name, distanceUnit, volumeUnit)
                     }
                 },
-                enabled = nameError == null && currencyError == null
+                enabled = nameError == null
             )
         },
         dismissButton = {

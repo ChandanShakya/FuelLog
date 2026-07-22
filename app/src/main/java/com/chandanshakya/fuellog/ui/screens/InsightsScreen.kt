@@ -77,7 +77,6 @@ fun InsightsScreen(
             } else {
                 val distanceUnit = vehicle?.distanceUnit ?: DistanceUnit.KM
                 val volumeUnit = vehicle?.volumeUnit ?: VolumeUnit.LITERS
-                val currency = vehicle?.defaultCurrency ?: "USD"
 
                 StatisticsGrid(
                     averageMileage = state.averageMileageKmPerLiter,
@@ -90,7 +89,7 @@ fun InsightsScreen(
                     entriesCount = state.entriesCount,
                     distanceUnit = distanceUnit,
                     volumeUnit = volumeUnit,
-                    currency = currency,
+                    currency = state.currency,
                     mileageDataPoints = state.mileageDataPoints,
                     priceDataPoints = state.priceDataPoints,
                     mileageTrend = state.mileageTrend,

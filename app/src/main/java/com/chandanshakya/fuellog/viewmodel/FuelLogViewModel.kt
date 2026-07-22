@@ -2,17 +2,16 @@ package com.chandanshakya.fuellog.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.chandanshakya.fuellog.data.db.FuelEntryDao
+import com.chandanshakya.fuellog.data.db.VehicleDao
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.Vehicle
-import com.chandanshakya.fuellog.data.repository.FuelRepository
-import com.chandanshakya.fuellog.data.repository.VehicleRepository
 import com.chandanshakya.fuellog.util.MileageCalculator
 import com.chandanshakya.fuellog.util.Validation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -24,36 +23,35 @@ import com.chandanshakya.fuellog.ui.navigation.NavArgs
 
 @HiltViewModel
 class FuelLogViewModel @Inject constructor(
-    private val fuelRepository: FuelRepository,
-    private val vehicleRepository: VehicleRepository,
+    private val fuelEntryDao: FuelEntryDao,
+    private val vehicleDao: VehicleDao,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val currentVehicleId = MutableStateFlow(savedStateHandle.get<Long>(NavArgs.VEHICLE_ID) ?: -1L)
-    private var currentVehicle: Vehicle? = null
+    private val vehicle = MutableStateFlow<Vehicle?>(null)
 
     val fuelLogState: StateFlow<FuelLogState> = currentVehicleId.flatMapLatest { vehicleId ->
-        combine(
-            fuelRepository.getAllByVehicle(vehicleId),
-            vehicleRepository.getAll()
-        ) { entries, vehicles ->
-            val vehicle = vehicles.find { it.id == vehicleId }
+        kotlinx.coroutines.flow.combine(
+            fuelEntryDao.getAllByVehicle(vehicleId),
+            vehicle
+        ) { entries, v ->
             val sortedEntries = entries.sortedBy { it.odometer }
 
             val entriesWithMileage = sortedEntries.mapIndexed { index, entry ->
                 val previous = if (index > 0) sortedEntries[index - 1] else null
-                val mileage = if (previous != null && vehicle != null) {
-                    MileageCalculator.calculateMileage(entry, previous, vehicle.distanceUnit, vehicle.volumeUnit)
+                val mileage = if (previous != null && v != null) {
+                    MileageCalculator.calculateMileage(entry, previous, v.distanceUnit, v.volumeUnit)
                 } else null
                 EntryWithMileage(entry = entry, mileage = mileage)
             }.reversed()
 
             FuelLogState(
-                vehicle = vehicle,
+                vehicle = v,
                 entries = entriesWithMileage,
-                averageMileage = if (vehicle != null) MileageCalculator.calculateAverageMileage(sortedEntries, vehicle.distanceUnit, vehicle.volumeUnit) else null,
-                totalDistance = if (vehicle != null) MileageCalculator.calculateTotalDistance(sortedEntries, vehicle.distanceUnit) else 0.0,
-                totalFuel = if (vehicle != null) MileageCalculator.calculateTotalFuel(sortedEntries, vehicle.volumeUnit) else 0.0,
+                averageMileage = if (v != null) MileageCalculator.calculateAverageMileage(sortedEntries, v.distanceUnit, v.volumeUnit) else null,
+                totalDistance = if (v != null) MileageCalculator.calculateTotalDistance(sortedEntries, v.distanceUnit) else 0.0,
+                totalFuel = if (v != null) MileageCalculator.calculateTotalFuel(sortedEntries, v.volumeUnit) else 0.0,
                 totalCost = MileageCalculator.calculateTotalCost(sortedEntries)
             )
         }
@@ -67,7 +65,7 @@ class FuelLogViewModel @Inject constructor(
         if (currentVehicleId.value != vehicleId) {
             currentVehicleId.value = vehicleId
             viewModelScope.launch {
-                currentVehicle = vehicleRepository.getById(vehicleId)
+                vehicle.value = vehicleDao.getById(vehicleId)
             }
         }
     }
@@ -90,7 +88,7 @@ class FuelLogViewModel @Inject constructor(
                 fuelCost = fuelCost,
                 notes = notes
             )
-            fuelRepository.insert(entry)
+            fuelEntryDao.insert(entry)
         }
     }
 
@@ -100,19 +98,15 @@ class FuelLogViewModel @Inject constructor(
         if (!Validation.validateFuelEntry(odometer, fuelVolume, fuelCost)) return
 
         viewModelScope.launch {
-            val existing = fuelRepository.getById(id) ?: return@launch
+            val existing = fuelEntryDao.getById(id) ?: return@launch
             val entry = existing.copy(date = date, odometer = odometer, fuelVolume = fuelVolume, fuelCost = fuelCost, notes = notes)
-            fuelRepository.update(entry)
+            fuelEntryDao.update(entry)
         }
     }
 
     fun deleteFuelEntry(id: Long) {
-        viewModelScope.launch { fuelRepository.deleteById(id) }
+        viewModelScope.launch { fuelEntryDao.deleteById(id) }
     }
-
-    fun getCurrentVehicle(): Vehicle? = currentVehicle
-
-    suspend fun getFuelEntriesCount(): Int = fuelRepository.countByVehicle(currentVehicleId.value)
 }
 
 data class FuelLogState(
@@ -121,9 +115,7 @@ data class FuelLogState(
     val averageMileage: Double? = null,
     val totalDistance: Double = 0.0,
     val totalFuel: Double = 0.0,
-    val totalCost: Double = 0.0,
-    val isLoading: Boolean = false,
-    val error: String? = null
+    val totalCost: Double = 0.0
 )
 
 data class EntryWithMileage(

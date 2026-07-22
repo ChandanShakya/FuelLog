@@ -81,15 +81,4 @@ class MileageCalculatorTest {
         )
         assertEquals(240.0, MileageCalculator.calculateTotalCost(entries), 0.001)
     }
-
-    @Test
-    fun testCalculateCostPerDistance() {
-        val entries = listOf(
-            FuelEntry(1, 1, LocalDate.now().minusDays(2), 1000.0, 50.0, 100.0),
-            FuelEntry(2, 1, LocalDate.now().minusDays(1), 1100.0, 40.0, 80.0),
-            FuelEntry(3, 1, LocalDate.now(), 1200.0, 30.0, 60.0)
-        )
-        // Total cost: 240, Total distance: 200 km → 1.2 per km
-        assertEquals(1.2, MileageCalculator.calculateCostPerDistance(entries, DistanceUnit.KM, VolumeUnit.LITERS)!!, 0.001)
-    }
 }

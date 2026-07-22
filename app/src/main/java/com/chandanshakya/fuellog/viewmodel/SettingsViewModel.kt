@@ -2,10 +2,10 @@ package com.chandanshakya.fuellog.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.chandanshakya.fuellog.data.db.UserSettingsDao
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.UserSettings
 import com.chandanshakya.fuellog.data.model.VolumeUnit
-import com.chandanshakya.fuellog.data.repository.SettingsRepository
 import com.chandanshakya.fuellog.util.Validation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,10 +17,10 @@ import javax.inject.Inject
 
 @HiltViewModel
 class SettingsViewModel @Inject constructor(
-    private val settingsRepository: SettingsRepository
+    private val userSettingsDao: UserSettingsDao
 ) : ViewModel() {
 
-    val settingsState: StateFlow<SettingsState> = settingsRepository.getSettings()
+    val settingsState: StateFlow<SettingsState> = userSettingsDao.getSettings()
         .map { settings ->
             SettingsState(settings = settings)
         }
@@ -45,15 +45,16 @@ class SettingsViewModel @Inject constructor(
                 defaultDistanceUnit = distanceUnit,
                 defaultVolumeUnit = volumeUnit
             )
-            settingsRepository.saveSettings(settings)
+            val existing = userSettingsDao.getSettingsSuspend()
+            if (existing == null) {
+                userSettingsDao.insert(settings)
+            } else {
+                userSettingsDao.update(settings)
+            }
         }
     }
-
-    suspend fun getCurrentSettings(): UserSettings? = settingsRepository.getSettingsSuspend()
 }
 
 data class SettingsState(
-    val settings: UserSettings? = null,
-    val isLoading: Boolean = false,
-    val error: String? = null
+    val settings: UserSettings? = null
 )

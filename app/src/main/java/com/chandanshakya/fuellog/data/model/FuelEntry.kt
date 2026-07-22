@@ -7,19 +7,6 @@ import androidx.room.PrimaryKey
 import java.time.LocalDate
 import java.time.LocalTime
 
-/**
- * Represents a single fuel fill-up entry for a vehicle.
- * 
- * @param id Unique identifier for the entry
- * @param vehicleId Foreign key to the associated vehicle
- * @param date Date of the fill-up
- * @param odometer Odometer reading at fill-up
- * @param fuelVolume Amount of fuel added
- * @param fuelCost Total cost of the fuel
- * @param isFullTank Whether this was a full tank fill-up
- * @param notes Optional notes about this entry
- * @param time Time of the fill-up
- */
 @Entity(
     tableName = "fuel_entries",
     foreignKeys = [
@@ -32,7 +19,6 @@ import java.time.LocalTime
     ],
     indices = [
         Index(value = ["vehicleId", "odometer"]),
-        Index(value = ["vehicleId"]),
         Index(value = ["date"])
     ]
 )
@@ -43,7 +29,6 @@ data class FuelEntry(
     var odometer: Double,
     var fuelVolume: Double,
     var fuelCost: Double,
-    var isFullTank: Boolean = false,
     var notes: String? = null,
     var time: LocalTime = LocalTime.now()
 )

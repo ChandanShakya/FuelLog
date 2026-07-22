@@ -3,7 +3,6 @@ package com.chandanshakya.fuellog.ui.navigation
 import androidx.compose.animation.EnterTransition
 import androidx.compose.animation.ExitTransition
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -127,21 +126,4 @@ fun AppNavHost(
             )
         }
     }
-}
-
-val bottomNavItems = listOf(
-    BottomNavItem(route = NavRoutes.VEHICLES, label = "Vehicles"),
-    BottomNavItem(route = NavRoutes.FUEL_LOG, label = "Fuel Log"),
-    BottomNavItem(route = NavRoutes.INSIGHTS, label = "Insights"),
-    BottomNavItem(route = NavRoutes.SETTINGS, label = "Settings")
-)
-
-data class BottomNavItem(
-    val route: String,
-    val label: String
-)
-
-fun NavHostController.shouldShowBottomBar(route: String): Boolean {
-    val currentDestination = currentBackStackEntry?.destination
-    return currentDestination?.hierarchy?.any { it.route == route } == true
 }

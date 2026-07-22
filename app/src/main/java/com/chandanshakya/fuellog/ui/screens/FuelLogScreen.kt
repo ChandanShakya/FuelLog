@@ -16,16 +16,15 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.Add
-import androidx.compose.material.icons.outlined.Analytics
+import androidx.compose.material.icons.outlined.Insights
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.LocalGasStation
+import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Speed
+import androidx.compose.material.icons.outlined.Timer
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.DropdownMenu
@@ -88,7 +87,7 @@ fun FuelLogScreen(
                 },
                 actions = {
                     IconButton(onClick = onNavigateToInsights) {
-                        Icon(imageVector = Icons.Outlined.Analytics, contentDescription = "Insights")
+                        Icon(imageVector = Icons.Outlined.Insights, contentDescription = "Insights")
                     }
                 }
             )
@@ -122,8 +121,7 @@ fun FuelLogScreen(
                         totalCost = state.totalCost,
                         distanceUnit = vehicle.distanceUnit,
                         volumeUnit = vehicle.volumeUnit,
-                        currency = vehicle.defaultCurrency,
-                        vehicleType = vehicle.vehicleType
+                        currency = vehicle.defaultCurrency
                     )
 
                     Spacer(modifier = Modifier.height(Dimens.spacingLg))
@@ -133,7 +131,7 @@ fun FuelLogScreen(
 
                 if (state.entries.isEmpty()) {
                     EmptyState(
-                        icon = Icons.Outlined.LocalGasStation,
+                        icon = Icons.Outlined.WaterDrop,
                         title = "No Fuel Entries",
                         description = "Tap + to add your first fill-up"
                     )
@@ -207,16 +205,15 @@ fun SummaryStats(
     totalCost: Double,
     distanceUnit: DistanceUnit,
     volumeUnit: VolumeUnit,
-    currency: String,
-    vehicleType: String
+    currency: String
 ) {
     Row(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
     ) {
-        StatCard(label = "Avg Mileage", value = averageMileage?.let { "%.1f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(it) } ?: "N/A", icon = Icons.Outlined.Speed, modifier = Modifier.weight(1f))
-        StatCard(label = "Total Distance", value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance), icon = getVehicleIcon(vehicleType), modifier = Modifier.weight(1f))
-        StatCard(label = "Total Cost", value = CurrencyFormatter.formatCurrency(totalCost, currency), icon = Icons.Outlined.LocalGasStation, modifier = Modifier.weight(1f))
+        StatCard(label = "Avg Mileage", value = averageMileage?.let { "%.1f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(it) } ?: "N/A", icon = Icons.Outlined.Timer, modifier = Modifier.weight(1f))
+        StatCard(label = "Total Distance", value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance), icon = Icons.Outlined.DirectionsCar, modifier = Modifier.weight(1f))
+        StatCard(label = "Total Cost", value = CurrencyFormatter.formatCurrency(totalCost, currency), icon = Icons.Outlined.WaterDrop, modifier = Modifier.weight(1f))
     }
 }
 
@@ -267,7 +264,7 @@ fun FuelEntryCard(
     Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, elevation = Dimens.cardElevation()) {
         Column(modifier = Modifier.fillMaxWidth().padding(Dimens.spacingMd)) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Icon(imageVector = Icons.Outlined.LocalGasStation, contentDescription = null, modifier = Modifier.size(Dimens.iconMedium), tint = MaterialTheme.colorScheme.primary)
+                Icon(imageVector = Icons.Outlined.WaterDrop, contentDescription = null, modifier = Modifier.size(Dimens.iconMedium), tint = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.size(Dimens.spacingMd))
                 Column(modifier = Modifier.weight(1f)) {
                     Row(

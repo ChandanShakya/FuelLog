@@ -4,16 +4,13 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.Analytics
 import androidx.compose.material.icons.outlined.ArrowDownward
 import androidx.compose.material.icons.outlined.ArrowUpward
-import androidx.compose.material.icons.outlined.LocalGasStation
-import androidx.compose.material.icons.outlined.Payments
-import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.Speed
-import androidx.compose.material.icons.outlined.TrendingFlat
+import androidx.compose.material.icons.outlined.AttachMoney
+import androidx.compose.material.icons.outlined.Insights
+import androidx.compose.material.icons.outlined.Timer
+import androidx.compose.material.icons.outlined.WaterDrop
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -22,7 +19,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -52,10 +48,6 @@ fun InsightsScreen(
 ) {
     val state by viewModel.insightsState.collectAsStateWithLifecycle()
 
-    LaunchedEffect(vehicleId) {
-        viewModel.setVehicleId(vehicleId)
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -75,16 +67,9 @@ fun InsightsScreen(
                 .padding(paddingValues)
                 .padding(Dimens.spacingMd)
         ) {
-            if (state.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            } else if (state.entries.isEmpty()) {
+            if (state.entries.isEmpty()) {
                 EmptyState(
-                    icon = Icons.Outlined.Analytics,
+                    icon = Icons.Outlined.Insights,
                     title = "No Data Available",
                     description = "Add fuel entries to see insights and trends"
                 )
@@ -183,7 +168,7 @@ fun StatisticsGrid(
                                     Text("Declining", color = Color.Red, style = MaterialTheme.typography.bodySmall)
                                 }
                                 MileageTrend.STABLE -> {
-                                    Icon(Icons.Outlined.TrendingFlat, contentDescription = null, tint = Color.Gray)
+                                    Icon(Icons.Outlined.Remove, contentDescription = null, tint = Color.Gray)
                                     Spacer(modifier = Modifier.width(Dimens.spacingXs))
                                     Text("Stable", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
                                 }
@@ -202,7 +187,7 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Average Mileage",
                     value = averageMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
-                    icon = Icons.Outlined.Speed,
+                    icon = Icons.Outlined.Timer,
                     modifier = Modifier.weight(1f)
                 )
 
@@ -230,7 +215,7 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Total Entries",
                     value = entriesCount.toString(),
-                    icon = Icons.Outlined.Analytics,
+                    icon = Icons.Outlined.Insights,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -244,14 +229,14 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Total Distance",
                     value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance),
-                    icon = Icons.Outlined.LocalGasStation,
+                    icon = Icons.Outlined.WaterDrop,
                     modifier = Modifier.weight(1f)
                 )
 
                 InsightCard(
                     label = "Total Fuel",
                     value = "%.1f ${UnitConverter.getVolumeUnitLabel(volumeUnit)}".format(totalFuel),
-                    icon = Icons.Outlined.LocalGasStation,
+                    icon = Icons.Outlined.WaterDrop,
                     modifier = Modifier.weight(1f)
                 )
             }
@@ -265,14 +250,14 @@ fun StatisticsGrid(
                 InsightCard(
                     label = "Total Cost",
                     value = CurrencyFormatter.formatCurrency(totalCost, currency),
-                    icon = Icons.Outlined.Payments,
+                    icon = Icons.Outlined.AttachMoney,
                     modifier = Modifier.weight(1f)
                 )
 
                 InsightCard(
                     label = "Cost per km",
                     value = costPerKm?.let { CurrencyFormatter.formatCurrency(it, currency) } ?: "N/A",
-                    icon = Icons.Outlined.Speed,
+                    icon = Icons.Outlined.Timer,
                     modifier = Modifier.weight(1f)
                 )
             }

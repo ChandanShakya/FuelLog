@@ -1,17 +1,14 @@
 package com.chandanshakya.fuellog.ui.components
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -27,11 +24,8 @@ import androidx.compose.ui.unit.dp
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.data.model.VolumeUnit
-import com.chandanshakya.fuellog.ui.screens.getVehicleIcon
 import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.Validation
-
-private val VEHICLE_TYPES = listOf("car", "bus", "bike", "scooter", "truck")
 
 @Composable
 fun AddVehicleDialog(
@@ -40,10 +34,9 @@ fun AddVehicleDialog(
     defaultDistanceUnit: DistanceUnit,
     defaultVolumeUnit: VolumeUnit,
     onDismiss: () -> Unit,
-    onSave: (name: String, vehicleType: String, currency: String, distanceUnit: DistanceUnit, volumeUnit: VolumeUnit) -> Unit
+    onSave: (name: String, currency: String, distanceUnit: DistanceUnit, volumeUnit: VolumeUnit) -> Unit
 ) {
     var name by remember { mutableStateOf(vehicle?.name ?: "") }
-    var vehicleType by remember { mutableStateOf(vehicle?.vehicleType ?: "car") }
     var currency by remember { mutableStateOf(vehicle?.defaultCurrency ?: defaultCurrency) }
     var distanceUnit by remember { mutableStateOf(vehicle?.distanceUnit ?: defaultDistanceUnit) }
     var volumeUnit by remember { mutableStateOf(vehicle?.volumeUnit ?: defaultVolumeUnit) }
@@ -62,35 +55,6 @@ fun AddVehicleDialog(
                     error = nameError,
                     supportingText = "e.g. My Car, Honda Activa"
                 )
-
-                Spacer(modifier = Modifier.height(Dimens.spacingMd))
-                Text("Vehicle Type", style = MaterialTheme.typography.bodyMedium)
-                Spacer(modifier = Modifier.height(Dimens.spacingSm))
-
-                Row(modifier = Modifier.fillMaxWidth()) {
-                    VEHICLE_TYPES.forEach { type ->
-                        val isSelected = type == vehicleType
-                        Column(
-                            modifier = Modifier
-                                .weight(1f)
-                                .clickable { vehicleType = type }
-                                .padding(4.dp),
-                            horizontalAlignment = Alignment.CenterHorizontally
-                        ) {
-                            Icon(
-                                imageVector = getVehicleIcon(type),
-                                contentDescription = type,
-                                modifier = Modifier.size(28.dp),
-                                tint = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            Text(
-                                text = type.replaceFirstChar { it.uppercase() },
-                                style = MaterialTheme.typography.labelSmall,
-                                color = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
-                    }
-                }
 
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
 
@@ -131,7 +95,7 @@ fun AddVehicleDialog(
                 text = "Save",
                 onClick = {
                     if (nameError == null && currencyError == null) {
-                        onSave(name, vehicleType, currency, distanceUnit, volumeUnit)
+                        onSave(name, currency, distanceUnit, volumeUnit)
                     }
                 },
                 enabled = nameError == null && currencyError == null

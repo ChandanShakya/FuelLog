@@ -90,7 +90,6 @@ fun FuelLogTheme(
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
         content = content
     )
 }

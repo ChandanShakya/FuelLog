@@ -2,11 +2,11 @@ package com.chandanshakya.fuellog.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.chandanshakya.fuellog.data.db.UserSettingsDao
+import com.chandanshakya.fuellog.data.db.VehicleDao
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.data.model.VolumeUnit
-import com.chandanshakya.fuellog.data.repository.SettingsRepository
-import com.chandanshakya.fuellog.data.repository.VehicleRepository
 import com.chandanshakya.fuellog.util.Validation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
@@ -18,13 +18,13 @@ import javax.inject.Inject
 
 @HiltViewModel
 class VehiclesViewModel @Inject constructor(
-    private val vehicleRepository: VehicleRepository,
-    private val settingsRepository: SettingsRepository
+    private val vehicleDao: VehicleDao,
+    private val userSettingsDao: UserSettingsDao
 ) : ViewModel() {
 
     val vehiclesState: StateFlow<VehiclesState> = combine(
-        vehicleRepository.getAll(),
-        settingsRepository.getSettings()
+        vehicleDao.getAll(),
+        userSettingsDao.getSettings()
     ) { vehicles, settings ->
         VehiclesState(
             vehicles = vehicles,
@@ -40,7 +40,6 @@ class VehiclesViewModel @Inject constructor(
 
     fun addVehicle(
         name: String,
-        vehicleType: String = "car",
         currency: String? = null,
         distanceUnit: DistanceUnit? = null,
         volumeUnit: VolumeUnit? = null
@@ -48,35 +47,32 @@ class VehiclesViewModel @Inject constructor(
         if (!Validation.validateVehicleName(name)) return
 
         viewModelScope.launch {
-            val settings = settingsRepository.getSettingsSuspend()
+            val settings = userSettingsDao.getSettingsSuspend()
             val vehicle = Vehicle(
                 name = name,
-                vehicleType = vehicleType,
                 defaultCurrency = currency ?: settings?.defaultCurrency ?: "USD",
                 distanceUnit = distanceUnit ?: settings?.defaultDistanceUnit ?: DistanceUnit.KM,
                 volumeUnit = volumeUnit ?: settings?.defaultVolumeUnit ?: VolumeUnit.LITERS
             )
-            vehicleRepository.insert(vehicle)
+            vehicleDao.insert(vehicle)
         }
     }
 
     fun updateVehicle(vehicle: Vehicle) {
         if (!Validation.validateVehicleName(vehicle.name)) return
-        viewModelScope.launch { vehicleRepository.update(vehicle) }
+        viewModelScope.launch { vehicleDao.update(vehicle) }
     }
 
     fun deleteVehicle(id: Long) {
-        viewModelScope.launch { vehicleRepository.deleteById(id) }
+        viewModelScope.launch { vehicleDao.deleteById(id) }
     }
 
-    suspend fun getVehicleById(id: Long): Vehicle? = vehicleRepository.getById(id)
+    suspend fun getVehicleById(id: Long): Vehicle? = vehicleDao.getById(id)
 }
 
 data class VehiclesState(
     val vehicles: List<Vehicle> = emptyList(),
     val defaultCurrency: String = "USD",
     val defaultDistanceUnit: DistanceUnit = DistanceUnit.KM,
-    val defaultVolumeUnit: VolumeUnit = VolumeUnit.LITERS,
-    val isLoading: Boolean = false,
-    val error: String? = null
+    val defaultVolumeUnit: VolumeUnit = VolumeUnit.LITERS
 )

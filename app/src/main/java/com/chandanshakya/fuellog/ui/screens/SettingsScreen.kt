@@ -1,7 +1,6 @@
 package com.chandanshakya.fuellog.ui.screens
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -14,11 +13,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.outlined.CurrencyExchange
-import androidx.compose.material.icons.outlined.Scale
+import androidx.compose.material.icons.outlined.AttachMoney
 import androidx.compose.material.icons.outlined.Straighten
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -29,6 +26,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,7 +57,7 @@ fun SettingsScreen(
     var volumeUnit by remember { mutableStateOf(VolumeUnit.LITERS) }
     var currencyError by remember { mutableStateOf<String?>(null) }
 
-    androidx.compose.runtime.LaunchedEffect(state.settings) {
+    LaunchedEffect(state.settings) {
         state.settings?.let { settings ->
             currency = settings.defaultCurrency
             distanceUnit = settings.defaultDistanceUnit
@@ -85,22 +83,14 @@ fun SettingsScreen(
                 .padding(paddingValues)
                 .padding(Dimens.spacingMd)
         ) {
-            if (state.isLoading) {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            } else {
-                LazyColumn(
-                    contentPadding = PaddingValues(bottom = Dimens.spacingXl),
-                    verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
-                ) {
+            LazyColumn(
+                contentPadding = PaddingValues(bottom = Dimens.spacingXl),
+                verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
+            ) {
                 item {
                     SettingCard(
                         title = "Default Currency",
-                        icon = Icons.Outlined.CurrencyExchange,
+                        icon = Icons.Outlined.AttachMoney,
                         description = "Currency used for new vehicles"
                     ) {
                         AppTextField(
@@ -119,7 +109,7 @@ fun SettingsScreen(
                 item {
                     SettingCard(
                         title = "Default Distance Unit",
-                        icon = Icons.Outlined.Scale,
+                        icon = Icons.Outlined.Straighten,
                         description = "Distance unit used for new vehicles"
                     ) {
                         Column {
@@ -202,7 +192,6 @@ fun SettingsScreen(
                 }
             }
         }
-    }
     }
 }
 

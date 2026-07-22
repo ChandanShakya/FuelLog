@@ -17,17 +17,11 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
-import androidx.compose.material.icons.outlined.DirectionsBike
-import androidx.compose.material.icons.outlined.DirectionsBus
 import androidx.compose.material.icons.outlined.DirectionsCar
 import androidx.compose.material.icons.outlined.Edit
-import androidx.compose.material.icons.outlined.LocalShipping
-import androidx.compose.material.icons.outlined.Moped
 import androidx.compose.material.icons.outlined.MoreVert
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material.icons.outlined.TwoWheeler
 import androidx.compose.material3.Card
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -56,20 +50,11 @@ import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.viewmodel.VehiclesViewModel
 
-fun getVehicleIcon(type: String): ImageVector = when (type) {
-    "bus" -> Icons.Outlined.DirectionsBus
-    "bike" -> Icons.Outlined.DirectionsBike
-    "scooter" -> Icons.Outlined.Moped
-    "truck" -> Icons.Outlined.LocalShipping
-    else -> Icons.Outlined.DirectionsCar
-}
-
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VehiclesScreen(
     onVehicleSelected: (Long) -> Unit,
     onNavigateToSettings: () -> Unit = {},
-    onAddVehicle: () -> Unit = {},
     viewModel: VehiclesViewModel = hiltViewModel()
 ) {
     val state by viewModel.vehiclesState.collectAsStateWithLifecycle()
@@ -107,11 +92,7 @@ fun VehiclesScreen(
                     .fillMaxSize()
                     .padding(Dimens.spacingMd)
             ) {
-                if (state.isLoading) {
-                    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                        CircularProgressIndicator()
-                    }
-                } else if (state.vehicles.isEmpty()) {
+                if (state.vehicles.isEmpty()) {
                     EmptyState(
                         icon = Icons.Outlined.DirectionsCar,
                         title = "No Vehicles",
@@ -142,8 +123,8 @@ fun VehiclesScreen(
             defaultDistanceUnit = state.defaultDistanceUnit,
             defaultVolumeUnit = state.defaultVolumeUnit,
             onDismiss = { showAddDialog = false },
-            onSave = { name, vehicleType, currency, distanceUnit, volumeUnit ->
-                viewModel.addVehicle(name, vehicleType, currency, distanceUnit, volumeUnit)
+            onSave = { name, currency, distanceUnit, volumeUnit ->
+                viewModel.addVehicle(name, currency, distanceUnit, volumeUnit)
                 showAddDialog = false
             }
         )
@@ -156,11 +137,10 @@ fun VehiclesScreen(
             defaultDistanceUnit = state.defaultDistanceUnit,
             defaultVolumeUnit = state.defaultVolumeUnit,
             onDismiss = { vehicleToEdit = null },
-            onSave = { name, vehicleType, currency, distanceUnit, volumeUnit ->
+            onSave = { name, currency, distanceUnit, volumeUnit ->
                 vehicleToEdit?.let { existing ->
                     viewModel.updateVehicle(existing.copy(
                         name = name,
-                        vehicleType = vehicleType,
                         defaultCurrency = currency,
                         distanceUnit = distanceUnit,
                         volumeUnit = volumeUnit
@@ -191,7 +171,7 @@ fun VehicleCard(
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = getVehicleIcon(vehicle.vehicleType),
+                imageVector = Icons.Outlined.DirectionsCar,
                 contentDescription = null,
                 modifier = Modifier.size(Dimens.iconLarge),
                 tint = MaterialTheme.colorScheme.primary

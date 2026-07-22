@@ -83,3 +83,9 @@ Thumbs.db
 
 # MiMoCode
 .mimocode/
+
+# Keystores and platform keys
+debug.keystore
+debug.keystore.base64
+.build-outputs/
+.kotlin/

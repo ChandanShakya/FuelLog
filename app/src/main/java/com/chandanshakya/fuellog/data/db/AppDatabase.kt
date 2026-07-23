@@ -9,7 +9,7 @@ import com.chandanshakya.fuellog.data.model.Vehicle
 
 @Database(
     entities = [Vehicle::class, FuelEntry::class, UserSettings::class],
-    version = 6,
+    version = 7,
     exportSchema = false
 )
 @TypeConverters(Converters::class)

@@ -10,7 +10,6 @@ import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.util.MileageCalculator
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -30,7 +29,7 @@ class InsightsViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val currentVehicleId = MutableStateFlow(savedStateHandle.get<Long>(NavArgs.VEHICLE_ID) ?: -1L)
+    private val currentVehicleId = savedStateHandle.getStateFlow(NavArgs.VEHICLE_ID, -1L)
     private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }
     private val settingsFlow = userSettingsDao.getSettings()
 
@@ -101,10 +100,6 @@ class InsightsViewModel @Inject constructor(
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = InsightsState()
     )
-
-    fun setVehicleId(vehicleId: Long) {
-        currentVehicleId.value = vehicleId
-    }
 
     private fun calculateTrend(mileages: List<Double>): MileageTrend {
         if (mileages.size < 3) return MileageTrend.STABLE

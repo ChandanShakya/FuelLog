@@ -40,7 +40,6 @@ object Validation {
     fun validateFuelVolume(volume: Double): Boolean = getFuelVolumeError(volume) == null
     fun validateFuelCost(cost: Double): Boolean = getFuelCostError(cost) == null
     fun validateCurrencyCode(code: String): Boolean = getCurrencyCodeError(code) == null
-    fun validateNotes(notes: String?): Boolean = notes == null || notes.length <= 500
 
     fun validateFuelEntry(
         odometer: Double,

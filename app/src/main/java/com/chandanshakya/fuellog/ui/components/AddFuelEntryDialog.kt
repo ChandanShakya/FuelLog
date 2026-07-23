@@ -9,9 +9,19 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -19,14 +29,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
+import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.util.Validation
+import java.time.Instant
 import java.time.LocalDate
+import java.time.ZoneId
 
 enum class FuelInputMode {
     VOLUME_RATE,
@@ -42,7 +56,7 @@ fun AddFuelEntryDialog(
     volumeUnit: VolumeUnit,
     currency: String,
     onDismiss: () -> Unit,
-    onSave: (LocalDate, Double, Double, Double, String?) -> Unit
+    onSave: (LocalDate, Double, Double, Double) -> Unit
 ) {
     var date by remember { mutableStateOf(entry?.date ?: LocalDate.now()) }
     var odometer by remember { mutableStateOf(entry?.odometer?.let { "%.2f".format(it) } ?: "") }
@@ -54,7 +68,6 @@ fun AddFuelEntryDialog(
         )
     }
     var totalCost by remember { mutableStateOf(entry?.fuelCost?.let { "%.2f".format(it) } ?: "") }
-    var notes by remember { mutableStateOf(entry?.notes ?: "") }
 
     var inputMode by remember {
         mutableStateOf(
@@ -72,12 +85,19 @@ fun AddFuelEntryDialog(
     val volumeLabel = UnitConverter.getVolumeUnitLabel(volumeUnit)
     val distanceLabel = UnitConverter.getDistanceUnitLabel(distanceUnit)
 
+    var showDatePicker by remember { mutableStateOf(false) }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (entry != null) "Edit Fuel Entry" else "Add Fuel Entry", style = MaterialTheme.typography.titleLarge) },
         text = {
             Column(modifier = Modifier.padding(vertical = Dimens.spacingSm)) {
-                Text(text = "Date: ${date}", style = MaterialTheme.typography.bodyMedium)
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(text = "Date: $date", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
+                    IconButton(onClick = { showDatePicker = true }) {
+                        Icon(painter = painterResource(R.drawable.ic_calendar), contentDescription = "Pick date")
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
 
@@ -91,29 +111,24 @@ fun AddFuelEntryDialog(
                 )
 
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
-                Text("How do you want to enter fuel cost?", style = MaterialTheme.typography.bodyMedium)
-                Spacer(modifier = Modifier.height(Dimens.spacingSm))
 
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(
-                        selected = inputMode == FuelInputMode.VOLUME_RATE,
-                        onClick = { inputMode = FuelInputMode.VOLUME_RATE }
-                    )
-                    Text("Volume + Rate")
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(
-                        selected = inputMode == FuelInputMode.VOLUME_COST,
-                        onClick = { inputMode = FuelInputMode.VOLUME_COST }
-                    )
-                    Text("Volume + Cost")
-                }
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    RadioButton(
-                        selected = inputMode == FuelInputMode.RATE_COST,
-                        onClick = { inputMode = FuelInputMode.RATE_COST }
-                    )
-                    Text("Rate + Cost")
+                SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+                    FuelInputMode.entries.forEachIndexed { index, mode ->
+                        SegmentedButton(
+                            shape = SegmentedButtonDefaults.itemShape(index = index, count = FuelInputMode.entries.size),
+                            onClick = { inputMode = mode },
+                            selected = inputMode == mode,
+                            label = {
+                                Text(
+                                    when (mode) {
+                                        FuelInputMode.VOLUME_RATE -> "Vol+Rate"
+                                        FuelInputMode.VOLUME_COST -> "Vol+Cost"
+                                        FuelInputMode.RATE_COST -> "Rate+Cost"
+                                    }
+                                )
+                            }
+                        )
+                    }
                 }
 
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
@@ -250,7 +265,7 @@ fun AddFuelEntryDialog(
                     val vol = fuelVolume.toDoubleOrNull() ?: 0.0
                     val cost = totalCost.toDoubleOrNull() ?: 0.0
                     if (odometerError == null && fuelVolumeError == null && totalCostError == null) {
-                        onSave(date, odo, vol, cost, if (notes.isBlank()) null else notes)
+                        onSave(date, odo, vol, cost)
                     }
                 },
                 enabled = odometerError == null && fuelVolumeError == null && totalCostError == null
@@ -260,4 +275,30 @@ fun AddFuelEntryDialog(
             AppButtonOutlined(text = "Cancel", onClick = onDismiss)
         }
     )
+
+    if (showDatePicker) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
+        )
+        DatePickerDialog(
+            onDismissRequest = { showDatePicker = false },
+            confirmButton = {
+                TextButton(onClick = {
+                    datePickerState.selectedDateMillis?.let { millis ->
+                        date = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
+                    }
+                    showDatePicker = false
+                }) {
+                    Text("OK")
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDatePicker = false }) {
+                    Text("Cancel")
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
 }

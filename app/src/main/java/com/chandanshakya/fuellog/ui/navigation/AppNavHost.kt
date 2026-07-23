@@ -15,8 +15,7 @@ import com.chandanshakya.fuellog.ui.screens.VehiclesScreen
 
 @Composable
 fun AppNavHost(
-    navController: NavHostController,
-    onNavigateToVehicle: (Long) -> Unit
+    navController: NavHostController
 ) {
     NavHost(
         navController = navController,
@@ -29,7 +28,6 @@ fun AppNavHost(
         composable(NavRoutes.VEHICLES) {
             VehiclesScreen(
                 onVehicleSelected = { vehicleId ->
-                    onNavigateToVehicle(vehicleId)
                     navController.navigate(NavRoutes.FUEL_LOG_WITH_ARG.replace(
                         "{vehicleId}",
                         vehicleId.toString()
@@ -78,11 +76,6 @@ fun AppNavHost(
                             restoreState = true
                         }
                     }
-                },
-                onNavigateToSettings = {
-                    navController.navigate(NavRoutes.SETTINGS) {
-                        launchSingleTop = true
-                    }
                 }
             )
         }
@@ -100,20 +93,6 @@ fun AppNavHost(
                 vehicleId = vehicleId,
                 onNavigateToLog = {
                     navController.popBackStack()
-                },
-                onNavigateToVehicles = {
-                    navController.navigate(NavRoutes.VEHICLES) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                },
-                onNavigateToSettings = {
-                    navController.navigate(NavRoutes.SETTINGS) {
-                        launchSingleTop = true
-                    }
                 }
             )
         }

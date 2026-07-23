@@ -27,17 +27,6 @@ object UnitConverter {
         VolumeUnit.GALLONS -> value / GALLONS_TO_LITERS
     }
 
-    fun calculateEfficiencyBase(
-        distance: Double,
-        fuelVolume: Double,
-        distanceUnit: DistanceUnit,
-        volumeUnit: VolumeUnit
-    ): Double {
-        val distanceKm = toKilometers(distance, distanceUnit)
-        val volumeLiters = toLiters(fuelVolume, volumeUnit)
-        return if (volumeLiters > 0) distanceKm / volumeLiters else 0.0
-    }
-
     fun convertEfficiency(
         efficiencyKmPerLiter: Double,
         distanceUnit: DistanceUnit,

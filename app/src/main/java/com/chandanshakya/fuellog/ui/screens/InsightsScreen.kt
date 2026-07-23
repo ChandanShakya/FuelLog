@@ -36,8 +36,6 @@ import com.chandanshakya.fuellog.viewmodel.PriceChartDataPoint
 fun InsightsScreen(
     vehicleId: Long,
     onNavigateToLog: () -> Unit,
-    onNavigateToVehicles: () -> Unit,
-    onNavigateToSettings: () -> Unit = {},
     viewModel: InsightsViewModel = hiltViewModel()
 ) {
     val state by viewModel.insightsState.collectAsStateWithLifecycle()
@@ -177,14 +175,14 @@ fun StatisticsGrid(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
             ) {
-                InsightCard(
+                InfoCard(
                     label = "Average Mileage",
                     value = averageMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
                     icon = painterResource(R.drawable.ic_speed),
                     modifier = Modifier.weight(1f)
                 )
 
-                InsightCard(
+                InfoCard(
                     label = "Best Mileage",
                     value = bestMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
                     icon = painterResource(R.drawable.ic_arrow_upward),
@@ -198,14 +196,14 @@ fun StatisticsGrid(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
             ) {
-                InsightCard(
+                InfoCard(
                     label = "Worst Mileage",
                     value = worstMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
                     icon = painterResource(R.drawable.ic_arrow_downward),
                     modifier = Modifier.weight(1f)
                 )
 
-                InsightCard(
+                InfoCard(
                     label = "Total Entries",
                     value = entriesCount.toString(),
                     icon = painterResource(R.drawable.ic_analytics),
@@ -219,14 +217,14 @@ fun StatisticsGrid(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
             ) {
-                InsightCard(
+                InfoCard(
                     label = "Total Distance",
                     value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance),
                     icon = painterResource(R.drawable.ic_road),
                     modifier = Modifier.weight(1f)
                 )
 
-                InsightCard(
+                InfoCard(
                     label = "Total Fuel",
                     value = "%.1f ${UnitConverter.getVolumeUnitLabel(volumeUnit)}".format(totalFuel),
                     icon = painterResource(R.drawable.ic_local_gas_station),
@@ -240,14 +238,14 @@ fun StatisticsGrid(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
             ) {
-                InsightCard(
+                InfoCard(
                     label = "Total Cost",
                     value = CurrencyFormatter.formatCurrency(totalCost, currency),
                     icon = painterResource(R.drawable.ic_payments),
                     modifier = Modifier.weight(1f)
                 )
 
-                InsightCard(
+                InfoCard(
                     label = "Cost per km",
                     value = costPerKm?.let { CurrencyFormatter.formatCurrency(it, currency) } ?: "N/A",
                     icon = painterResource(R.drawable.ic_speed),
@@ -283,53 +281,6 @@ fun StatisticsGrid(
                     }
                 }
             }
-        }
-    }
-}
-
-@Composable
-fun InsightCard(
-    label: String,
-    value: String,
-    icon: androidx.compose.ui.graphics.painter.Painter,
-    modifier: Modifier = Modifier
-) {
-    Card(
-        modifier = modifier,
-        shape = MaterialTheme.shapes.medium,
-        elevation = Dimens.cardElevation()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Dimens.spacingSm, vertical = Dimens.spacingMd),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(
-                painter = icon,
-                contentDescription = null,
-                modifier = Modifier.size(Dimens.iconMedium),
-                tint = MaterialTheme.colorScheme.primary
-            )
-
-            Spacer(modifier = Modifier.height(Dimens.spacingSm))
-
-            androidx.compose.material3.Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = if (value.length > 8) MaterialTheme.typography.titleSmall.fontSize else MaterialTheme.typography.titleMedium.fontSize
-                ),
-                maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-            )
-
-            androidx.compose.material3.Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-            )
         }
     }
 }

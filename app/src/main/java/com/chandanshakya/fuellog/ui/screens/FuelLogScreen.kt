@@ -26,7 +26,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -56,16 +55,11 @@ fun FuelLogScreen(
     vehicleId: Long,
     onNavigateToInsights: () -> Unit,
     onNavigateToVehicles: () -> Unit,
-    onNavigateToSettings: () -> Unit = {},
     viewModel: FuelLogViewModel = hiltViewModel()
 ) {
     val state by viewModel.fuelLogState.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
     var entryToEdit by remember { mutableStateOf<FuelEntry?>(null) }
-
-    LaunchedEffect(vehicleId) {
-        viewModel.setVehicleId(vehicleId)
-    }
 
     Scaffold(
         topBar = {
@@ -156,8 +150,8 @@ fun FuelLogScreen(
             volumeUnit = state.vehicle?.volumeUnit ?: VolumeUnit.LITERS,
             currency = state.currency,
             onDismiss = { showAddDialog = false },
-            onSave = { date, odometer, fuelVolume, totalCost, notes ->
-                viewModel.addFuelEntry(date, odometer, fuelVolume, totalCost, notes)
+            onSave = { date, odometer, fuelVolume, totalCost ->
+                viewModel.addFuelEntry(date, odometer, fuelVolume, totalCost)
                 showAddDialog = false
             }
         )
@@ -171,15 +165,14 @@ fun FuelLogScreen(
             volumeUnit = state.vehicle?.volumeUnit ?: VolumeUnit.LITERS,
             currency = state.currency,
             onDismiss = { entryToEdit = null },
-            onSave = { date, odometer, fuelVolume, totalCost, notes ->
+            onSave = { date, odometer, fuelVolume, totalCost ->
                 entryToEdit?.let { existing ->
                     viewModel.updateFuelEntry(
                         id = existing.id,
                         date = date,
                         odometer = odometer,
                         fuelVolume = fuelVolume,
-                        fuelCost = totalCost,
-                        notes = notes
+                        fuelCost = totalCost
                     )
                 }
                 entryToEdit = null
@@ -202,19 +195,19 @@ fun SummaryStats(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
     ) {
-        StatCard(label = "Avg Mileage", value = averageMileage?.let { "%.1f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(it) } ?: "N/A", icon = painterResource(R.drawable.ic_speed), modifier = Modifier.weight(1f))
-        StatCard(label = "Total Distance", value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance), icon = painterResource(R.drawable.ic_road), modifier = Modifier.weight(1f))
-        StatCard(label = "Total Cost", value = CurrencyFormatter.formatCurrency(totalCost, currency), icon = painterResource(R.drawable.ic_local_gas_station), modifier = Modifier.weight(1f))
+        InfoCard(label = "Avg Mileage", value = averageMileage?.let { "%.1f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(it) } ?: "N/A", icon = painterResource(R.drawable.ic_speed), modifier = Modifier.weight(1f))
+        InfoCard(label = "Total Distance", value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance), icon = painterResource(R.drawable.ic_road), modifier = Modifier.weight(1f))
+        InfoCard(label = "Total Cost", value = CurrencyFormatter.formatCurrency(totalCost, currency), icon = painterResource(R.drawable.ic_local_gas_station), modifier = Modifier.weight(1f))
     }
 }
 
 @Composable
-fun StatCard(label: String, value: String, icon: androidx.compose.ui.graphics.painter.Painter, modifier: Modifier = Modifier) {
+fun InfoCard(label: String, value: String, icon: androidx.compose.ui.graphics.painter.Painter, modifier: Modifier = Modifier) {
     Card(modifier = modifier, shape = MaterialTheme.shapes.medium, elevation = Dimens.cardElevation()) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = Dimens.spacingXs, vertical = Dimens.spacingMd),
+                .padding(horizontal = Dimens.spacingSm, vertical = Dimens.spacingMd),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             Icon(painter = icon, contentDescription = null, modifier = Modifier.size(Dimens.iconMedium), tint = MaterialTheme.colorScheme.primary)
@@ -225,7 +218,6 @@ fun StatCard(label: String, value: String, icon: androidx.compose.ui.graphics.pa
                     fontSize = if (value.length > 8) MaterialTheme.typography.titleSmall.fontSize else MaterialTheme.typography.titleMedium.fontSize
                 ),
                 maxLines = 1,
-                softWrap = false,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
             Text(
@@ -233,7 +225,6 @@ fun StatCard(label: String, value: String, icon: androidx.compose.ui.graphics.pa
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,
-                softWrap = false,
                 overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
             )
         }
@@ -258,18 +249,7 @@ fun FuelEntryCard(
                 Icon(painter = painterResource(R.drawable.ic_local_gas_station), contentDescription = null, modifier = Modifier.size(Dimens.iconMedium), tint = MaterialTheme.colorScheme.primary)
                 Spacer(modifier = Modifier.size(Dimens.spacingMd))
                 Column(modifier = Modifier.weight(1f)) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
-                    ) {
-                        Text(text = DateTimeFormatter.ISO_LOCAL_DATE.format(entry.date), style = MaterialTheme.typography.titleMedium)
-                        val timeFormatter = remember { DateTimeFormatter.ofPattern("hh:mm a") }
-                        Text(
-                            text = entry.time.format(timeFormatter),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    Text(text = DateTimeFormatter.ISO_LOCAL_DATE.format(entry.date), style = MaterialTheme.typography.titleMedium)
                     Text(
                         text = "Odometer: ${"%.0f".format(entry.odometer)} ${UnitConverter.getDistanceUnitLabel(distanceUnit)}",
                         style = MaterialTheme.typography.bodySmall,

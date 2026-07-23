@@ -43,8 +43,7 @@ fun FuelLogApp() {
             val navController = rememberNavController()
 
             AppNavHost(
-                navController = navController,
-                onNavigateToVehicle = { }
+                navController = navController
             )
         }
     }

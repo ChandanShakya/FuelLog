@@ -11,7 +11,6 @@ import com.chandanshakya.fuellog.util.MileageCalculator
 import com.chandanshakya.fuellog.util.Validation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -33,7 +32,7 @@ class FuelLogViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val currentVehicleId = MutableStateFlow(savedStateHandle.get<Long>(NavArgs.VEHICLE_ID) ?: -1L)
+    private val currentVehicleId = savedStateHandle.getStateFlow(NavArgs.VEHICLE_ID, -1L)
     private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }
     private val settingsFlow = userSettingsDao.getSettings()
 
@@ -67,16 +66,11 @@ class FuelLogViewModel @Inject constructor(
         initialValue = FuelLogState()
     )
 
-    fun setVehicleId(vehicleId: Long) {
-        currentVehicleId.value = vehicleId
-    }
-
     fun addFuelEntry(
         date: LocalDate,
         odometer: Double,
         fuelVolume: Double,
-        fuelCost: Double,
-        notes: String? = null
+        fuelCost: Double
     ) {
         if (!Validation.validateFuelEntry(odometer, fuelVolume, fuelCost)) return
 
@@ -86,21 +80,20 @@ class FuelLogViewModel @Inject constructor(
                 date = date,
                 odometer = odometer,
                 fuelVolume = fuelVolume,
-                fuelCost = fuelCost,
-                notes = notes
+                fuelCost = fuelCost
             )
             fuelEntryDao.insert(entry)
         }
     }
 
     fun updateFuelEntry(
-        id: Long, date: LocalDate, odometer: Double, fuelVolume: Double, fuelCost: Double, notes: String? = null
+        id: Long, date: LocalDate, odometer: Double, fuelVolume: Double, fuelCost: Double
     ) {
         if (!Validation.validateFuelEntry(odometer, fuelVolume, fuelCost)) return
 
         viewModelScope.launch {
             val existing = fuelEntryDao.getById(id) ?: return@launch
-            val entry = existing.copy(date = date, odometer = odometer, fuelVolume = fuelVolume, fuelCost = fuelCost, notes = notes)
+            val entry = existing.copy(date = date, odometer = odometer, fuelVolume = fuelVolume, fuelCost = fuelCost)
             fuelEntryDao.update(entry)
         }
     }

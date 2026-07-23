@@ -90,8 +90,6 @@ class VehiclesViewModel @Inject constructor(
     fun deleteVehicle(id: Long) {
         viewModelScope.launch { vehicleDao.deleteById(id) }
     }
-
-    suspend fun getVehicleById(id: Long): Vehicle? = vehicleDao.getById(id)
 }
 
 data class VehiclesState(

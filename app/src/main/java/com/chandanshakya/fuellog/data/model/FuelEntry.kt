@@ -5,7 +5,6 @@ import androidx.room.ForeignKey
 import androidx.room.Index
 import androidx.room.PrimaryKey
 import java.time.LocalDate
-import java.time.LocalTime
 
 @Entity(
     tableName = "fuel_entries",
@@ -28,7 +27,5 @@ data class FuelEntry(
     var date: LocalDate,
     var odometer: Double,
     var fuelVolume: Double,
-    var fuelCost: Double,
-    var notes: String? = null,
-    var time: LocalTime = LocalTime.now()
+    var fuelCost: Double
 )

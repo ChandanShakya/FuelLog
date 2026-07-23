@@ -49,26 +49,6 @@ fun AppButton(
 }
 
 /**
- * Secondary button variant.
- */
-@Composable
-fun AppButtonSecondary(
-    text: String,
-    onClick: () -> Unit,
-    modifier: Modifier = Modifier,
-    enabled: Boolean = true
-) {
-    AppButton(
-        text = text,
-        onClick = onClick,
-        modifier = modifier,
-        enabled = enabled,
-        containerColor = MaterialTheme.colorScheme.secondaryContainer,
-        contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-    )
-}
-
-/**
  * Outlined button variant.
  */
 @Composable

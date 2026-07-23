@@ -1,7 +1,6 @@
 package com.chandanshakya.fuellog.data.db
 
 import androidx.room.Dao
-import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -28,9 +27,6 @@ interface VehicleDao {
 
     @Update
     suspend fun update(vehicle: Vehicle)
-
-    @Delete
-    suspend fun delete(vehicle: Vehicle)
 
     @Query("DELETE FROM vehicles WHERE id = :id")
     suspend fun deleteById(id: Long)

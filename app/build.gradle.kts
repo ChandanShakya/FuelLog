@@ -15,9 +15,13 @@ android {
         minSdk = 26
         targetSdk = 35
         versionCode = 1
-        versionName = "1.1.8"
+        versionName = "1.1.9"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            abiFilters += listOf("arm64-v8a", "armeabi-v7a")
+        }
     }
 
     signingConfigs {
@@ -61,6 +65,9 @@ android {
     packaging {
         resources {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
+            excludes += "DebugProbesKt.bin"
+            excludes += "kotlin/**"
+            excludes += "META-INF/*.version"
         }
         jniLibs.keepDebugSymbols += "**/libandroidx.graphics.path.so"
     }
@@ -68,8 +75,12 @@ android {
 
 dependencies {
     // Android
-    implementation("androidx.core:core-ktx:1.15.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.core:core-ktx:1.15.0") {
+        exclude(group = "androidx.emoji2")
+    }
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7") {
+        exclude(group = "androidx.profileinstaller")
+    }
     implementation("androidx.activity:activity-compose:1.9.3")
 
     // Material Components (for XML themes) - commented out to minimize app size (using platform theme instead)

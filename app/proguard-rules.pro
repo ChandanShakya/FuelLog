@@ -1,19 +1,10 @@
-# Room - keep only what's needed
+# Room - keep only DAOs and entities
 -keep class * extends androidx.room.RoomDatabase { *; }
--keep class * extends androidx.room.Dao { *; }
--keepclassmembers class * {
-    @androidx.room.Entity <fields>;
-}
+-keep @androidx.room.Entity class * { <fields>; }
 
-# Hilt
--keep class dagger.hilt.** { *; }
--keep class javax.inject.** { *; }
+# Hilt - keep generated component and entry points
+-keep class dagger.hilt.android.internal.** { *; }
+-keep class * extends dagger.hilt.android.internal.managers.ViewComponentManager$FragmentContextWrapper { *; }
 
-# Kotlin
--keep class kotlin.Metadata { *; }
--keepclassmembers class **$WhenMappings {
-    <fields>;
-}
-
-# Keep Room entities (needed for reflection)
--keep @androidx.room.Entity class * { *; }
+# Kotlin - keep metadata for serialization only
+-keepattributes *Annotation*

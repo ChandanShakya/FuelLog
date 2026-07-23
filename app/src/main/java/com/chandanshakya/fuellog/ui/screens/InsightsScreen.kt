@@ -177,14 +177,14 @@ fun StatisticsGrid(
             ) {
                 InfoCard(
                     label = "Average Mileage",
-                    value = averageMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
+                    value = averageMileage?.let { "%.2f $efficiencyLabel".format(it) } ?: "N/A",
                     icon = painterResource(R.drawable.ic_speed),
                     modifier = Modifier.weight(1f)
                 )
 
                 InfoCard(
                     label = "Best Mileage",
-                    value = bestMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
+                    value = bestMileage?.let { "%.2f $efficiencyLabel".format(it) } ?: "N/A",
                     icon = painterResource(R.drawable.ic_arrow_upward),
                     modifier = Modifier.weight(1f)
                 )
@@ -198,7 +198,7 @@ fun StatisticsGrid(
             ) {
                 InfoCard(
                     label = "Worst Mileage",
-                    value = worstMileage?.let { "%.1f $efficiencyLabel".format(it) } ?: "N/A",
+                    value = worstMileage?.let { "%.2f $efficiencyLabel".format(it) } ?: "N/A",
                     icon = painterResource(R.drawable.ic_arrow_downward),
                     modifier = Modifier.weight(1f)
                 )
@@ -219,14 +219,14 @@ fun StatisticsGrid(
             ) {
                 InfoCard(
                     label = "Total Distance",
-                    value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance),
+                    value = "%.2f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance),
                     icon = painterResource(R.drawable.ic_road),
                     modifier = Modifier.weight(1f)
                 )
 
                 InfoCard(
                     label = "Total Fuel",
-                    value = "%.1f ${UnitConverter.getVolumeUnitLabel(volumeUnit)}".format(totalFuel),
+                    value = "%.2f ${UnitConverter.getVolumeUnitLabel(volumeUnit)}".format(totalFuel),
                     icon = painterResource(R.drawable.ic_local_gas_station),
                     modifier = Modifier.weight(1f)
                 )

@@ -195,8 +195,8 @@ fun SummaryStats(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
     ) {
-        InfoCard(label = "Avg Mileage", value = averageMileage?.let { "%.1f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(it) } ?: "N/A", icon = painterResource(R.drawable.ic_speed), modifier = Modifier.weight(1f))
-        InfoCard(label = "Total Distance", value = "%.0f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance), icon = painterResource(R.drawable.ic_road), modifier = Modifier.weight(1f))
+        InfoCard(label = "Avg Mileage", value = averageMileage?.let { "%.2f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(it) } ?: "N/A", icon = painterResource(R.drawable.ic_speed), modifier = Modifier.weight(1f))
+        InfoCard(label = "Total Distance", value = "%.2f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance), icon = painterResource(R.drawable.ic_road), modifier = Modifier.weight(1f))
         InfoCard(label = "Total Cost", value = CurrencyFormatter.formatCurrency(totalCost, currency), icon = painterResource(R.drawable.ic_local_gas_station), modifier = Modifier.weight(1f))
     }
 }
@@ -251,7 +251,7 @@ fun FuelEntryCard(
                 Column(modifier = Modifier.weight(1f)) {
                     Text(text = DateTimeFormatter.ISO_LOCAL_DATE.format(entry.date), style = MaterialTheme.typography.titleMedium)
                     Text(
-                        text = "Odometer: ${"%.0f".format(entry.odometer)} ${UnitConverter.getDistanceUnitLabel(distanceUnit)}",
+                        text = "Odometer: ${"%.2f".format(entry.odometer)} ${UnitConverter.getDistanceUnitLabel(distanceUnit)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -269,9 +269,9 @@ fun FuelEntryCard(
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)) {
                 mileage?.let { m ->
-                    AppBadge(text = "%.1f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(m))
+                    AppBadge(text = "%.2f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(m))
                 }
-                AppBadge(text = "${"%.1f".format(entry.fuelVolume)} ${UnitConverter.getVolumeUnitLabel(volumeUnit)}")
+                AppBadge(text = "${"%.2f".format(entry.fuelVolume)} ${UnitConverter.getVolumeUnitLabel(volumeUnit)}")
                 AppBadge(text = CurrencyFormatter.formatCurrency(entry.fuelCost, currency))
             }
         }

@@ -15,7 +15,7 @@ fun MileageChart(
     LineChart(
         values = dataPoints.map { it.mileage },
         dates = dataPoints.map { it.date },
-        valueLabel = { "%.1f".format(it) },
+        valueLabel = { "%.2f".format(it) },
         lineColor = lineColor,
         modifier = modifier
     )

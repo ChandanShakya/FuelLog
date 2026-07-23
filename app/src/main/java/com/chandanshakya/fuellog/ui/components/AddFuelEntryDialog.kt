@@ -263,10 +263,16 @@ fun AddFuelEntryDialog(
                 text = "Save",
                 onClick = {
                     val odo = odometer.toDoubleOrNull() ?: 0.0
-                    val vol = fuelVolume.toDoubleOrNull() ?: 0.0
+                    val r = rate.toDoubleOrNull() ?: 0.0
                     val cost = totalCost.toDoubleOrNull() ?: 0.0
+                    val vol = fuelVolume.toDoubleOrNull() ?: 0.0
+                    val (finalVol, finalCost) = when (inputMode) {
+                        FuelInputMode.VOLUME_RATE -> vol to if (vol > 0 && r > 0) vol * r else cost
+                        FuelInputMode.VOLUME_COST -> vol to cost
+                        FuelInputMode.RATE_COST -> (if (r > 0) cost / r else vol) to cost
+                    }
                     if (odometerError == null && fuelVolumeError == null && totalCostError == null) {
-                        onSave(date, odo, vol, cost)
+                        onSave(date, odo, finalVol, finalCost)
                     }
                 },
                 enabled = odometerError == null && fuelVolumeError == null && totalCostError == null

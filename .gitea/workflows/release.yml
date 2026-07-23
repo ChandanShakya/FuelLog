@@ -8,9 +8,6 @@ on:
 env:
   GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.parallel=true"
 
-permissions:
-  contents: write
-
 jobs:
   build-and-test:
     name: Build and Test
@@ -50,7 +47,7 @@ jobs:
     name: Publish Release
     needs: build-and-test
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: gitea.ref == 'refs/heads/main' && gitea.event_name == 'push'
 
     steps:
       - name: Checkout repository

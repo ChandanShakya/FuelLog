@@ -11,10 +11,12 @@ import com.chandanshakya.fuellog.util.MileageCalculator
 import com.chandanshakya.fuellog.util.Validation
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -60,7 +62,7 @@ class FuelLogViewModel @Inject constructor(
             totalCost = MileageCalculator.calculateTotalCost(sortedEntries),
             currency = settings?.defaultCurrency ?: "USD"
         )
-    }.stateIn(
+    }.flowOn(Dispatchers.Default).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = FuelLogState()
@@ -92,8 +94,14 @@ class FuelLogViewModel @Inject constructor(
         if (!Validation.validateFuelEntry(odometer, fuelVolume, fuelCost)) return
 
         viewModelScope.launch {
-            val existing = fuelEntryDao.getById(id) ?: return@launch
-            val entry = existing.copy(date = date, odometer = odometer, fuelVolume = fuelVolume, fuelCost = fuelCost)
+            val entry = FuelEntry(
+                id = id,
+                vehicleId = currentVehicleId.value,
+                date = date,
+                odometer = odometer,
+                fuelVolume = fuelVolume,
+                fuelCost = fuelCost
+            )
             fuelEntryDao.update(entry)
         }
     }

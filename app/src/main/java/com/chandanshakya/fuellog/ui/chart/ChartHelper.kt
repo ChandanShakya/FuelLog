@@ -32,6 +32,9 @@ fun LineChart(
 
     val textMeasurer = rememberTextMeasurer()
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM") }
+    val minVal = remember(values) { values.minOrNull() ?: 0.0 }
+    val maxVal = remember(values) { values.maxOrNull() ?: 1.0 }
+    val range = remember(minVal, maxVal) { maxVal - minVal }
 
     val textStyleLabel = MaterialTheme.typography.labelSmall.copy(color = lineColor)
     val textStyleBody = MaterialTheme.typography.bodySmall.copy(
@@ -66,9 +69,6 @@ fun LineChart(
         val yPositions = if (values.size == 1) {
             listOf(topMargin + usableHeight / 2f)
         } else {
-            val minVal = values.minOrNull() ?: 0.0
-            val maxVal = values.maxOrNull() ?: 1.0
-            val range = maxVal - minVal
             values.map { v ->
                 val normalized = if (range > 0) (v - minVal) / range else 0.5
                 topMargin + usableHeight - (normalized * usableHeight).toFloat()

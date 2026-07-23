@@ -97,7 +97,7 @@ fun VehiclesScreen(
                         contentPadding = PaddingValues(bottom = 80.dp),
                         verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
                     ) {
-                        items(items = state.vehicles, key = { it.id }) { vehicle ->
+                        items(items = state.vehicles, key = { it.id }, contentType = { "vehicle" }) { vehicle ->
                             VehicleCard(
                                 vehicle = vehicle,
                                 onClick = { onVehicleSelected(vehicle.id) },

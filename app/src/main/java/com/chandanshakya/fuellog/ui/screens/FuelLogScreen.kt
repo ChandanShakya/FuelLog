@@ -126,7 +126,7 @@ fun FuelLogScreen(
                         contentPadding = PaddingValues(bottom = 80.dp),
                         verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
                     ) {
-                        items(items = state.entries, key = { it.entry.id }) { entryWithMileage ->
+                        items(items = state.entries, key = { it.entry.id }, contentType = { "fuel_entry" }) { entryWithMileage ->
                             FuelEntryCard(
                                 entry = entryWithMileage.entry,
                                 mileage = entryWithMileage.mileage,

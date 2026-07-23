@@ -3,8 +3,6 @@ name: Build and Release
 on:
   push:
     branches: [ main ]
-  pull_request:
-    branches: [ main ]
   workflow_dispatch:
 
 env:
@@ -41,13 +39,6 @@ jobs:
 
       - name: Run unit tests
         run: ./gradlew testDebugUnitTest --no-daemon
-
-      - name: Upload test results
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: app/build/reports/tests/
 
       - name: Upload debug APK
         uses: actions/upload-artifact@v4
@@ -102,15 +93,34 @@ jobs:
           echo "APK_PATH=$APK_PATH" >> $GITHUB_OUTPUT
           echo "AAB_PATH=$AAB_PATH" >> $GITHUB_OUTPUT
 
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.VERSION_NAME }}
-          name: FuelLog v${{ steps.version.outputs.VERSION_NAME }}
-          body: "FuelLog Android Fuel Tracker v${{ steps.version.outputs.VERSION_NAME }}"
-          files: |
-            ${{ steps.paths.outputs.APK_PATH }}
-            ${{ steps.paths.outputs.AAB_PATH }}
-          fail_on_unmatched_files: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Create Codeberg Release
+        run: |
+          VERSION="v${{ steps.version.outputs.VERSION_NAME }}"
+          APK="${{ steps.paths.outputs.APK_PATH }}"
+          AAB="${{ steps.paths.outputs.AAB_PATH }}"
+
+          curl -s -X POST \
+            -H "Authorization: token ${{ secrets.CODEBERG_TOKEN }}" \
+            -H "Content-Type: application/json" \
+            "https://codeberg.org/api/v1/repos/ChandanShakya/FuelLog/releases" \
+            -d "{
+              \"tag_name\": \"$VERSION\",
+              \"name\": \"FuelLog $VERSION\",
+              \"body\": \"FuelLog Android Fuel Tracker $VERSION\",
+              \"draft\": false,
+              \"prerelease\": false
+            }" | jq .
+
+          RELEASE_ID=$(curl -s \
+            -H "Authorization: token ${{ secrets.CODEBERG_TOKEN }}" \
+            "https://codeberg.org/api/v1/repos/ChandanShakya/FuelLog/releases/tags/$VERSION" | jq '.id')
+
+          curl -s -X POST \
+            -H "Authorization: token ${{ secrets.CODEBERG_TOKEN }}" \
+            -F "attachment=@$APK" \
+            "https://codeberg.org/api/v1/repos/ChandanShakya/FuelLog/releases/$RELEASE_ID/assets"
+
+          curl -s -X POST \
+            -H "Authorization: token ${{ secrets.CODEBERG_TOKEN }}" \
+            -F "attachment=@$AAB" \
+            "https://codeberg.org/api/v1/repos/ChandanShakya/FuelLog/releases/$RELEASE_ID/assets"

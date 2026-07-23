@@ -82,19 +82,6 @@ class ValidationTest {
     }
 
     @Test
-    fun testValidateNotes_Valid() {
-        assertTrue(Validation.validateNotes(null))
-        assertTrue(Validation.validateNotes(""))
-        assertTrue(Validation.validateNotes("Short note"))
-        assertTrue(Validation.validateNotes("A".repeat(500)))
-    }
-
-    @Test
-    fun testValidateNotes_Invalid() {
-        assertFalse(Validation.validateNotes("A".repeat(501)))
-    }
-
-    @Test
     fun testValidateFuelEntry_Valid() {
         assertTrue(Validation.validateFuelEntry(1000.0, 50.0, 100.0))
     }

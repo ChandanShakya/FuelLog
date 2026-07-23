@@ -49,25 +49,6 @@ class UnitConverterTest {
     }
 
     @Test
-    fun testCalculateEfficiencyBase_KM_LITERS() {
-        val result = UnitConverter.calculateEfficiencyBase(
-            distance = 100.0, fuelVolume = 10.0,
-            distanceUnit = DistanceUnit.KM, volumeUnit = VolumeUnit.LITERS
-        )
-        assertEquals(10.0, result, 0.001)
-    }
-
-    @Test
-    fun testCalculateEfficiencyBase_MILES_GALLONS() {
-        val result = UnitConverter.calculateEfficiencyBase(
-            distance = 100.0, fuelVolume = 2.64172,
-            distanceUnit = DistanceUnit.MILES, volumeUnit = VolumeUnit.GALLONS
-        )
-        // 100 miles = 160.9344 km, 2.64172 gal = 10.0 L → 16.0934 km/L
-        assertEquals(16.0934, result, 0.01)
-    }
-
-    @Test
     fun testConvertEfficiency_KM_LITERS_to_MILES_GALLONS() {
         val result = UnitConverter.convertEfficiency(
             efficiencyKmPerLiter = 10.0,

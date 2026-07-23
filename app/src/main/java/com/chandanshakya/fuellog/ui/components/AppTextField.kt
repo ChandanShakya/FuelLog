@@ -15,6 +15,18 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import com.chandanshakya.fuellog.R
 
+private fun filterDecimalInput(value: String, maxDecimalPlaces: Int): String {
+    if (value.isEmpty()) return value
+    val hasMinus = value.startsWith('-')
+    val raw = if (hasMinus) value.removePrefix("-") else value
+    val dotIndex = raw.indexOf('.')
+    if (dotIndex == -1) return value
+    val integerPart = raw.substring(0, dotIndex)
+    val decimalPart = raw.substring(dotIndex + 1).filter { it.isDigit() }
+    val truncated = decimalPart.take(maxDecimalPlaces)
+    return (if (hasMinus) "-" else "") + integerPart + "." + truncated
+}
+
 /**
  * Custom text field wrapper to avoid naming conflicts with Material 3 components.
  * 
@@ -37,11 +49,21 @@ fun AppTextField(
     keyboardOptions: KeyboardOptions = KeyboardOptions.Default,
     visualTransformation: VisualTransformation = VisualTransformation.None,
     error: String? = null,
-    supportingText: String? = null
+    supportingText: String? = null,
+    decimalPlaces: Int = 0
 ) {
+    val filteredOnValueChange: (String) -> Unit = if (decimalPlaces > 0) {
+        { newValue ->
+            val filtered = filterDecimalInput(newValue, decimalPlaces)
+            onValueChange(filtered)
+        }
+    } else {
+        onValueChange
+    }
+
     OutlinedTextField(
         value = value,
-        onValueChange = onValueChange,
+        onValueChange = filteredOnValueChange,
         label = { Text(label) },
         modifier = modifier
             .fillMaxWidth()

@@ -45,15 +45,15 @@ fun AddFuelEntryDialog(
     onSave: (LocalDate, Double, Double, Double, String?) -> Unit
 ) {
     var date by remember { mutableStateOf(entry?.date ?: LocalDate.now()) }
-    var odometer by remember { mutableStateOf(entry?.odometer?.toString() ?: "") }
-    var fuelVolume by remember { mutableStateOf(entry?.fuelVolume?.toString() ?: "") }
+    var odometer by remember { mutableStateOf(entry?.odometer?.let { "%.2f".format(it) } ?: "") }
+    var fuelVolume by remember { mutableStateOf(entry?.fuelVolume?.let { "%.2f".format(it) } ?: "") }
     var rate by remember {
         mutableStateOf(
-            if (entry != null && entry.fuelVolume > 0) (entry.fuelCost / entry.fuelVolume).toString()
+            if (entry != null && entry.fuelVolume > 0) "%.2f".format(entry.fuelCost / entry.fuelVolume)
             else ""
         )
     }
-    var totalCost by remember { mutableStateOf(entry?.fuelCost?.toString() ?: "") }
+    var totalCost by remember { mutableStateOf(entry?.fuelCost?.let { "%.2f".format(it) } ?: "") }
     var notes by remember { mutableStateOf(entry?.notes ?: "") }
 
     var inputMode by remember {
@@ -86,7 +86,8 @@ fun AddFuelEntryDialog(
                     onValueChange = { odometer = it; odometerError = Validation.getOdometerError(it.toDoubleOrNull() ?: 0.0) },
                     label = "Odometer ($distanceLabel)",
                     error = odometerError,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    decimalPlaces = 2
                 )
 
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
@@ -132,7 +133,8 @@ fun AddFuelEntryDialog(
                             },
                             label = "Fuel Volume ($volumeLabel)",
                             error = fuelVolumeError,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            decimalPlaces = 2
                         )
                         Spacer(modifier = Modifier.height(Dimens.spacingMd))
                         AppTextField(
@@ -146,15 +148,14 @@ fun AddFuelEntryDialog(
                                 }
                             },
                             label = "Rate ($currency/$volumeLabel)",
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            decimalPlaces = 2
                         )
                         Spacer(modifier = Modifier.height(Dimens.spacingMd))
-                        AppTextField(
-                            value = totalCost,
-                            onValueChange = {},
-                            label = "Total Cost ($currency) (calculated)",
-                            enabled = false,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        Text(
+                            text = "Total Cost ($currency): ${if (totalCost.isNotEmpty()) totalCost else "--"}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                     FuelInputMode.VOLUME_COST -> {
@@ -171,7 +172,8 @@ fun AddFuelEntryDialog(
                             },
                             label = "Fuel Volume ($volumeLabel)",
                             error = fuelVolumeError,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            decimalPlaces = 2
                         )
                         Spacer(modifier = Modifier.height(Dimens.spacingMd))
                         AppTextField(
@@ -187,15 +189,14 @@ fun AddFuelEntryDialog(
                             },
                             label = "Total Cost ($currency)",
                             error = totalCostError,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            decimalPlaces = 2
                         )
                         Spacer(modifier = Modifier.height(Dimens.spacingMd))
-                        AppTextField(
-                            value = rate,
-                            onValueChange = {},
-                            label = "Rate ($currency/$volumeLabel) (calculated)",
-                            enabled = false,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        Text(
+                            text = "Rate ($currency/$volumeLabel): ${if (rate.isNotEmpty()) rate else "--"}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                     FuelInputMode.RATE_COST -> {
@@ -210,7 +211,8 @@ fun AddFuelEntryDialog(
                                 }
                             },
                             label = "Rate ($currency/$volumeLabel)",
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            decimalPlaces = 2
                         )
                         Spacer(modifier = Modifier.height(Dimens.spacingMd))
                         AppTextField(
@@ -226,27 +228,18 @@ fun AddFuelEntryDialog(
                             },
                             label = "Total Cost ($currency)",
                             error = totalCostError,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            decimalPlaces = 2
                         )
                         Spacer(modifier = Modifier.height(Dimens.spacingMd))
-                        AppTextField(
-                            value = fuelVolume,
-                            onValueChange = {},
-                            label = "Fuel Volume ($volumeLabel) (calculated)",
-                            enabled = false,
-                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number)
+                        Text(
+                            text = "Fuel Volume ($volumeLabel): ${if (fuelVolume.isNotEmpty()) fuelVolume else "--"}",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
 
-                Spacer(modifier = Modifier.height(Dimens.spacingMd))
-
-                AppTextField(
-                    value = notes,
-                    onValueChange = { notes = it },
-                    label = "Notes (optional)",
-                    supportingText = "Max 500 characters"
-                )
             }
         },
         confirmButton = {

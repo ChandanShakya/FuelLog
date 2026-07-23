@@ -41,6 +41,7 @@ class SettingsFragment : Fragment() {
 
         binding.toolbar.title = getString(R.string.settings_title)
         binding.toolbar.setNavigationOnClickListener { parentFragmentManager.popBackStack() }
+        binding.toolbar.navigationIcon?.setTint(requireContext().getColor(R.color.md_theme_light_primary))
 
         binding.btnSave.setOnClickListener { saveSettings() }
 

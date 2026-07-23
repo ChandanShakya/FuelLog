@@ -48,7 +48,7 @@ class VehiclesViewModel(
     ) {
         if (!Validation.validateVehicleName(name)) return
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val settings = userSettingsDao.getSettingsSuspend()
             val vehicle = Vehicle(
                 name = name,
@@ -62,7 +62,7 @@ class VehiclesViewModel(
 
     fun updateVehicle(vehicle: Vehicle) {
         if (!Validation.validateVehicleName(vehicle.name)) return
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val oldVehicle = vehicleDao.getById(vehicle.id)
             if (oldVehicle != null) {
                 val distanceChanged = oldVehicle.distanceUnit != vehicle.distanceUnit
@@ -87,7 +87,7 @@ class VehiclesViewModel(
     }
 
     fun deleteVehicle(id: Long) {
-        viewModelScope.launch { vehicleDao.deleteById(id) }
+        viewModelScope.launch(Dispatchers.IO) { vehicleDao.deleteById(id) }
     }
 }
 

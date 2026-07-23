@@ -53,6 +53,7 @@ class FuelLogFragment : Fragment() {
         binding.recyclerFuelEntries.adapter = adapter
 
         binding.toolbar.setNavigationOnClickListener { parentFragmentManager.popBackStack() }
+        binding.toolbar.navigationIcon?.setTint(requireContext().getColor(R.color.md_theme_light_primary))
         binding.toolbar.inflateMenu(R.menu.menu_fuel_log)
         binding.toolbar.setOnMenuItemClickListener { item ->
             when (item.itemId) {

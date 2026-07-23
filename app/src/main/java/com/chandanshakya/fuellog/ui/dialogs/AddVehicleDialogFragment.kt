@@ -11,7 +11,7 @@ import android.widget.GridLayout
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import com.chandanshakya.fuellog.FuelLogApplication
 import com.chandanshakya.fuellog.AppViewModelFactory
 import com.chandanshakya.fuellog.R
@@ -30,7 +30,9 @@ class AddVehicleDialogFragment : DialogFragment() {
 
     private val app by lazy { requireActivity().application as FuelLogApplication }
 
-    private val viewModel: VehiclesViewModel by activityViewModels {
+    private val viewModel: VehiclesViewModel by viewModels(
+        ownerProducer = { requireParentFragment() }
+    ) {
         AppViewModelFactory.vehicles(app.vehicleDao, app.userSettingsDao, app.fuelEntryDao)
     }
 

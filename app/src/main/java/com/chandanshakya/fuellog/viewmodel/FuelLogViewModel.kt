@@ -71,7 +71,7 @@ class FuelLogViewModel(
     ) {
         if (!Validation.validateFuelEntry(odometer, fuelVolume, fuelCost)) return
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val entry = FuelEntry(
                 vehicleId = currentVehicleId.value,
                 date = date,
@@ -88,7 +88,7 @@ class FuelLogViewModel(
     ) {
         if (!Validation.validateFuelEntry(odometer, fuelVolume, fuelCost)) return
 
-        viewModelScope.launch {
+        viewModelScope.launch(Dispatchers.IO) {
             val entry = FuelEntry(
                 id = id,
                 vehicleId = currentVehicleId.value,
@@ -102,7 +102,7 @@ class FuelLogViewModel(
     }
 
     fun deleteFuelEntry(id: Long) {
-        viewModelScope.launch { fuelEntryDao.deleteById(id) }
+        viewModelScope.launch(Dispatchers.IO) { fuelEntryDao.deleteById(id) }
     }
 }
 

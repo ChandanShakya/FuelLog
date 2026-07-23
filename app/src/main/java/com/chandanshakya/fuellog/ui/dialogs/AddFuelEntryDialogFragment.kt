@@ -10,7 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import androidx.core.os.BundleCompat
 import androidx.fragment.app.DialogFragment
-import androidx.fragment.app.activityViewModels
+import androidx.fragment.app.viewModels
 import com.chandanshakya.fuellog.FuelLogApplication
 import com.chandanshakya.fuellog.AppViewModelFactory
 import com.chandanshakya.fuellog.R
@@ -31,7 +31,9 @@ class AddFuelEntryDialogFragment : DialogFragment() {
 
     private val app by lazy { requireActivity().application as FuelLogApplication }
 
-    private val viewModel: FuelLogViewModel by activityViewModels {
+    private val viewModel: FuelLogViewModel by viewModels(
+        ownerProducer = { requireParentFragment() }
+    ) {
         AppViewModelFactory.fuelLog(app.vehicleDao, app.fuelEntryDao, app.userSettingsDao, requireParentFragment())
     }
 

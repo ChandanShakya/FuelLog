@@ -1,5 +1,6 @@
 package com.chandanshakya.fuellog.viewmodel
 
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chandanshakya.fuellog.data.db.FuelEntryDao
@@ -8,7 +9,6 @@ import com.chandanshakya.fuellog.data.db.VehicleDao
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.util.MileageCalculator
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -17,21 +17,17 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
-import javax.inject.Inject
-
-import androidx.lifecycle.SavedStateHandle
-import com.chandanshakya.fuellog.ui.navigation.NavArgs
+import java.time.LocalDate
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@HiltViewModel
-class InsightsViewModel @Inject constructor(
+class InsightsViewModel(
     private val fuelEntryDao: FuelEntryDao,
     private val vehicleDao: VehicleDao,
     private val userSettingsDao: UserSettingsDao,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
-    private val currentVehicleId = savedStateHandle.getStateFlow(NavArgs.VEHICLE_ID, -1L)
+    private val currentVehicleId = savedStateHandle.getStateFlow("vehicleId", -1L)
     private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }
     private val settingsFlow = userSettingsDao.getSettings()
 
@@ -146,10 +142,10 @@ enum class MileageTrend {
 data class ChartDataPoint(
     val odometer: Double,
     val mileage: Double,
-    val date: java.time.LocalDate
+    val date: LocalDate
 )
 
 data class PriceChartDataPoint(
     val pricePerUnit: Double,
-    val date: java.time.LocalDate
+    val date: LocalDate
 )

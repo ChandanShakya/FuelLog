@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="spacing_xs">4dp</dimen>
+    <dimen name="spacing_sm">8dp</dimen>
+    <dimen name="spacing_md">16dp</dimen>
+    <dimen name="spacing_lg">24dp</dimen>
+    <dimen name="spacing_xl">32dp</dimen>
+    <dimen name="icon_medium">24dp</dimen>
+    <dimen name="icon_large">32dp</dimen>
+    <dimen name="chart_height">200dp</dimen>
+    <dimen name="card_elevation">1dp</dimen>
+    <dimen name="badge_padding_h">8dp</dimen>
+    <dimen name="badge_padding_v">4dp</dimen>
+    <dimen name="dialog_padding">16dp</dimen>
+</resources>

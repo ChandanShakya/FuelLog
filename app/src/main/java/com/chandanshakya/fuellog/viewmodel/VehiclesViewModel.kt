@@ -11,7 +11,6 @@ import com.chandanshakya.fuellog.data.model.VehicleType
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.util.Validation
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,10 +18,8 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class VehiclesViewModel @Inject constructor(
+class VehiclesViewModel(
     private val vehicleDao: VehicleDao,
     private val userSettingsDao: UserSettingsDao,
     private val fuelEntryDao: FuelEntryDao

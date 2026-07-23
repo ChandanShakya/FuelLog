@@ -1,33 +1,105 @@
 package com.chandanshakya.fuellog.data.db
 
-import androidx.room.Dao
-import androidx.room.Insert
-import androidx.room.OnConflictStrategy
-import androidx.room.Query
-import androidx.room.Update
+import android.content.ContentValues
 import com.chandanshakya.fuellog.data.model.FuelEntry
+import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.flow
+import java.time.LocalDate
 
-@Dao
-interface FuelEntryDao {
-    @Query("SELECT * FROM fuel_entries WHERE vehicleId = :vehicleId ORDER BY odometer ASC, date ASC")
-    fun getAllByVehicle(vehicleId: Long): Flow<List<FuelEntry>>
+class FuelEntryDao(private val dbHelper: FuelLogDbHelper) {
 
-    @Query("SELECT * FROM fuel_entries WHERE vehicleId = :vehicleId ORDER BY odometer ASC, date ASC")
-    suspend fun getAllByVehicleList(vehicleId: Long): List<FuelEntry>
+    private val _dataChanged = Channel<Unit>(Channel.BUFFERED)
 
-    @Query("SELECT * FROM fuel_entries WHERE id = :id")
-    suspend fun getById(id: Long): FuelEntry?
+    fun getAllByVehicle(vehicleId: Long): Flow<List<FuelEntry>> = flow {
+        emit(queryByVehicle(vehicleId))
+        for (Unit in _dataChanged) emit(queryByVehicle(vehicleId))
+    }
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insert(entry: FuelEntry): Long
+    suspend fun getAllByVehicleList(vehicleId: Long): List<FuelEntry> = queryByVehicle(vehicleId)
 
-    @Update
-    suspend fun update(entry: FuelEntry)
+    suspend fun getById(id: Long): FuelEntry? {
+        val db = dbHelper.readableDatabase
+        val cursor = db.query("fuel_entries", null, "id = ?", arrayOf(id.toString()), null, null, null)
+        return cursor.use {
+            if (it.moveToFirst()) cursorToFuelEntry(it) else null
+        }
+    }
 
-    @Update
-    suspend fun updateAll(entries: List<FuelEntry>)
+    suspend fun insert(entry: FuelEntry): Long {
+        val db = dbHelper.writableDatabase
+        val values = ContentValues().apply {
+            put("vehicleId", entry.vehicleId)
+            put("date", entry.date.toString())
+            put("odometer", entry.odometer)
+            put("fuelVolume", entry.fuelVolume)
+            put("fuelCost", entry.fuelCost)
+        }
+        val id = db.insert("fuel_entries", null, values)
+        _dataChanged.send(Unit)
+        return id
+    }
 
-    @Query("DELETE FROM fuel_entries WHERE id = :id")
-    suspend fun deleteById(id: Long)
+    suspend fun update(entry: FuelEntry) {
+        val db = dbHelper.writableDatabase
+        val values = ContentValues().apply {
+            put("vehicleId", entry.vehicleId)
+            put("date", entry.date.toString())
+            put("odometer", entry.odometer)
+            put("fuelVolume", entry.fuelVolume)
+            put("fuelCost", entry.fuelCost)
+        }
+        db.update("fuel_entries", values, "id = ?", arrayOf(entry.id.toString()))
+        _dataChanged.send(Unit)
+    }
+
+    suspend fun updateAll(entries: List<FuelEntry>) {
+        val db = dbHelper.writableDatabase
+        db.beginTransaction()
+        try {
+            for (entry in entries) {
+                val values = ContentValues().apply {
+                    put("vehicleId", entry.vehicleId)
+                    put("date", entry.date.toString())
+                    put("odometer", entry.odometer)
+                    put("fuelVolume", entry.fuelVolume)
+                    put("fuelCost", entry.fuelCost)
+                }
+                db.update("fuel_entries", values, "id = ?", arrayOf(entry.id.toString()))
+            }
+            db.setTransactionSuccessful()
+        } finally {
+            db.endTransaction()
+        }
+        _dataChanged.send(Unit)
+    }
+
+    suspend fun deleteById(id: Long) {
+        dbHelper.writableDatabase.delete("fuel_entries", "id = ?", arrayOf(id.toString()))
+        _dataChanged.send(Unit)
+    }
+
+    private fun queryByVehicle(vehicleId: Long): List<FuelEntry> {
+        val db = dbHelper.readableDatabase
+        val cursor = db.query(
+            "fuel_entries", null, "vehicleId = ?",
+            arrayOf(vehicleId.toString()), null, null, "odometer ASC, date ASC"
+        )
+        return cursor.use {
+            val list = mutableListOf<FuelEntry>()
+            while (it.moveToNext()) list.add(cursorToFuelEntry(it))
+            list
+        }
+    }
+
+    private fun cursorToFuelEntry(cursor: android.database.Cursor): FuelEntry {
+        return FuelEntry(
+            id = cursor.getLong(cursor.getColumnIndexOrThrow("id")),
+            vehicleId = cursor.getLong(cursor.getColumnIndexOrThrow("vehicleId")),
+            date = LocalDate.parse(cursor.getString(cursor.getColumnIndexOrThrow("date"))),
+            odometer = cursor.getDouble(cursor.getColumnIndexOrThrow("odometer")),
+            fuelVolume = cursor.getDouble(cursor.getColumnIndexOrThrow("fuelVolume")),
+            fuelCost = cursor.getDouble(cursor.getColumnIndexOrThrow("fuelCost"))
+        )
+    }
 }

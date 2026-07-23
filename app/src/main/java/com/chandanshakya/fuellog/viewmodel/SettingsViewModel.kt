@@ -7,16 +7,13 @@ import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.UserSettings
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.util.Validation
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class SettingsViewModel @Inject constructor(
+class SettingsViewModel(
     private val userSettingsDao: UserSettingsDao
 ) : ViewModel() {
 

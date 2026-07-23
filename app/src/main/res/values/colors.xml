@@ -1,4 +1,25 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- Light theme (used in themes.xml and drawables) -->
     <color name="md_theme_light_primary">#FF625B77</color>
+    <color name="md_theme_light_onPrimaryContainer">#FF1E192B</color>
+    <color name="md_theme_light_background">#FFF8F7F9</color>
+    <color name="md_theme_light_onSurface">#FF1C1B1F</color>
+    <color name="md_theme_light_onSurfaceVariant">#FF49454F</color>
+    <color name="md_theme_light_primaryContainer">#FFEADDFF</color>
+
+    <!-- Dark theme (used in themes.xml) -->
+    <color name="md_theme_dark_primary">#FFD0BCFF</color>
+    <color name="md_theme_dark_background">#FF141214</color>
+    <color name="md_theme_dark_onSurface">#FFE6E1E6</color>
+    <color name="md_theme_dark_onSurfaceVariant">#FFCAC4D0</color>
+
+    <!-- Chart -->
+    <color name="chart_line_primary">#FF625B77</color>
+    <color name="chart_line_secondary">#FF605D6E</color>
+
+    <!-- Semantic -->
+    <color name="trend_improving">#FF00897B</color>
+    <color name="trend_declining">#FFB3261E</color>
+    <color name="trend_stable">#FF757575</color>
 </resources>

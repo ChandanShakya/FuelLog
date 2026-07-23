@@ -1,11 +1,29 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.FuelLog" parent="android:Theme.Material.Light.NoActionBar">
-        <!-- Minimal platform theme for Jetpack Compose, no external dependencies needed -->
+<resources>
+
+    <style name="Theme.FuelLog" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimary">@color/md_theme_light_primary</item>
+        <item name="colorPrimaryDark">@color/md_theme_light_primary</item>
+        <item name="colorAccent">@color/md_theme_light_primary</item>
+        <item name="android:windowBackground">@color/md_theme_light_background</item>
+        <item name="android:textColorPrimary">@color/md_theme_light_onSurface</item>
+        <item name="android:textColorSecondary">@color/md_theme_light_onSurfaceVariant</item>
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
-    <style name="Theme.FuelLog" parent="Base.Theme.FuelLog" />
+    <style name="Widget.FuelLog.Card" parent="">
+        <item name="cardCornerRadius">12dp</item>
+        <item name="cardElevation">@dimen/card_elevation</item>
+    </style>
+
+    <style name="Widget.FuelLog.Badge" parent="">
+        <item name="android:background">@drawable/bg_badge</item>
+        <item name="android:paddingStart">@dimen/badge_padding_h</item>
+        <item name="android:paddingEnd">@dimen/badge_padding_h</item>
+        <item name="android:paddingTop">@dimen/badge_padding_v</item>
+        <item name="android:paddingBottom">@dimen/badge_padding_v</item>
+        <item name="android:textColor">@color/md_theme_light_onPrimaryContainer</item>
+    </style>
+
 </resources>

@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="@dimen/dialog_padding">
+
+    <EditText
+        android:id="@+id/edit_name"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:hint="@string/vehicle_name"
+        android:inputType="textCapWords"
+        android:maxLength="100"
+        android:singleLine="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_md"
+        android:text="@string/vehicle_type"
+        android:textSize="14sp" />
+
+    <GridLayout
+        android:id="@+id/grid_vehicle_type"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:columnCount="3"
+        android:useDefaultMargins="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_md"
+        android:text="@string/distance_unit"
+        android:textSize="14sp" />
+
+    <RadioGroup
+        android:id="@+id/radio_distance_unit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/radio_km"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="km" />
+
+        <RadioButton
+            android:id="@+id/radio_miles"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_md"
+            android:text="miles" />
+    </RadioGroup>
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_md"
+        android:text="@string/volume_unit"
+        android:textSize="14sp" />
+
+    <RadioGroup
+        android:id="@+id/radio_volume_unit"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/spacing_sm"
+        android:orientation="horizontal">
+
+        <RadioButton
+            android:id="@+id/radio_liters"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="@string/liters" />
+
+        <RadioButton
+            android:id="@+id/radio_gallons"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="@dimen/spacing_md"
+            android:text="@string/gallons" />
+    </RadioGroup>
+</LinearLayout>

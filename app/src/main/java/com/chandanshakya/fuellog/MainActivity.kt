@@ -1,50 +1,19 @@
 package com.chandanshakya.fuellog
 
 import android.os.Bundle
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
-import androidx.navigation.compose.rememberNavController
-import com.chandanshakya.fuellog.ui.navigation.AppNavHost
-import com.chandanshakya.fuellog.ui.theme.FuelLogTheme
-import dagger.hilt.android.AndroidEntryPoint
+import androidx.appcompat.app.AppCompatActivity
+import com.chandanshakya.fuellog.ui.fragments.VehiclesFragment
 
-/**
- * Main entry point for FuelLog application.
- * 
- * Single-activity architecture with Jetpack Compose navigation.
- */
-@AndroidEntryPoint
-class MainActivity : ComponentActivity() {
+class MainActivity : AppCompatActivity() {
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
-        setContent {
-            FuelLogApp()
-        }
-    }
-}
+        setContentView(R.layout.activity_main)
 
-/**
- * Root composable for the FuelLog application.
- */
-@Composable
-fun FuelLogApp() {
-    FuelLogTheme {
-        Surface(
-            modifier = Modifier.fillMaxSize(),
-            color = MaterialTheme.colorScheme.background
-        ) {
-            val navController = rememberNavController()
-
-            AppNavHost(
-                navController = navController
-            )
+        if (savedInstanceState == null) {
+            supportFragmentManager.beginTransaction()
+                .replace(R.id.fragment_container, VehiclesFragment())
+                .commit()
         }
     }
 }

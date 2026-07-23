@@ -55,6 +55,36 @@ jobs:
           name: debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
 
+  mirror-to-codeberg:
+    name: Mirror to Codeberg
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up SSH key
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.CODEBERG_SSH_PRIVATE_KEY }}" > ~/.ssh/codeberg_key
+          chmod 600 ~/.ssh/codeberg_key
+          ssh-keyscan codeberg.org >> ~/.ssh/known_hosts 2>/dev/null
+          cat >> ~/.ssh/config << EOF
+          Host codeberg.org
+              HostName codeberg.org
+              IdentityFile ~/.ssh/codeberg_key
+              IdentitiesOnly yes
+          EOF
+
+      - name: Push to Codeberg
+        run: |
+          git remote add codeberg ssh://git@codeberg.org/ChandanShakya/FuelLog.git || true
+          git push codeberg main
+
   publish-release:
     name: Publish Release
     needs: build-and-test

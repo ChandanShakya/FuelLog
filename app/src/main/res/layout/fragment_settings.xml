@@ -164,6 +164,7 @@
                             android:id="@+id/radio_km"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:checked="true"
                             android:text="@string/kilometers" />
 
                         <RadioButton
@@ -241,6 +242,7 @@
                             android:id="@+id/radio_liters"
                             android:layout_width="match_parent"
                             android:layout_height="wrap_content"
+                            android:checked="true"
                             android:text="@string/liters" />
 
                         <RadioButton

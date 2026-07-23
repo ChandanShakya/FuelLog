@@ -47,6 +47,7 @@
             android:id="@+id/radio_km"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:checked="true"
             android:text="km" />
 
         <RadioButton
@@ -75,6 +76,7 @@
             android:id="@+id/radio_liters"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:checked="true"
             android:text="@string/liters" />
 
         <RadioButton

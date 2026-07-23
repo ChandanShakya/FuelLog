@@ -7,7 +7,6 @@
         <item name="android:windowBackground">@color/md_theme_dark_background</item>
         <item name="android:textColorPrimary">@color/md_theme_dark_onSurface</item>
         <item name="android:textColorSecondary">@color/md_theme_dark_onSurfaceVariant</item>
-        <item name="android:statusBarColor">@android:color/transparent</item>
-        <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:fitsSystemWindows">true</item>
     </style>
 </resources>

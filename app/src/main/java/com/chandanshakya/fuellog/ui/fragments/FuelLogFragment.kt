@@ -22,7 +22,6 @@ import com.chandanshakya.fuellog.util.CurrencyFormatter
 import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.viewmodel.FuelLogViewModel
 import kotlinx.coroutines.launch
-import java.time.LocalDate
 
 class FuelLogFragment : Fragment() {
 
@@ -62,28 +61,34 @@ class FuelLogFragment : Fragment() {
             }
         }
 
-        binding.fabAdd.setOnClickListener {
-            val state = viewModel.fuelLogState.value
-            val v = state.vehicle
-            AddFuelEntryDialogFragment.newInstance(
-                FuelEntry(
-                    vehicleId = arguments?.getLong("vehicleId", -1L) ?: -1L,
-                    date = LocalDate.now(),
-                    odometer = 0.0,
-                    fuelVolume = 0.0,
-                    fuelCost = 0.0
-                ),
-                v?.distanceUnit ?: DistanceUnit.KM,
-                v?.volumeUnit ?: VolumeUnit.LITERS,
-                state.currency
-            ).show(childFragmentManager, "add_fuel_entry")
-        }
+        binding.fabAdd.setOnClickListener { showAddDialog() }
 
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 viewModel.fuelLogState.collect { state -> updateUi(state) }
             }
         }
+    }
+
+    private fun showAddDialog() {
+        val state = viewModel.fuelLogState.value
+        val v = state.vehicle
+        AddFuelEntryDialogFragment.newInstanceForNew(
+            v?.distanceUnit ?: DistanceUnit.KM,
+            v?.volumeUnit ?: VolumeUnit.LITERS,
+            state.currency
+        ).show(childFragmentManager, "add_fuel_entry")
+    }
+
+    private fun showEditDialog(entry: FuelEntry) {
+        val state = viewModel.fuelLogState.value
+        val v = state.vehicle
+        AddFuelEntryDialogFragment.newInstanceForEdit(
+            entry,
+            v?.distanceUnit ?: DistanceUnit.KM,
+            v?.volumeUnit ?: VolumeUnit.LITERS,
+            state.currency
+        ).show(childFragmentManager, "edit_fuel_entry")
     }
 
     private fun updateUi(state: com.chandanshakya.fuellog.viewmodel.FuelLogState) {
@@ -116,17 +121,6 @@ class FuelLogFragment : Fragment() {
             .replace(R.id.fragment_container, InsightsFragment.newInstance(vehicleId))
             .addToBackStack(null)
             .commit()
-    }
-
-    private fun showEditDialog(entry: FuelEntry) {
-        val state = viewModel.fuelLogState.value
-        val v = state.vehicle
-        AddFuelEntryDialogFragment.newInstance(
-            entry,
-            v?.distanceUnit ?: DistanceUnit.KM,
-            v?.volumeUnit ?: VolumeUnit.LITERS,
-            state.currency
-        ).show(childFragmentManager, "edit_fuel_entry")
     }
 
     override fun onDestroyView() {

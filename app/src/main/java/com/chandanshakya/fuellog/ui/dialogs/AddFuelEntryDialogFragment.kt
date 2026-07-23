@@ -4,9 +4,11 @@ import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.Dialog
 import android.os.Bundle
+import android.text.Editable
+import android.text.TextWatcher
 import android.view.LayoutInflater
-import androidx.core.os.BundleCompat
 import android.view.View
+import androidx.core.os.BundleCompat
 import androidx.fragment.app.DialogFragment
 import androidx.fragment.app.activityViewModels
 import com.chandanshakya.fuellog.FuelLogApplication
@@ -38,10 +40,14 @@ class AddFuelEntryDialogFragment : DialogFragment() {
     private var distanceUnit = DistanceUnit.KM
     private var volumeUnit = VolumeUnit.LITERS
     private var currency = "USD"
+    private var isNewEntry = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        editEntry = arguments?.let { BundleCompat.getParcelable(it, "entry", FuelEntry::class.java) }
+        isNewEntry = arguments?.getBoolean("isNewEntry", true) ?: true
+        if (!isNewEntry) {
+            editEntry = arguments?.let { BundleCompat.getParcelable(it, "entry", FuelEntry::class.java) }
+        }
         distanceUnit = DistanceUnit.valueOf(arguments?.getString("distanceUnit") ?: "KM")
         volumeUnit = VolumeUnit.valueOf(arguments?.getString("volumeUnit") ?: "LITERS")
         currency = arguments?.getString("currency") ?: "USD"
@@ -50,22 +56,25 @@ class AddFuelEntryDialogFragment : DialogFragment() {
     override fun onCreateDialog(savedInstanceState: Bundle?): Dialog {
         _binding = DialogAddFuelEntryBinding.inflate(LayoutInflater.from(requireContext()))
 
-        editEntry?.let { entry ->
-            selectedDate = entry.date
-            binding.editOdometer.setText("%.2f".format(entry.odometer))
-            binding.editVolume.setText("%.2f".format(entry.fuelVolume))
-            binding.editCost.setText("%.2f".format(entry.fuelCost))
-            if (entry.fuelVolume > 0) {
-                binding.editRate.setText("%.2f".format(entry.fuelCost / entry.fuelVolume))
+        if (!isNewEntry) {
+            editEntry?.let { entry ->
+                selectedDate = entry.date
+                binding.editOdometer.setText("%.2f".format(entry.odometer))
+                binding.editVolume.setText("%.2f".format(entry.fuelVolume))
+                binding.editCost.setText("%.2f".format(entry.fuelCost))
+                if (entry.fuelVolume > 0) {
+                    binding.editRate.setText("%.2f".format(entry.fuelCost / entry.fuelVolume))
+                }
             }
         }
 
         updateFieldLabels()
         setupInputModeToggle()
+        setupTextWatchers()
         setupDatePicker()
 
         return AlertDialog.Builder(requireContext())
-            .setTitle(if (editEntry != null) R.string.edit_fuel_entry else R.string.add_fuel_entry)
+            .setTitle(if (!isNewEntry) R.string.edit_fuel_entry else R.string.add_fuel_entry)
             .setView(binding.root)
             .setPositiveButton(R.string.save, null)
             .setNegativeButton(R.string.cancel, null)
@@ -78,6 +87,7 @@ class AddFuelEntryDialogFragment : DialogFragment() {
     }
 
     private fun setupInputModeToggle() {
+        binding.btnModeVolRate.isChecked = true
         binding.toggleInputMode.setOnCheckedChangeListener { _, checkedId ->
             when (checkedId) {
                 R.id.btn_mode_vol_rate -> showVolRateMode()
@@ -86,6 +96,17 @@ class AddFuelEntryDialogFragment : DialogFragment() {
             }
         }
         showVolRateMode()
+    }
+
+    private fun setupTextWatchers() {
+        val watcher = object : TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) {}
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) {}
+            override fun afterTextChanged(s: Editable?) { updateComputedText() }
+        }
+        binding.editVolume.addTextChangedListener(watcher)
+        binding.editRate.addTextChangedListener(watcher)
+        binding.editCost.addTextChangedListener(watcher)
     }
 
     private fun showVolRateMode() {
@@ -121,20 +142,17 @@ class AddFuelEntryDialogFragment : DialogFragment() {
     }
 
     private fun setupDatePicker() {
-        val calendar = Calendar.getInstance().apply {
-            set(selectedDate.year, selectedDate.monthValue - 1, selectedDate.dayOfMonth)
-        }
-
         binding.btnPickDate.setOnClickListener {
+            val cal = Calendar.getInstance()
             DatePickerDialog(
                 requireContext(),
                 { _, year, month, day ->
                     selectedDate = LocalDate.of(year, month + 1, day)
                     updateFieldLabels()
                 },
-                calendar.get(Calendar.YEAR),
-                calendar.get(Calendar.MONTH),
-                calendar.get(Calendar.DAY_OF_MONTH)
+                cal.get(Calendar.YEAR),
+                cal.get(Calendar.MONTH),
+                cal.get(Calendar.DAY_OF_MONTH)
             ).show()
         }
     }
@@ -148,18 +166,18 @@ class AddFuelEntryDialogFragment : DialogFragment() {
         val rateVisible = binding.editRate.visibility == View.VISIBLE
 
         val volLabel = UnitConverter.getVolumeUnitLabel(volumeUnit)
-        when {
+        binding.textComputed.text = when {
             volVisible && rateVisible -> {
                 val computed = if (vol > 0 && rate > 0) vol * rate else cost
-                binding.textComputed.text = getString(R.string.total_cost_value, currency, if (computed > 0) "%.2f".format(computed) else "--")
+                getString(R.string.total_cost_value, currency, if (computed > 0) "%.2f".format(computed) else "--")
             }
             volVisible -> {
                 val computed = if (vol > 0 && cost > 0) cost / vol else rate
-                binding.textComputed.text = getString(R.string.rate_value, currency, volLabel, if (computed > 0) "%.2f".format(computed) else "--")
+                getString(R.string.rate_value, currency, volLabel, if (computed > 0) "%.2f".format(computed) else "--")
             }
             else -> {
                 val computed = if (rate > 0 && cost > 0) cost / rate else vol
-                binding.textComputed.text = getString(R.string.fuel_volume_value, volLabel, if (computed > 0) "%.2f".format(computed) else "--")
+                getString(R.string.fuel_volume_value, volLabel, if (computed > 0) "%.2f".format(computed) else "--")
             }
         }
     }
@@ -208,9 +226,20 @@ class AddFuelEntryDialogFragment : DialogFragment() {
     }
 
     companion object {
-        fun newInstance(entry: FuelEntry, distanceUnit: DistanceUnit, volumeUnit: VolumeUnit, currency: String) =
+        fun newInstanceForNew(distanceUnit: DistanceUnit, volumeUnit: VolumeUnit, currency: String) =
             AddFuelEntryDialogFragment().apply {
                 arguments = Bundle().apply {
+                    putBoolean("isNewEntry", true)
+                    putString("distanceUnit", distanceUnit.name)
+                    putString("volumeUnit", volumeUnit.name)
+                    putString("currency", currency)
+                }
+            }
+
+        fun newInstanceForEdit(entry: FuelEntry, distanceUnit: DistanceUnit, volumeUnit: VolumeUnit, currency: String) =
+            AddFuelEntryDialogFragment().apply {
+                arguments = Bundle().apply {
+                    putBoolean("isNewEntry", false)
                     putParcelable("entry", entry)
                     putString("distanceUnit", distanceUnit.name)
                     putString("volumeUnit", volumeUnit.name)

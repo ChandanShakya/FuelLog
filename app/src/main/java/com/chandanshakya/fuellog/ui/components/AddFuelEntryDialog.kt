@@ -48,6 +48,7 @@ enum class FuelInputMode {
     RATE_COST
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AddFuelEntryDialog(
     vehicleId: Long,

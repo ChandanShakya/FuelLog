@@ -7,7 +7,10 @@ import com.chandanshakya.fuellog.data.db.UserSettingsDao
 import com.chandanshakya.fuellog.data.db.VehicleDao
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.Vehicle
+import com.chandanshakya.fuellog.util.CapacitySuggestion
 import com.chandanshakya.fuellog.util.MileageCalculator
+import com.chandanshakya.fuellog.util.computeRecencyWeightedMileage
+import com.chandanshakya.fuellog.util.shouldSuggestUpdate
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -16,6 +19,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.stateIn
 import javax.inject.Inject
 
@@ -116,6 +121,38 @@ class InsightsViewModel @Inject constructor(
             difference > 0.5 -> MileageTrend.IMPROVING
             difference < -0.5 -> MileageTrend.DECLINING
             else -> MileageTrend.STABLE
+        }
+    }
+
+    val capacitySuggestion: StateFlow<CapacitySuggestion?> = combine(
+        currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
+        vehicleFlow
+    ) { entries, vehicle ->
+        val fullTankEntries = entries.filter { it.isFullTank }.sortedBy { it.odometer }
+        shouldSuggestUpdate(vehicle?.tankCapacity, fullTankEntries)
+    }.flowOn(Dispatchers.Default).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    val recentMileage: StateFlow<Double?> = currentVehicleId
+        .flatMapLatest { fuelEntryDao.getAllByVehicle(it) }
+        .map { entries ->
+            val fullTankEntries = entries.filter { it.isFullTank && it.fuelVolume > 0 }.sortedBy { it.odometer }
+            computeRecencyWeightedMileage(fullTankEntries)
+        }
+        .flowOn(Dispatchers.Default)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = null
+        )
+
+    fun applySuggestedCapacity(capacity: Double) {
+        viewModelScope.launch {
+            val vehicle = vehicleDao.getById(currentVehicleId.value) ?: return@launch
+            vehicleDao.update(vehicle.copy(tankCapacity = capacity))
         }
     }
 }

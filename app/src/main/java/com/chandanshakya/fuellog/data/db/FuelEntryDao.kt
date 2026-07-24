@@ -40,4 +40,16 @@ interface FuelEntryDao {
 
     @Query("DELETE FROM fuel_entries WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("SELECT * FROM fuel_entries WHERE vehicleId = :vehicleId AND isFullTank = 1 ORDER BY odometer ASC")
+    suspend fun getFullTankEntriesByVehicle(vehicleId: Long): List<FuelEntry>
+
+    @Query("SELECT * FROM fuel_entries WHERE vehicleId = :vehicleId ORDER BY odometer DESC LIMIT 1")
+    suspend fun getLatestEntryByVehicle(vehicleId: Long): FuelEntry?
+
+    @Query("SELECT * FROM fuel_entries WHERE fuelPumpId = :pumpId ORDER BY odometer ASC")
+    fun getAllByPumpId(pumpId: Long): Flow<List<FuelEntry>>
+
+    @Query("SELECT * FROM fuel_entries WHERE fuelPumpId IS NULL AND vehicleId = :vehicleId ORDER BY odometer ASC")
+    fun getAllByVehicleWithNullPump(vehicleId: Long): Flow<List<FuelEntry>>
 }

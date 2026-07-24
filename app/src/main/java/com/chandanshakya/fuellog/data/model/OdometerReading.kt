@@ -7,34 +7,22 @@ import androidx.room.PrimaryKey
 import java.time.LocalDate
 
 @Entity(
-    tableName = "fuel_entries",
+    tableName = "odometer_readings",
     foreignKeys = [
         ForeignKey(
             entity = Vehicle::class,
             parentColumns = ["id"],
             childColumns = ["vehicleId"],
             onDelete = ForeignKey.CASCADE
-        ),
-        ForeignKey(
-            entity = FuelPump::class,
-            parentColumns = ["id"],
-            childColumns = ["fuelPumpId"],
-            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [
-        Index(value = ["vehicleId", "odometer"]),
-        Index(value = ["date"]),
-        Index(value = ["fuelPumpId"])
+        Index(value = ["vehicleId", "odometer"])
     ]
 )
-data class FuelEntry(
+data class OdometerReading(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
     var vehicleId: Long,
     var date: LocalDate,
-    var odometer: Double,
-    var fuelVolume: Double,
-    var fuelCost: Double,
-    var fuelPumpId: Long? = null,
-    var isFullTank: Boolean = false
+    var odometer: Double
 )

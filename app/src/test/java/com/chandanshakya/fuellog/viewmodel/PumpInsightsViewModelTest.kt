@@ -143,6 +143,16 @@ class FakeFuelEntryDaoForPump : FuelEntryDao {
     override suspend fun update(entry: FuelEntry) {}
     override suspend fun updateAll(entries: List<FuelEntry>) {}
     override suspend fun deleteById(id: Long) {}
+    override suspend fun getFullTankEntriesByVehicle(vehicleId: Long) =
+        entries.filter { it.vehicleId == vehicleId && it.isFullTank }.sortedBy { it.odometer }
+    override suspend fun getLatestEntryByVehicle(vehicleId: Long) =
+        entries.filter { it.vehicleId == vehicleId }.maxByOrNull { it.odometer }
+    override fun getAllByPumpId(pumpId: Long) = flowOf(
+        entries.filter { it.fuelPumpId == pumpId }
+    )
+    override fun getAllByVehicleWithNullPump(vehicleId: Long) = flowOf(
+        entries.filter { it.vehicleId == vehicleId && it.fuelPumpId == null }
+    )
 }
 
 class FakeUserSettingsDaoForPump : UserSettingsDao {

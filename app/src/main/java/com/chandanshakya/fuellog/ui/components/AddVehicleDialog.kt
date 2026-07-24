@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -25,12 +26,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.data.model.VehicleType
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.ui.theme.Dimens
+import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.util.Validation
 
 @Composable
@@ -39,13 +42,16 @@ fun AddVehicleDialog(
     defaultDistanceUnit: DistanceUnit,
     defaultVolumeUnit: VolumeUnit,
     onDismiss: () -> Unit,
-    onSave: (name: String, vehicleType: VehicleType, distanceUnit: DistanceUnit, volumeUnit: VolumeUnit) -> Unit
+    onSave: (name: String, vehicleType: VehicleType, distanceUnit: DistanceUnit, volumeUnit: VolumeUnit, tankCapacity: Double?) -> Unit
 ) {
     var name by remember { mutableStateOf(vehicle?.name ?: "") }
     var vehicleType by remember { mutableStateOf(vehicle?.vehicleType ?: VehicleType.CAR) }
     var distanceUnit by remember { mutableStateOf(vehicle?.distanceUnit ?: defaultDistanceUnit) }
     var volumeUnit by remember { mutableStateOf(vehicle?.volumeUnit ?: defaultVolumeUnit) }
+    var tankCapacityText by remember { mutableStateOf(vehicle?.tankCapacity?.let { "%.2f".format(it) } ?: "") }
     var nameError by remember { mutableStateOf<String?>(null) }
+
+    val volumeLabel = UnitConverter.getVolumeUnitLabel(volumeUnit)
 
     AlertDialog(
         onDismissRequest = onDismiss,
@@ -94,7 +100,7 @@ fun AddVehicleDialog(
                                             text = type.label,
                                             style = MaterialTheme.typography.labelSmall,
                                             color = if (isSelected) MaterialTheme.colorScheme.primary
-                                                  else MaterialTheme.colorScheme.onSurfaceVariant
+                                                   else MaterialTheme.colorScheme.onSurfaceVariant
                                         )
                                     }
                                 }
@@ -124,6 +130,16 @@ fun AddVehicleDialog(
                     RadioButton(selected = volumeUnit == VolumeUnit.GALLONS, onClick = { volumeUnit = VolumeUnit.GALLONS })
                     Text("Gallons", modifier = Modifier.align(Alignment.CenterVertically))
                 }
+
+                Spacer(modifier = Modifier.height(Dimens.spacingMd))
+                AppTextField(
+                    value = tankCapacityText,
+                    onValueChange = { tankCapacityText = it },
+                    label = "Tank Capacity ($volumeLabel, optional)",
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                    decimalPlaces = 2,
+                    supportingText = "Used for next fill-up prediction"
+                )
             }
         },
         confirmButton = {
@@ -131,7 +147,8 @@ fun AddVehicleDialog(
                 text = "Save",
                 onClick = {
                     if (nameError == null) {
-                        onSave(name, vehicleType, distanceUnit, volumeUnit)
+                        val capacity = tankCapacityText.toDoubleOrNull()?.takeIf { it > 0 }
+                        onSave(name, vehicleType, distanceUnit, volumeUnit, capacity)
                     }
                 },
                 enabled = nameError == null

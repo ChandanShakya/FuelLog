@@ -47,7 +47,8 @@ class VehiclesViewModel @Inject constructor(
         name: String,
         vehicleType: VehicleType = VehicleType.CAR,
         distanceUnit: DistanceUnit? = null,
-        volumeUnit: VolumeUnit? = null
+        volumeUnit: VolumeUnit? = null,
+        tankCapacity: Double? = null
     ) {
         if (!Validation.validateVehicleName(name)) return
 
@@ -57,7 +58,8 @@ class VehiclesViewModel @Inject constructor(
                 name = name,
                 vehicleType = vehicleType,
                 distanceUnit = distanceUnit ?: settings?.defaultDistanceUnit ?: DistanceUnit.KM,
-                volumeUnit = volumeUnit ?: settings?.defaultVolumeUnit ?: VolumeUnit.LITERS
+                volumeUnit = volumeUnit ?: settings?.defaultVolumeUnit ?: VolumeUnit.LITERS,
+                tankCapacity = tankCapacity
             )
             vehicleDao.insert(vehicle)
         }

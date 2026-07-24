@@ -10,6 +10,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
@@ -55,6 +63,7 @@ fun PumpDetailScreen(
     val pumpDetail = remember(pumpId, pumpStats) {
         pumpInsightsViewModel.getPumpDetail(pumpId)
     }
+    val allPumpEntries by pumpInsightsViewModel.getAllEntriesForPump(pumpId).collectAsState()
 
     val stat = remember(pumpId, pumpStats) {
         pumpStats.find { it.pumpId == pumpId }
@@ -100,6 +109,20 @@ fun PumpDetailScreen(
                 val sortedDesc = pumpDetail.sortedByDescending { it.date }
                 items(items = sortedDesc, key = { it.entryId }) { detail ->
                     PumpFillDetailCard(detail = detail, currency = currency)
+                }
+            }
+
+            if (allPumpEntries.isNotEmpty()) {
+                item {
+                    Spacer(modifier = Modifier.height(Dimens.spacingSm))
+                    Text(
+                        text = "All Entries at This Pump (${allPumpEntries.size})",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+                }
+                val sortedEntries = allPumpEntries.sortedByDescending { it.date }
+                items(items = sortedEntries, key = { it.id }) { entry ->
+                    PumpEntryCard(entry = entry, currency = currency)
                 }
             }
         }
@@ -251,6 +274,66 @@ private fun PumpFillDetailCard(detail: PumpFillDetail, currency: String) {
                 AppBadge(text = "${"%.2f".format(detail.fuelVolume)} L")
                 AppBadge(text = CurrencyFormatter.formatCurrency(detail.fuelCost, currency))
                 AppBadge(text = "${"%.0f".format(detail.distanceSinceLastFill)} km since last")
+            }
+        }
+    }
+}
+
+@Composable
+private fun PumpEntryCard(
+    entry: com.chandanshakya.fuellog.data.model.FuelEntry,
+    currency: String
+) {
+    val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM yyyy") }
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        elevation = Dimens.cardElevation()
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.spacingMd)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(R.drawable.ic_local_gas_station),
+                    contentDescription = null,
+                    modifier = Modifier.size(Dimens.iconMedium),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.size(Dimens.spacingMd))
+                Column(modifier = Modifier.weight(1f)) {
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Text(
+                            text = entry.date.format(dateFormatter),
+                            style = MaterialTheme.typography.titleMedium
+                        )
+                        if (entry.isFullTank) {
+                            Spacer(modifier = Modifier.width(Dimens.spacingSm))
+                            AppBadge(text = "Full Tank")
+                        }
+                    }
+                    Text(
+                        text = "Odometer: ${"%.2f".format(entry.odometer)} km",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Dimens.spacingSm))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
+            ) {
+                AppBadge(text = "${"%.2f".format(entry.fuelVolume)} L")
+                AppBadge(text = CurrencyFormatter.formatCurrency(entry.fuelCost, currency))
             }
         }
     }

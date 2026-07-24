@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.chandanshakya.fuellog.data.db.FuelEntryDao
 import com.chandanshakya.fuellog.data.db.UserSettingsDao
 import com.chandanshakya.fuellog.ui.navigation.NavArgs
+import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.util.PumpFillDetail
 import com.chandanshakya.fuellog.util.PumpMileageStat
 import com.chandanshakya.fuellog.util.computePumpFillHistory
@@ -60,5 +61,17 @@ class PumpInsightsViewModel @Inject constructor(
 
     fun getPumpDetail(pumpId: Long?): List<PumpFillDetail> {
         return computePumpFillHistory(entriesWithPump.value, pumpId)
+    }
+
+    fun getAllEntriesForPump(pumpId: Long?): StateFlow<List<FuelEntry>> {
+        return if (pumpId != null) {
+            fuelEntryDao.getAllByPumpId(pumpId)
+        } else {
+            currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicleWithNullPump(it) }
+        }.flowOn(Dispatchers.Default).stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
     }
 }

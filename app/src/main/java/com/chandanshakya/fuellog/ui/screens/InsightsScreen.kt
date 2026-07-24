@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
+import com.chandanshakya.fuellog.ui.components.AppButton
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -46,6 +47,8 @@ fun InsightsScreen(
 ) {
     val state by viewModel.insightsState.collectAsStateWithLifecycle()
     val pumpStats by pumpInsightsViewModel.pumpStats.collectAsStateWithLifecycle()
+    val capacitySuggestion by viewModel.capacitySuggestion.collectAsStateWithLifecycle()
+    val recentMileage by viewModel.recentMileage.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -93,6 +96,10 @@ fun InsightsScreen(
                     mileageTrend = state.mileageTrend,
                     pumpStats = pumpStats,
                     onPumpClick = { pumpId -> onNavigateToPumpDetail(vehicleId, pumpId) },
+                    tankCapacity = vehicle?.tankCapacity,
+                    capacitySuggestion = capacitySuggestion,
+                    recentMileage = recentMileage,
+                    onApplyCapacity = { viewModel.applySuggestedCapacity(it) },
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -118,6 +125,10 @@ fun StatisticsGrid(
     mileageTrend: MileageTrend,
     pumpStats: List<PumpMileageStat>,
     onPumpClick: (Long) -> Unit,
+    tankCapacity: Double? = null,
+    capacitySuggestion: com.chandanshakya.fuellog.util.CapacitySuggestion? = null,
+    recentMileage: Double? = null,
+    onApplyCapacity: (Double) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val efficiencyLabel = UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)
@@ -353,5 +364,83 @@ fun StatisticsGrid(
                 }
             }
         }
+
+        // Tank Info Card
+        item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    elevation = Dimens.cardElevation()
+                ) {
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(Dimens.spacingMd)
+                    ) {
+                        Text(
+                            text = "Tank Information",
+                            style = MaterialTheme.typography.titleMedium
+                        )
+
+                        Spacer(modifier = Modifier.height(Dimens.spacingMd))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Column {
+                                Text(
+                                    text = "Stored Capacity",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = tankCapacity?.let { "%.2f ${UnitConverter.getVolumeUnitLabel(volumeUnit)}".format(it) } ?: "Not set",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                            Column(horizontalAlignment = Alignment.End) {
+                                Text(
+                                    text = "Recent Mileage",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = recentMileage?.let { "%.2f $efficiencyLabel".format(it) } ?: "N/A",
+                                    style = MaterialTheme.typography.bodyLarge
+                                )
+                            }
+                        }
+
+                        if (capacitySuggestion != null) {
+                            Spacer(modifier = Modifier.height(Dimens.spacingMd))
+                            HorizontalDivider()
+                            Spacer(modifier = Modifier.height(Dimens.spacingSm))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "Suggested: ${"%.2f".format(capacitySuggestion!!.learnedCapacity)} ${UnitConverter.getVolumeUnitLabel(volumeUnit)}",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.primary
+                                    )
+                                    Text(
+                                        text = "Based on ${capacitySuggestion!!.basedOnFills} fills (${capacitySuggestion!!.confidence} confidence)",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                AppButton(
+                                    text = "Apply",
+                                    onClick = { onApplyCapacity(capacitySuggestion!!.learnedCapacity) }
+                                )
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
-}

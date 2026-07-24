@@ -6,9 +6,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
@@ -35,6 +37,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
 import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.FuelEntry
@@ -63,11 +66,14 @@ fun AddFuelEntryDialog(
     currency: String,
     existingPumps: List<FuelPump> = emptyList(),
     initialPumpName: String? = null,
+    onEditPump: (FuelPump) -> Unit = {},
+    onDeletePump: (Long) -> Unit = {},
     onDismiss: () -> Unit,
-    onSave: (LocalDate, Double, Double, Double, String?) -> Unit
+    onSave: (LocalDate, Double, Double, Double, String?, Boolean) -> Unit
 ) {
     var date by remember { mutableStateOf(entry?.date ?: LocalDate.now()) }
     var odometer by remember { mutableStateOf(entry?.odometer?.let { "%.2f".format(it) } ?: "") }
+    var isFullTank by remember { mutableStateOf(entry?.isFullTank ?: false) }
     var fuelVolume by remember { mutableStateOf(entry?.fuelVolume?.let { "%.2f".format(it) } ?: "") }
     var rate by remember {
         mutableStateOf(
@@ -126,6 +132,13 @@ fun AddFuelEntryDialog(
                     decimalPlaces = 2
                 )
 
+                Spacer(modifier = Modifier.height(Dimens.spacingSm))
+
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Checkbox(checked = isFullTank, onCheckedChange = { isFullTank = it })
+                    Text(text = "Full tank?", style = MaterialTheme.typography.bodyMedium)
+                }
+
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
 
                 ExposedDropdownMenuBox(
@@ -156,6 +169,16 @@ fun AddFuelEntryDialog(
                                     onClick = {
                                         pumpText = pump.name
                                         pumpDropdownExpanded = false
+                                    },
+                                    trailingIcon = {
+                                        Row {
+                                            IconButton(onClick = { onEditPump(pump) }, modifier = Modifier.size(32.dp)) {
+                                                Icon(painter = painterResource(R.drawable.ic_edit), contentDescription = "Edit pump", modifier = Modifier.size(16.dp))
+                                            }
+                                            IconButton(onClick = { onDeletePump(pump.id) }, modifier = Modifier.size(32.dp)) {
+                                                Icon(painter = painterResource(R.drawable.ic_delete), contentDescription = "Delete pump", modifier = Modifier.size(16.dp), tint = MaterialTheme.colorScheme.error)
+                                            }
+                                        }
                                     }
                                 )
                             }
@@ -325,7 +348,7 @@ fun AddFuelEntryDialog(
                     }
                     if (odometerError == null && fuelVolumeError == null && totalCostError == null) {
                         val pumpName = pumpText.trim().ifBlank { null }
-                        onSave(date, odo, finalVol, finalCost, pumpName)
+                        onSave(date, odo, finalVol, finalCost, pumpName, isFullTank)
                     }
                 },
                 enabled = odometerError == null && fuelVolumeError == null && totalCostError == null

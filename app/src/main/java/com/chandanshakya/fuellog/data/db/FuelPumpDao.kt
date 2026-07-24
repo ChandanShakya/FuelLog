@@ -4,6 +4,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
+import androidx.room.Update
 import com.chandanshakya.fuellog.data.model.FuelPump
 import kotlinx.coroutines.flow.Flow
 
@@ -20,6 +21,9 @@ interface FuelPumpDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(pump: FuelPump): Long
+
+    @Update
+    suspend fun update(pump: FuelPump)
 
     @Query("DELETE FROM fuel_pumps WHERE id = :id")
     suspend fun deleteById(id: Long)

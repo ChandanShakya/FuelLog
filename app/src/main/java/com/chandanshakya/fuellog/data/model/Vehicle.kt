@@ -11,5 +11,6 @@ data class Vehicle(
     var vehicleType: VehicleType = VehicleType.CAR,
     var distanceUnit: DistanceUnit = DistanceUnit.KM,
     var volumeUnit: VolumeUnit = VolumeUnit.LITERS,
-    var createdAt: LocalDate = LocalDate.now()
+    var createdAt: LocalDate = LocalDate.now(),
+    var tankCapacity: Double? = null
 )

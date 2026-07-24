@@ -2,6 +2,7 @@ package com.chandanshakya.fuellog.util
 
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.Vehicle
+import com.chandanshakya.fuellog.data.model.VolumeUnit
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.combine
 
@@ -16,8 +17,15 @@ data class CapacitySuggestion(
  * capacity likely is. For each pair of consecutive full-tank fills, the fuel volume added
  * at the second fill is approximately the fuel consumed since the last full fill (since the
  * tank was full at both points). The median of these volumes is the learned capacity.
+ *
+ * Note: All entries are assumed to be in the same volume unit. If the vehicle changed
+ * units mid-history, entries from different periods will be in different units and the
+ * learned capacity may be inaccurate.
  */
-fun suggestCapacity(fullTankEntries: List<FuelEntry>): CapacitySuggestion? {
+fun suggestCapacity(
+    fullTankEntries: List<FuelEntry>,
+    volumeUnit: VolumeUnit = VolumeUnit.LITERS
+): CapacitySuggestion? {
     if (fullTankEntries.size < 2) return null
 
     val volumes = mutableListOf<Double>()
@@ -56,8 +64,12 @@ fun suggestCapacity(fullTankEntries: List<FuelEntry>): CapacitySuggestion? {
  * value differs by more than 5% from the stored value. If no stored capacity is set,
  * always suggest.
  */
-fun shouldSuggestUpdate(currentCapacity: Double?, fullTankEntries: List<FuelEntry>): CapacitySuggestion? {
-    val suggestion = suggestCapacity(fullTankEntries) ?: return null
+fun shouldSuggestUpdate(
+    currentCapacity: Double?,
+    fullTankEntries: List<FuelEntry>,
+    volumeUnit: VolumeUnit = VolumeUnit.LITERS
+): CapacitySuggestion? {
+    val suggestion = suggestCapacity(fullTankEntries, volumeUnit) ?: return null
 
     if (currentCapacity == null || currentCapacity <= 0) return suggestion
 
@@ -70,5 +82,6 @@ fun observeCapacitySuggestion(
     vehicleFlow: Flow<Vehicle?>
 ): Flow<CapacitySuggestion?> = combine(entriesFlow, vehicleFlow) { entries, vehicle ->
     val fullTankEntries = entries.filter { it.isFullTank }.sortedBy { it.odometer }
-    shouldSuggestUpdate(vehicle?.tankCapacity, fullTankEntries)
+    val volumeUnit = vehicle?.volumeUnit ?: VolumeUnit.LITERS
+    shouldSuggestUpdate(vehicle?.tankCapacity, fullTankEntries, volumeUnit)
 }

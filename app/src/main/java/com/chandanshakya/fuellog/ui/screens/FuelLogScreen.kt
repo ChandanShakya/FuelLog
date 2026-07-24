@@ -62,6 +62,7 @@ fun FuelLogScreen(
     vehicleId: Long,
     onNavigateToInsights: () -> Unit,
     onNavigateToVehicles: () -> Unit,
+    onNavigateToOdometerLogs: () -> Unit = {},
     viewModel: FuelLogViewModel = hiltViewModel()
 ) {
     val state by viewModel.fuelLogState.collectAsStateWithLifecycle()
@@ -82,6 +83,9 @@ fun FuelLogScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToOdometerLogs) {
+                        Icon(painter = painterResource(R.drawable.ic_speed), contentDescription = "Odometer Logs")
+                    }
                     IconButton(onClick = onNavigateToInsights) {
                         Icon(painter = painterResource(R.drawable.ic_analytics), contentDescription = "Insights")
                     }
@@ -133,7 +137,7 @@ fun FuelLogScreen(
                     Spacer(modifier = Modifier.height(Dimens.spacingSm))
 
                     if (prediction != null) {
-                        NextFillUpCard(prediction = prediction!!, distanceUnit = vehicle.distanceUnit)
+                        NextFillUpCard(prediction = prediction!!, distanceUnit = vehicle.distanceUnit, volumeUnit = vehicle.volumeUnit)
                     } else if (vehicle.tankCapacity == null || vehicle.tankCapacity!! <= 0) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -303,6 +307,7 @@ fun FuelLogScreen(
 fun NextFillUpCard(
     prediction: FillUpPrediction,
     distanceUnit: DistanceUnit,
+    volumeUnit: VolumeUnit,
     modifier: Modifier = Modifier
 ) {
     val distanceLabel = UnitConverter.getDistanceUnitLabel(distanceUnit)
@@ -331,7 +336,7 @@ fun NextFillUpCard(
             ) {
                 Column {
                     Text(
-                        text = "Remaining",
+                        text = "Refuel after",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -343,7 +348,7 @@ fun NextFillUpCard(
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "Predicted",
+                        text = "Predicted date",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -358,9 +363,31 @@ fun NextFillUpCard(
                     )
                 }
             }
+
+            prediction.predictedOdometer?.let { odo ->
+                Spacer(modifier = Modifier.height(Dimens.spacingSm))
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text(
+                            text = "Refuel at odometer",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Text(
+                            text = "~${"%.0f".format(odo)} $distanceLabel",
+                            style = MaterialTheme.typography.titleMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+            }
+
             Spacer(modifier = Modifier.height(Dimens.spacingSm))
             Text(
-                text = "Based on ${"%.2f".format(prediction.recentMileage)} ${UnitConverter.getEfficiencyLabel(distanceUnit, VolumeUnit.LITERS)} recent avg",
+                text = "Based on ${"%.2f".format(prediction.recentMileage)} ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)} recent avg",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

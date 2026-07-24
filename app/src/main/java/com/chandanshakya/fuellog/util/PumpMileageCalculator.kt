@@ -1,6 +1,8 @@
 package com.chandanshakya.fuellog.util
 
 import com.chandanshakya.fuellog.data.db.FuelEntryWithPump
+import com.chandanshakya.fuellog.data.model.DistanceUnit
+import com.chandanshakya.fuellog.data.model.VolumeUnit
 import java.time.LocalDate
 
 data class PumpFillDetail(
@@ -24,9 +26,11 @@ data class PumpMileageStat(
 
 fun computePumpFillHistory(
     entriesSortedByOdometer: List<FuelEntryWithPump>,
-    pumpId: Long?
+    pumpId: Long?,
+    distanceUnit: DistanceUnit = DistanceUnit.KM,
+    volumeUnit: VolumeUnit = VolumeUnit.LITERS
 ): List<PumpFillDetail> {
-    val allPairs = computeAllPairs(entriesSortedByOdometer)
+    val allPairs = computeAllPairs(entriesSortedByOdometer, distanceUnit, volumeUnit)
     return allPairs
         .filter { it.pumpId == pumpId }
         .sortedBy { it.detail.date }
@@ -34,9 +38,11 @@ fun computePumpFillHistory(
 }
 
 fun computePumpMileageStats(
-    entriesSortedByOdometer: List<FuelEntryWithPump>
+    entriesSortedByOdometer: List<FuelEntryWithPump>,
+    distanceUnit: DistanceUnit = DistanceUnit.KM,
+    volumeUnit: VolumeUnit = VolumeUnit.LITERS
 ): List<PumpMileageStat> {
-    val allPairs = computeAllPairs(entriesSortedByOdometer)
+    val allPairs = computeAllPairs(entriesSortedByOdometer, distanceUnit, volumeUnit)
 
     // Count actual fill-ups per pump (entries where user refueled at that pump)
     val fillCounts = entriesSortedByOdometer
@@ -68,8 +74,12 @@ private data class AttributedPair(
     val detail: PumpFillDetail
 )
 
-private fun computeAllPairs(entries: List<FuelEntryWithPump>): List<AttributedPair> {
-    return entries.adjacentMileagePairs({ it.entry.odometer }, { it.entry.fuelVolume })
+private fun computeAllPairs(
+    entries: List<FuelEntryWithPump>,
+    distanceUnit: DistanceUnit = DistanceUnit.KM,
+    volumeUnit: VolumeUnit = VolumeUnit.LITERS
+): List<AttributedPair> {
+    return entries.adjacentMileagePairs({ it.entry.odometer }, { it.entry.fuelVolume }, distanceUnit, volumeUnit)
         .mapIndexed { index, pair ->
             val curr = entries[index + 1]
             AttributedPair(

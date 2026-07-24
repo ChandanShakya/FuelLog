@@ -69,7 +69,9 @@ class FuelLogViewModel @Inject constructor(
         settingsFlow
     ) { entriesWithPump, v, settings ->
         val sortedEntries = entriesWithPump.sortedBy { it.entry.odometer }
-        val pairs = sortedEntries.adjacentMileagePairs({ it.entry.odometer }, { it.entry.fuelVolume })
+        val distanceUnit = v?.distanceUnit ?: com.chandanshakya.fuellog.data.model.DistanceUnit.KM
+        val volumeUnit = v?.volumeUnit ?: com.chandanshakya.fuellog.data.model.VolumeUnit.LITERS
+        val pairs = sortedEntries.adjacentMileagePairs({ it.entry.odometer }, { it.entry.fuelVolume }, distanceUnit, volumeUnit)
 
         val entriesWithMileage = sortedEntries.mapIndexed { index, entryWithPump ->
             EntryWithMileage(entry = entryWithPump.entry, mileage = pairs.getOrNull(index)?.mileage, pumpName = entryWithPump.pumpName)
@@ -146,9 +148,11 @@ class FuelLogViewModel @Inject constructor(
         id: Long?, date: LocalDate, odometer: Double, fuelVolume: Double, fuelCost: Double,
         pumpName: String?, isFullTank: Boolean
     ) {
-        if (!Validation.validateFuelEntry(odometer, fuelVolume, fuelCost)) return
-
         viewModelScope.launch {
+            val vehicle = vehicleDao.getById(currentVehicleId.value)
+            val distanceUnit = vehicle?.distanceUnit ?: com.chandanshakya.fuellog.data.model.DistanceUnit.KM
+            val volumeUnit = vehicle?.volumeUnit ?: com.chandanshakya.fuellog.data.model.VolumeUnit.LITERS
+            if (!Validation.validateFuelEntry(odometer, fuelVolume, fuelCost, distanceUnit, volumeUnit)) return@launch
             val resolvedPumpId = if (!pumpName.isNullOrBlank()) {
                 resolveOrCreatePump(pumpName)
             } else null
@@ -182,6 +186,10 @@ class FuelLogViewModel @Inject constructor(
                 )
             )
         }
+    }
+
+    fun deleteOdometerReading(id: Long) {
+        viewModelScope.launch { odometerReadingDao.deleteById(id) }
     }
 
     fun applySuggestedCapacity(capacity: Double) {

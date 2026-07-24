@@ -10,6 +10,7 @@ import java.time.temporal.ChronoUnit
 data class FillUpPrediction(
     val remainingDistance: Double,
     val predictedDate: LocalDate?,
+    val predictedOdometer: Double?,
     val recentMileage: Double,
     val tankCapacity: Double
 )
@@ -20,11 +21,13 @@ data class FillUpPrediction(
  */
 fun computeRecencyWeightedMileage(
     entries: List<FuelEntry>,
-    windowSize: Int = 3
+    windowSize: Int = 3,
+    distanceUnit: DistanceUnit = DistanceUnit.KM,
+    volumeUnit: VolumeUnit = VolumeUnit.LITERS
 ): Double? {
     if (entries.size < 2) return null
 
-    val mileages = entries.adjacentMileagePairs({ it.odometer }, { it.fuelVolume }).map { it.mileage }
+    val mileages = entries.adjacentMileagePairs({ it.odometer }, { it.fuelVolume }, distanceUnit, volumeUnit).map { it.mileage }
     if (mileages.isEmpty()) return null
 
     val recent = mileages.takeLast(windowSize)
@@ -53,7 +56,7 @@ fun predictNextFillUp(
     if (tankCapacity == null || tankCapacity <= 0) return null
 
     val usableEntries = entries.filter { it.fuelVolume > 0 }.sortedBy { it.odometer }
-    val recentMileage = computeRecencyWeightedMileage(usableEntries, recentWindowSize) ?: return null
+    val recentMileage = computeRecencyWeightedMileage(usableEntries, recentWindowSize, distanceUnit, volumeUnit) ?: return null
 
     // Find the most recent odometer point (highest odometer from any source)
     val latestFuelOdo = entries.maxOfOrNull { it.odometer } ?: 0.0
@@ -97,6 +100,7 @@ fun predictNextFillUp(
     return FillUpPrediction(
         remainingDistance = remainingDistance,
         predictedDate = predictedDate,
+        predictedOdometer = if (latestOdo > 0) latestOdo + remainingDistance else null,
         recentMileage = recentMileage,
         tankCapacity = tankCapacity
     )

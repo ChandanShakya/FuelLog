@@ -18,8 +18,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.DropdownMenu
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -71,6 +69,7 @@ fun FuelLogScreen(
     var showAddDialog by remember { mutableStateOf(false) }
     var showOdometerDialog by remember { mutableStateOf(false) }
     var entryToEdit by remember { mutableStateOf<FuelEntry?>(null) }
+    var entryToView by remember { mutableStateOf<FuelEntry?>(null) }
     var pumpToEdit by remember { mutableStateOf<com.chandanshakya.fuellog.data.model.FuelPump?>(null) }
 
     Scaffold(
@@ -176,8 +175,7 @@ fun FuelLogScreen(
                                 distanceUnit = currentVehicle?.distanceUnit ?: DistanceUnit.KM,
                                 volumeUnit = currentVehicle?.volumeUnit ?: VolumeUnit.LITERS,
                                 currency = state.currency,
-                                onEdit = { entryToEdit = entryWithMileage.entry },
-                                onDelete = { viewModel.deleteFuelEntry(entryWithMileage.entry.id) },
+                                onClick = { entryToView = entryWithMileage.entry },
                                 modifier = Modifier.animateItem()
                             )
                         }
@@ -245,6 +243,27 @@ fun FuelLogScreen(
             onSave = { date, odometer ->
                 viewModel.addOdometerReading(date, odometer)
                 showOdometerDialog = false
+            }
+        )
+    }
+
+    if (entryToView != null) {
+        val fuelPumps by viewModel.fuelPumps.collectAsStateWithLifecycle()
+        val viewEntry = entryToView
+        val pumpName = viewEntry?.fuelPumpId?.let { pumpId ->
+            fuelPumps.find { it.id == pumpId }?.name
+        }
+        FuelEntryDetailDialog(
+            entry = viewEntry!!,
+            mileage = null,
+            pumpName = pumpName,
+            distanceUnit = state.vehicle?.distanceUnit ?: DistanceUnit.KM,
+            volumeUnit = state.vehicle?.volumeUnit ?: VolumeUnit.LITERS,
+            currency = state.currency,
+            onDismiss = { entryToView = null },
+            onDelete = {
+                viewModel.deleteFuelEntry(viewEntry.id)
+                entryToView = null
             }
         )
     }
@@ -369,6 +388,7 @@ fun SummaryStats(
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FuelEntryCard(
     entry: FuelEntry,
@@ -378,13 +398,15 @@ fun FuelEntryCard(
     distanceUnit: DistanceUnit,
     volumeUnit: VolumeUnit,
     currency: String,
-    onEdit: () -> Unit,
-    onDelete: () -> Unit,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var showMenu by remember { mutableStateOf(false) }
-
-    Card(modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, elevation = Dimens.cardElevation()) {
+    Card(
+        onClick = onClick,
+        modifier = modifier.fillMaxWidth(),
+        shape = MaterialTheme.shapes.medium,
+        elevation = Dimens.cardElevation()
+    ) {
         Column(modifier = Modifier.fillMaxWidth().padding(Dimens.spacingMd)) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Icon(painter = painterResource(R.drawable.ic_local_gas_station), contentDescription = null, modifier = Modifier.size(Dimens.iconMedium), tint = MaterialTheme.colorScheme.primary)
@@ -396,13 +418,6 @@ fun FuelEntryCard(
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                }
-                IconButton(onClick = { showMenu = true }) {
-                    Icon(painter = painterResource(R.drawable.ic_more_vert), contentDescription = "More options")
-                }
-                DropdownMenu(expanded = showMenu, onDismissRequest = { showMenu = false }) {
-                    DropdownMenuItem(text = { Text("Edit") }, onClick = { showMenu = false; onEdit() }, leadingIcon = { Icon(painter = painterResource(R.drawable.ic_edit), null) })
-                    DropdownMenuItem(text = { Text("Delete") }, onClick = { showMenu = false; onDelete() }, leadingIcon = { Icon(painter = painterResource(R.drawable.ic_delete), null) })
                 }
             }
 
@@ -438,5 +453,100 @@ fun FuelEntryCard(
                 AppBadge(text = CurrencyFormatter.formatCurrency(entry.fuelCost, currency))
             }
         }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun FuelEntryDetailDialog(
+    entry: FuelEntry,
+    mileage: Double?,
+    pumpName: String? = null,
+    distanceUnit: DistanceUnit,
+    volumeUnit: VolumeUnit,
+    currency: String,
+    onDismiss: () -> Unit,
+    onDelete: () -> Unit
+) {
+    var showDeleteConfirm by remember { mutableStateOf(false) }
+
+    if (showDeleteConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Delete Entry", style = MaterialTheme.typography.titleLarge) },
+            text = { Text("Are you sure you want to delete this fuel entry from ${DateTimeFormatter.ISO_LOCAL_DATE.format(entry.date)}? This action cannot be undone.") },
+            confirmButton = {
+                AppButton(
+                    text = "Delete",
+                    onClick = {
+                        showDeleteConfirm = false
+                        onDelete()
+                    }
+                )
+            },
+            dismissButton = {
+                AppButtonOutlined(text = "Cancel", onClick = { showDeleteConfirm = false })
+            }
+        )
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(
+                text = DateTimeFormatter.ISO_LOCAL_DATE.format(entry.date),
+                style = MaterialTheme.typography.titleLarge
+            )
+        },
+        text = {
+            Column {
+                DetailRow(label = "Odometer", value = "${"%.2f".format(entry.odometer)} ${UnitConverter.getDistanceUnitLabel(distanceUnit)}")
+                DetailRow(label = "Volume", value = "${"%.2f".format(entry.fuelVolume)} ${UnitConverter.getVolumeUnitLabel(volumeUnit)}")
+                DetailRow(label = "Cost", value = CurrencyFormatter.formatCurrency(entry.fuelCost, currency))
+                if (entry.fuelVolume > 0) {
+                    DetailRow(label = "Rate", value = "${"%.2f".format(entry.fuelCost / entry.fuelVolume)} ${currency}/${UnitConverter.getVolumeUnitLabel(volumeUnit)}")
+                }
+                if (pumpName != null) {
+                    DetailRow(label = "Pump", value = pumpName)
+                }
+                if (entry.isFullTank) {
+                    Spacer(modifier = Modifier.height(Dimens.spacingSm))
+                    AppBadge(text = "Full Tank")
+                }
+                mileage?.let { m ->
+                    Spacer(modifier = Modifier.height(Dimens.spacingSm))
+                    AppBadge(
+                        text = "Mileage: ${"%.2f".format(m)} ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}"
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            AppButton(
+                text = "Delete",
+                onClick = { showDeleteConfirm = true }
+            )
+        },
+        dismissButton = {
+            AppButtonOutlined(text = "Close", onClick = onDismiss)
+        }
+    )
+}
+
+@Composable
+fun DetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = Dimens.spacingXs),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.bodyMedium
+        )
     }
 }

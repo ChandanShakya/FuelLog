@@ -16,8 +16,8 @@ fun <T> Iterable<T>.adjacentMileagePairs(
         val prev = list[i - 1]
         val curr = list[i]
         val distance = odometer(curr) - odometer(prev)
-        if (distance > 0 && fuelVolume(prev) > 0) {
-            result.add(MileagePair(distance, distance / fuelVolume(prev)))
+        if (distance > 0 && fuelVolume(curr) > 0) {
+            result.add(MileagePair(distance, distance / fuelVolume(curr)))
         }
     }
     return result

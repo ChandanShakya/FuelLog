@@ -61,13 +61,17 @@ class PumpInsightsViewModelTest {
 
         val stats = computePumpMileageStats(entriesWithPump)
 
-        // Shell: 2 entries, 2 pairs → included
-        // BP: 1 entry, no next entry → no pairs → excluded
-        assertEquals(1, stats.size)
+        // Shell (pump 1): pair at e2 → mileage [2.5]
+        // BP (pump 2): pair at e3 → mileage [100/45≈2.222]
+        assertEquals(2, stats.size)
         val shell = stats.first { it.pumpId == 1L }
         assertEquals("Shell", shell.pumpName)
         assertEquals(2, shell.fillCount)
-        assertEquals(2.25, shell.avgMileage, 0.001)
+        assertEquals(2.5, shell.avgMileage, 0.001)
+        val bp = stats.first { it.pumpId == 2L }
+        assertEquals("BP", bp.pumpName)
+        assertEquals(1, bp.fillCount)
+        assertEquals(100.0 / 45.0, bp.avgMileage, 0.001)
     }
 
     @Test
@@ -94,6 +98,7 @@ class PumpInsightsViewModelTest {
         assertEquals(1, stats.size)
         assertEquals("Unknown / Not recorded", stats[0].pumpName)
         assertEquals(2, stats[0].fillCount)
+        assertEquals(2.5, stats[0].avgMileage, 0.001)
     }
 
     @Test

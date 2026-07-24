@@ -92,10 +92,11 @@ class FuelPumpDaoTest {
 
     @Test
     fun insert_replace_existing_name() = runTest {
-        val id1 = dao.insert(FuelPump(name = "Shell"))
-        val id2 = dao.insert(FuelPump(name = "Shell"))
-        // REPLACE strategy: second insert replaces first
-        assertEquals(id1, id2)
+        dao.insert(FuelPump(name = "Shell"))
+        dao.insert(FuelPump(name = "Shell"))
+        // No unique constraint on name, so both inserts succeed with different IDs
+        val pumps = dao.getAll().first()
+        assertEquals(2, pumps.size)
     }
 
     @Test

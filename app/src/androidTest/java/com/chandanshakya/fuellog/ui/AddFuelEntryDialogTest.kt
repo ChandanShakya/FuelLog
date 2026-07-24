@@ -27,7 +27,7 @@ class AddFuelEntryDialogTest {
                 volumeUnit = VolumeUnit.LITERS,
                 currency = "USD",
                 onDismiss = {},
-                onSave = { _, _, _, _, _ -> }
+                onSave = { _, _, _, _, _, _ -> }
             )
         }
         composeTestRule.onNodeWithText("Add Fuel Entry").assertIsDisplayed()
@@ -52,7 +52,7 @@ class AddFuelEntryDialogTest {
                 currency = "USD",
                 existingPumps = listOf(FuelPump(id = 1, name = "Shell")),
                 onDismiss = {},
-                onSave = { _, _, _, _, _ -> }
+                onSave = { _, _, _, _, _, _ -> }
             )
         }
         composeTestRule.onNodeWithText("Edit Fuel Entry").assertIsDisplayed()
@@ -67,7 +67,7 @@ class AddFuelEntryDialogTest {
                 volumeUnit = VolumeUnit.LITERS,
                 currency = "USD",
                 onDismiss = {},
-                onSave = { _, _, _, _, _ -> }
+                onSave = { _, _, _, _, _, _ -> }
             )
         }
         composeTestRule.onNodeWithText("Fuel Pump (optional)").assertIsDisplayed()
@@ -89,7 +89,7 @@ class AddFuelEntryDialogTest {
                 currency = "USD",
                 existingPumps = pumps,
                 onDismiss = {},
-                onSave = { _, _, _, _, _ -> }
+                onSave = { _, _, _, _, _, _ -> }
             )
         }
 
@@ -118,7 +118,7 @@ class AddFuelEntryDialogTest {
                 currency = "USD",
                 existingPumps = pumps,
                 onDismiss = {},
-                onSave = { _, _, _, _, pumpName -> savedPumpName = pumpName }
+                onSave = { _, _, _, _, pumpName, _ -> savedPumpName = pumpName }
             )
         }
 
@@ -139,7 +139,7 @@ class AddFuelEntryDialogTest {
                 volumeUnit = VolumeUnit.LITERS,
                 currency = "USD",
                 onDismiss = { dismissed = true },
-                onSave = { _, _, _, _, _ -> }
+                onSave = { _, _, _, _, _, _ -> }
             )
         }
 

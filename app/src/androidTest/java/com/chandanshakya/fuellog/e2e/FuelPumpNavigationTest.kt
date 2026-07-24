@@ -77,6 +77,7 @@ class FuelPumpNavigationTest {
             vehicleDao = database.vehicleDao(),
             userSettingsDao = database.userSettingsDao(),
             fuelPumpDao = database.fuelPumpDao(),
+            odometerReadingDao = database.odometerReadingDao(),
             savedStateHandle = savedStateHandle
         )
     }

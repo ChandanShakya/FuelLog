@@ -15,26 +15,13 @@ class MileageCalculatorTest {
     fun testCalculateMileage_WithPrevious() {
         val previous = FuelEntry(id = 1, vehicleId = 1, date = LocalDate.now().minusDays(1), odometer = 1000.0, fuelVolume = 50.0, fuelCost = 100.0)
         val current = FuelEntry(id = 2, vehicleId = 1, date = LocalDate.now(), odometer = 1100.0, fuelVolume = 40.0, fuelCost = 80.0)
-
-        val result = MileageCalculator.calculateMileage(current, previous, DistanceUnit.KM, VolumeUnit.LITERS)
-
-        // (1100 - 1000) / 40 = 2.5 km/L
-        assertEquals(2.5, result!!, 0.001)
+        assertEquals(2.5, MileageCalculator.calculateMileage(current, previous)!!, 0.001)
     }
 
     @Test
     fun testCalculateMileage_WithoutPrevious() {
         val current = FuelEntry(id = 1, vehicleId = 1, date = LocalDate.now(), odometer = 1000.0, fuelVolume = 50.0, fuelCost = 100.0)
-        assertNull(MileageCalculator.calculateMileage(current, null, DistanceUnit.KM, VolumeUnit.LITERS))
-    }
-
-    @Test
-    fun testCalculateMileageBase() {
-        val previous = FuelEntry(id = 1, vehicleId = 1, date = LocalDate.now().minusDays(1), odometer = 1000.0, fuelVolume = 50.0, fuelCost = 100.0)
-        val current = FuelEntry(id = 2, vehicleId = 1, date = LocalDate.now(), odometer = 1100.0, fuelVolume = 40.0, fuelCost = 80.0)
-
-        // (1100 - 1000) / 40 = 2.5 km/L
-        assertEquals(2.5, MileageCalculator.calculateMileageBase(current, previous)!!, 0.001)
+        assertNull(MileageCalculator.calculateMileage(current, null))
     }
 
     @Test
@@ -59,7 +46,7 @@ class MileageCalculatorTest {
             FuelEntry(2, 1, LocalDate.now().minusDays(1), 1100.0, 40.0, 80.0),
             FuelEntry(3, 1, LocalDate.now(), 1200.0, 30.0, 60.0)
         )
-        assertEquals(200.0, MileageCalculator.calculateTotalDistance(entries, DistanceUnit.KM), 0.001)
+        assertEquals(200.0, MileageCalculator.calculateTotalDistance(entries), 0.001)
     }
 
     @Test
@@ -69,7 +56,7 @@ class MileageCalculatorTest {
             FuelEntry(2, 1, LocalDate.now().minusDays(1), 1100.0, 40.0, 80.0),
             FuelEntry(3, 1, LocalDate.now(), 1200.0, 30.0, 60.0)
         )
-        assertEquals(120.0, MileageCalculator.calculateTotalFuel(entries, VolumeUnit.LITERS), 0.001)
+        assertEquals(120.0, MileageCalculator.calculateTotalFuel(entries), 0.001)
     }
 
     @Test

@@ -10,7 +10,7 @@ import com.chandanshakya.fuellog.viewmodel.ChartDataPoint
 fun MileageChart(
     dataPoints: List<ChartDataPoint>,
     modifier: Modifier = Modifier,
-    lineColor: Color = Color(0xFF625B77)
+    lineColor: Color
 ) {
     val values = remember(dataPoints) { dataPoints.map { it.mileage } }
     val dates = remember(dataPoints) { dataPoints.map { it.date } }

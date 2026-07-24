@@ -30,6 +30,7 @@ fun LineChart(
 ) {
     if (values.isEmpty()) return
 
+    val surfaceColor = MaterialTheme.colorScheme.surface
     val textMeasurer = rememberTextMeasurer()
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM") }
     val minVal = remember(values) { values.minOrNull() ?: 0.0 }
@@ -100,7 +101,7 @@ fun LineChart(
             val y = yPositions[i]
 
             drawCircle(color = lineColor, radius = 6.dp.toPx(), center = Offset(x, y))
-            drawCircle(color = Color.White, radius = 2.dp.toPx(), center = Offset(x, y))
+            drawCircle(color = surfaceColor, radius = 2.dp.toPx(), center = Offset(x, y))
 
             val label = valueLabel(values[i])
             val labelResult = textMeasurer.measure(text = label, style = textStyleLabel)

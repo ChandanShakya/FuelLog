@@ -8,6 +8,8 @@ import com.chandanshakya.fuellog.data.db.UserSettingsDao
 import com.chandanshakya.fuellog.data.db.VehicleDao
 import com.chandanshakya.fuellog.ui.navigation.NavArgs
 import com.chandanshakya.fuellog.data.model.FuelEntry
+import com.chandanshakya.fuellog.data.model.DistanceUnit
+import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.util.PumpFillDetail
 import com.chandanshakya.fuellog.util.PumpMileageStat
 import com.chandanshakya.fuellog.util.computePumpFillHistory
@@ -18,6 +20,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -67,8 +70,15 @@ class PumpInsightsViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
+    val distanceUnit: StateFlow<DistanceUnit> = vehicleState.map { it?.distanceUnit ?: DistanceUnit.KM }
+        .stateIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = DistanceUnit.KM)
+
+    val volumeUnit: StateFlow<VolumeUnit> = vehicleState.map { it?.volumeUnit ?: VolumeUnit.LITERS }
+        .stateIn(scope = viewModelScope, started = SharingStarted.WhileSubscribed(5000), initialValue = VolumeUnit.LITERS)
+
     val currency: StateFlow<String> = userSettingsDao.getSettings()
         .map { it?.defaultCurrency ?: "USD" }
+        .distinctUntilChanged()
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),

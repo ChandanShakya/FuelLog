@@ -18,6 +18,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -39,10 +40,19 @@ class InsightsViewModel @Inject constructor(
 
     private val currentVehicleId = savedStateHandle.getStateFlow(NavArgs.VEHICLE_ID, -1L)
     private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }
-    private val settingsFlow = userSettingsDao.getSettings()
+    private val settingsFlow = userSettingsDao.getSettings().distinctUntilChanged()
+
+    private val allEntries: StateFlow<List<FuelEntry>> = currentVehicleId
+        .flatMapLatest { fuelEntryDao.getAllByVehicle(it) }
+        .flowOn(Dispatchers.Default)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     val insightsState: StateFlow<InsightsState> = combine(
-        currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
+        allEntries,
         vehicleFlow,
         settingsFlow
     ) { entries, v, settings ->
@@ -117,7 +127,7 @@ class InsightsViewModel @Inject constructor(
     }
 
     val capacitySuggestion: StateFlow<CapacitySuggestion?> = observeCapacitySuggestion(
-        entriesFlow = currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
+        entriesFlow = allEntries,
         vehicleFlow = vehicleFlow
     ).flowOn(Dispatchers.Default).stateIn(
         scope = viewModelScope,
@@ -126,7 +136,7 @@ class InsightsViewModel @Inject constructor(
     )
 
     val recentMileage: StateFlow<Double?> = combine(
-        currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
+        allEntries,
         vehicleFlow
     ) { entries, vehicle ->
         val recentEntries = entries.filter { it.fuelVolume > 0 }.sortedBy { it.odometer }

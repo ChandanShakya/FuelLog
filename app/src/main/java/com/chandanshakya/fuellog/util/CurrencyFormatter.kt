@@ -22,10 +22,4 @@ object CurrencyFormatter {
             "$currencyCode $formattedAmount"
         }
     }
-
-    fun getCurrencySymbol(currencyCode: String): String = try {
-        Currency.getInstance(currencyCode.uppercase()).symbol
-    } catch (_: IllegalArgumentException) {
-        currencyCode
-    }
 }

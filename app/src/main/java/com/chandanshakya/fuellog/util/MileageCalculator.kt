@@ -4,6 +4,7 @@ import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 
+
 data class MileagePair(val distance: Double, val mileage: Double)
 
 fun <T> Iterable<T>.adjacentMileagePairs(
@@ -30,34 +31,12 @@ fun <T> Iterable<T>.adjacentMileagePairs(
 object MileageCalculator {
     fun calculateMileage(
         current: FuelEntry,
-        previous: FuelEntry?,
-        distanceUnit: DistanceUnit,
-        volumeUnit: VolumeUnit
+        previous: FuelEntry?
     ): Double? {
         if (previous == null) return null
-
-        val distanceRaw = current.odometer - previous.odometer
-        val fuelVolumeRaw = current.fuelVolume
-
-        if (fuelVolumeRaw <= 0 || distanceRaw <= 0) return null
-
-        return distanceRaw / fuelVolumeRaw
-    }
-
-    fun calculateMileageBase(
-        current: FuelEntry,
-        previous: FuelEntry?,
-        distanceUnit: DistanceUnit = DistanceUnit.KM,
-        volumeUnit: VolumeUnit = VolumeUnit.LITERS
-    ): Double? {
-        if (previous == null) return null
-
-        val distanceRaw = current.odometer - previous.odometer
-        val fuelVolumeRaw = current.fuelVolume
-
-        if (fuelVolumeRaw <= 0 || distanceRaw <= 0) return null
-
-        return distanceRaw / fuelVolumeRaw
+        val distance = current.odometer - previous.odometer
+        if (distance <= 0 || current.fuelVolume <= 0) return null
+        return distance / current.fuelVolume
     }
 
     fun calculateAverageMileage(
@@ -71,16 +50,14 @@ object MileageCalculator {
     }
 
     fun calculateTotalDistance(
-        entries: List<FuelEntry>,
-        distanceUnit: DistanceUnit
+        entries: List<FuelEntry>
     ): Double {
         if (entries.isEmpty()) return 0.0
         return entries.last().odometer - entries.first().odometer
     }
 
     fun calculateTotalFuel(
-        entries: List<FuelEntry>,
-        volumeUnit: VolumeUnit
+        entries: List<FuelEntry>
     ): Double {
         return entries.sumOf { it.fuelVolume }
     }

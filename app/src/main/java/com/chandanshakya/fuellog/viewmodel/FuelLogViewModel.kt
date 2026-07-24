@@ -24,6 +24,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
@@ -47,7 +48,25 @@ class FuelLogViewModel @Inject constructor(
 
     private val currentVehicleId = savedStateHandle.getStateFlow(NavArgs.VEHICLE_ID, -1L)
     private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }
-    private val settingsFlow = userSettingsDao.getSettings()
+    private val settingsFlow = userSettingsDao.getSettings().distinctUntilChanged()
+
+    private val allEntries: StateFlow<List<FuelEntry>> = currentVehicleId
+        .flatMapLatest { fuelEntryDao.getAllByVehicle(it) }
+        .flowOn(Dispatchers.Default)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
+
+    private val allEntriesWithPump = currentVehicleId
+        .flatMapLatest { fuelEntryDao.getAllByVehicleWithPump(it) }
+        .flowOn(Dispatchers.Default)
+        .stateIn(
+            scope = viewModelScope,
+            started = SharingStarted.WhileSubscribed(5000),
+            initialValue = emptyList()
+        )
 
     val fuelPumps: StateFlow<List<FuelPump>> = fuelPumpDao.getAll().stateIn(
         scope = viewModelScope,
@@ -64,7 +83,7 @@ class FuelLogViewModel @Inject constructor(
         )
 
     val fuelLogState: StateFlow<FuelLogState> = combine(
-        currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicleWithPump(it) },
+        allEntriesWithPump,
         vehicleFlow,
         settingsFlow
     ) { entriesWithPump, v, settings ->
@@ -83,8 +102,8 @@ class FuelLogViewModel @Inject constructor(
             vehicle = v,
             entries = entriesWithMileage,
             averageMileage = if (v != null) MileageCalculator.calculateAverageMileage(rawEntries, v.distanceUnit, v.volumeUnit) else null,
-            totalDistance = if (v != null) MileageCalculator.calculateTotalDistance(rawEntries, v.distanceUnit) else 0.0,
-            totalFuel = if (v != null) MileageCalculator.calculateTotalFuel(rawEntries, v.volumeUnit) else 0.0,
+            totalDistance = if (v != null) MileageCalculator.calculateTotalDistance(rawEntries) else 0.0,
+            totalFuel = if (v != null) MileageCalculator.calculateTotalFuel(rawEntries) else 0.0,
             totalCost = MileageCalculator.calculateTotalCost(rawEntries),
             currency = settings?.defaultCurrency ?: "USD"
         )
@@ -95,7 +114,7 @@ class FuelLogViewModel @Inject constructor(
     )
 
     val nextFillUpPrediction: StateFlow<FillUpPrediction?> = combine(
-        currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
+        allEntries,
         vehicleFlow,
         odometerReadings
     ) { entries, vehicle, readings ->
@@ -114,7 +133,7 @@ class FuelLogViewModel @Inject constructor(
     )
 
     val capacitySuggestion: StateFlow<CapacitySuggestion?> = observeCapacitySuggestion(
-        entriesFlow = currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
+        entriesFlow = allEntries,
         vehicleFlow = vehicleFlow
     ).flowOn(Dispatchers.Default).stateIn(
         scope = viewModelScope,

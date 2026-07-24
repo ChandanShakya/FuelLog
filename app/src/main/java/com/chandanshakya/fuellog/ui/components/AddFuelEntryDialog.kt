@@ -7,12 +7,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -26,8 +23,6 @@ import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
 import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,9 +42,7 @@ import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.util.Validation
-import java.time.Instant
 import java.time.LocalDate
-import java.time.ZoneId
 
 enum class FuelInputMode {
     VOLUME_RATE,
@@ -70,7 +63,8 @@ fun AddFuelEntryDialog(
     onEditPump: (FuelPump) -> Unit = {},
     onDeletePump: (Long) -> Unit = {},
     onDismiss: () -> Unit,
-    onSave: (LocalDate, Double, Double, Double, String?, Boolean) -> Unit
+    onSave: (LocalDate, Double, Double, Double, String?, Boolean) -> Unit,
+    onDelete: (() -> Unit)? = null
 ) {
     var date by remember { mutableStateOf(entry?.date ?: LocalDate.now()) }
     var odometer by remember { mutableStateOf(entry?.odometer?.let { "%.2f".format(it) } ?: "") }
@@ -84,14 +78,7 @@ fun AddFuelEntryDialog(
     }
     var totalCost by remember { mutableStateOf(entry?.fuelCost?.let { "%.2f".format(it) } ?: "") }
 
-    var inputMode by remember {
-        mutableStateOf(
-            when {
-                entry != null && entry.fuelVolume > 0 && entry.fuelCost > 0 -> FuelInputMode.VOLUME_RATE
-                else -> FuelInputMode.VOLUME_RATE
-            }
-        )
-    }
+    var inputMode by remember { mutableStateOf(FuelInputMode.VOLUME_RATE) }
 
     var odometerError by remember { mutableStateOf<String?>(null) }
     var fuelVolumeError by remember { mutableStateOf<String?>(null) }
@@ -100,7 +87,7 @@ fun AddFuelEntryDialog(
     val volumeLabel = UnitConverter.getVolumeUnitLabel(volumeUnit)
     val distanceLabel = UnitConverter.getDistanceUnitLabel(distanceUnit)
 
-    var showDatePicker by remember { mutableStateOf(false) }
+    var showDeleteConfirm by remember { mutableStateOf(false) }
 
     var pumpText by remember {
         mutableStateOf(
@@ -128,12 +115,7 @@ fun AddFuelEntryDialog(
         title = { Text(if (entry != null) "Edit Fuel Entry" else "Add Fuel Entry", style = MaterialTheme.typography.titleLarge) },
         text = {
             Column(modifier = Modifier.padding(vertical = Dimens.spacingSm)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    Text(text = "Date: $date", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.weight(1f))
-                    IconButton(onClick = { showDatePicker = true }) {
-                        Icon(painter = painterResource(R.drawable.ic_calendar), contentDescription = "Pick date")
-                    }
-                }
+                DatePickerField(date = date, onDateChange = { date = it })
 
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
 
@@ -343,6 +325,7 @@ fun AddFuelEntryDialog(
                             color = MaterialTheme.colorScheme.primary
                         )
                     }
+
                 }
 
             }
@@ -369,33 +352,35 @@ fun AddFuelEntryDialog(
             )
         },
         dismissButton = {
-            AppButtonOutlined(text = "Cancel", onClick = onDismiss)
+            Row {
+                if (entry != null && onDelete != null) {
+                    AppButton(
+                        text = "Delete",
+                        onClick = { showDeleteConfirm = true }
+                    )
+                }
+                AppButtonOutlined(text = "Cancel", onClick = onDismiss)
+            }
         }
     )
 
-    if (showDatePicker) {
-        val datePickerState = rememberDatePickerState(
-            initialSelectedDateMillis = date.atStartOfDay(ZoneId.systemDefault()).toInstant().toEpochMilli()
-        )
-        DatePickerDialog(
-            onDismissRequest = { showDatePicker = false },
+    if (showDeleteConfirm && onDelete != null) {
+        AlertDialog(
+            onDismissRequest = { showDeleteConfirm = false },
+            title = { Text("Delete Entry", style = MaterialTheme.typography.titleLarge) },
+            text = { Text("Are you sure you want to delete this fuel entry? This action cannot be undone.") },
             confirmButton = {
-                TextButton(onClick = {
-                    datePickerState.selectedDateMillis?.let { millis ->
-                        date = Instant.ofEpochMilli(millis).atZone(ZoneId.systemDefault()).toLocalDate()
+                AppButton(
+                    text = "Delete",
+                    onClick = {
+                        showDeleteConfirm = false
+                        onDelete()
                     }
-                    showDatePicker = false
-                }) {
-                    Text("OK")
-                }
+                )
             },
             dismissButton = {
-                TextButton(onClick = { showDatePicker = false }) {
-                    Text("Cancel")
-                }
+                AppButtonOutlined(text = "Cancel", onClick = { showDeleteConfirm = false })
             }
-        ) {
-            DatePicker(state = datePickerState)
-        }
+        )
     }
 }

@@ -58,23 +58,6 @@ class UnitConsistencyTest {
     }
 
     @Test
-    fun `MileageCalculator calculateMileage with MI GAL`() {
-        val entry1 = createEntry(1, 1000.0, 13.2)
-        val entry2 = createEntry(2, 1500.0, 13.2)
-
-        val mileage = MileageCalculator.calculateMileage(
-            current = entry2,
-            previous = entry1,
-            distanceUnit = DistanceUnit.MILES,
-            volumeUnit = VolumeUnit.GALLONS
-        )
-
-        assertNotNull(mileage)
-        // 500 mi / 13.2 gal = 37.879 mi/gal
-        assertEquals(500.0 / 13.2, mileage!!, 0.001)
-    }
-
-    @Test
     fun `MileageCalculator calculateAverageMileage with MI GAL`() {
         val entries = listOf(
             createEntry(1, 1000.0, 13.2),
@@ -101,10 +84,7 @@ class UnitConsistencyTest {
             createEntry(3, 2000.0, 13.2)
         )
 
-        val totalFuel = MileageCalculator.calculateTotalFuel(
-            entries = entries,
-            volumeUnit = VolumeUnit.GALLONS
-        )
+        val totalFuel = MileageCalculator.calculateTotalFuel(entries)
 
         // 13.2 * 3 = 39.6 gallons
         assertEquals(39.6, totalFuel, 0.001)
@@ -118,10 +98,7 @@ class UnitConsistencyTest {
             createEntry(3, 2000.0, 50.0)
         )
 
-        val totalFuel = MileageCalculator.calculateTotalFuel(
-            entries = entries,
-            volumeUnit = VolumeUnit.LITERS
-        )
+        val totalFuel = MileageCalculator.calculateTotalFuel(entries)
 
         assertEquals(150.0, totalFuel, 0.001)
     }

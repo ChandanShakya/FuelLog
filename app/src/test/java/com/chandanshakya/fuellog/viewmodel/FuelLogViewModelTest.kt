@@ -188,7 +188,6 @@ class FakeFuelEntryDao : FuelEntryDao {
             com.chandanshakya.fuellog.data.db.FuelEntryWithPump(entry, null)
         }
     )
-    override suspend fun getById(id: Long) = entries.find { it.id == id }
     override suspend fun insert(entry: FuelEntry): Long {
         entries.add(entry)
         updateFlow()
@@ -210,8 +209,6 @@ class FakeFuelEntryDao : FuelEntryDao {
     }
     override suspend fun getFullTankEntriesByVehicle(vehicleId: Long) =
         entries.filter { it.vehicleId == vehicleId && it.isFullTank }.sortedBy { it.odometer }
-    override suspend fun getLatestEntryByVehicle(vehicleId: Long) =
-        entries.filter { it.vehicleId == vehicleId }.maxByOrNull { it.odometer }
     override fun getAllByPumpId(pumpId: Long) = flowOf(
         entries.filter { it.fuelPumpId == pumpId }
     )
@@ -247,7 +244,6 @@ class FakeUserSettingsDao : UserSettingsDao {
 class FakeFuelPumpDao : FuelPumpDao {
     val pumps = mutableListOf<FuelPump>()
     override fun getAll() = flowOf(pumps.sortedBy { it.name })
-    override suspend fun getAllList() = pumps.sortedBy { it.name }
     override suspend fun findByName(name: String) = pumps.find { it.name == name }
     override suspend fun insert(pump: FuelPump): Long {
         val existing = pumps.indexOfFirst { it.id == pump.id }
@@ -271,7 +267,6 @@ class FakeFuelPumpDao : FuelPumpDao {
 class FakeOdometerReadingDao : OdometerReadingDao {
     val readings = mutableListOf<OdometerReading>()
     override fun getByVehicle(vehicleId: Long) = flowOf(readings.filter { it.vehicleId == vehicleId })
-    override suspend fun getByVehicleList(vehicleId: Long) = readings.filter { it.vehicleId == vehicleId }
     override suspend fun insert(reading: OdometerReading): Long { readings.add(reading); return reading.id }
     override suspend fun deleteById(id: Long) { readings.removeAll { it.id == id } }
 }

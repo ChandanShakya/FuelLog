@@ -13,9 +13,6 @@ interface FuelPumpDao {
     @Query("SELECT * FROM fuel_pumps ORDER BY name ASC")
     fun getAll(): Flow<List<FuelPump>>
 
-    @Query("SELECT * FROM fuel_pumps ORDER BY name ASC")
-    suspend fun getAllList(): List<FuelPump>
-
     @Query("SELECT * FROM fuel_pumps WHERE name = :name")
     suspend fun findByName(name: String): FuelPump?
 

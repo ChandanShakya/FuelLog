@@ -46,22 +46,4 @@ class CurrencyFormatterTest {
         val result = CurrencyFormatter.formatCurrency(123.456, "usd")
         assertEquals("$123.46", result)
     }
-
-    @Test
-    fun testGetCurrencySymbol_USD() {
-        val result = CurrencyFormatter.getCurrencySymbol("USD")
-        assertEquals("$", result)
-    }
-
-    @Test
-    fun testGetCurrencySymbol_EUR() {
-        val result = CurrencyFormatter.getCurrencySymbol("EUR")
-        assertEquals("\u20AC", result)
-    }
-
-    @Test
-    fun testGetCurrencySymbol_Unknown() {
-        val result = CurrencyFormatter.getCurrencySymbol("XYZ")
-        assertEquals("XYZ", result)
-    }
 }

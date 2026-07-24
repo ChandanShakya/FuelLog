@@ -26,9 +26,6 @@ interface FuelEntryDao {
     @Query("SELECT fe.*, fp.name AS pumpName FROM fuel_entries fe LEFT JOIN fuel_pumps fp ON fe.fuelPumpId = fp.id WHERE fe.vehicleId = :vehicleId ORDER BY fe.odometer ASC, fe.date ASC")
     fun getAllByVehicleWithPump(vehicleId: Long): Flow<List<FuelEntryWithPump>>
 
-    @Query("SELECT * FROM fuel_entries WHERE id = :id")
-    suspend fun getById(id: Long): FuelEntry?
-
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insert(entry: FuelEntry): Long
 
@@ -43,9 +40,6 @@ interface FuelEntryDao {
 
     @Query("SELECT * FROM fuel_entries WHERE vehicleId = :vehicleId AND isFullTank = 1 ORDER BY odometer ASC")
     suspend fun getFullTankEntriesByVehicle(vehicleId: Long): List<FuelEntry>
-
-    @Query("SELECT * FROM fuel_entries WHERE vehicleId = :vehicleId ORDER BY odometer DESC LIMIT 1")
-    suspend fun getLatestEntryByVehicle(vehicleId: Long): FuelEntry?
 
     @Query("SELECT * FROM fuel_entries WHERE fuelPumpId = :pumpId ORDER BY odometer ASC")
     fun getAllByPumpId(pumpId: Long): Flow<List<FuelEntry>>

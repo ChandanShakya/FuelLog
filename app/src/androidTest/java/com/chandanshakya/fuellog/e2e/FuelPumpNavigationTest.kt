@@ -18,6 +18,7 @@ import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.ui.theme.FuelLogTheme
 import com.chandanshakya.fuellog.viewmodel.FuelLogViewModel
 import com.chandanshakya.fuellog.viewmodel.InsightsViewModel
+import kotlinx.coroutines.flow.first
 import com.chandanshakya.fuellog.viewmodel.PumpInsightsViewModel
 import com.chandanshakya.fuellog.viewmodel.VehiclesViewModel
 import kotlinx.coroutines.test.runTest
@@ -187,7 +188,7 @@ class FuelPumpNavigationTest {
         composeTestRule.onNodeWithText("1000.00").assertIsDisplayed()
 
         // Verify pump created in DB
-        val pumps = database.fuelPumpDao().getAllList()
+        val pumps = database.fuelPumpDao().getAll().first()
         assertEquals(1, pumps.size)
         assertEquals("Shell", pumps[0].name)
 

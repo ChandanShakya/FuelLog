@@ -77,7 +77,7 @@ class FuelPumpDaoTest {
         dao.insert(FuelPump(name = "Shell"))
         dao.insert(FuelPump(name = "BP"))
 
-        val list = dao.getAllList()
+        val list = dao.getAll().first()
         assertEquals(2, list.size)
     }
 

@@ -22,15 +22,14 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.VolumeUnit
@@ -53,12 +52,14 @@ fun PumpDetailScreen(
     onNavigateBack: () -> Unit,
     pumpInsightsViewModel: PumpInsightsViewModel = hiltViewModel()
 ) {
-    val pumpStats by pumpInsightsViewModel.pumpStats.collectAsState()
-    val currency by pumpInsightsViewModel.currency.collectAsState()
+    val pumpStats by pumpInsightsViewModel.pumpStats.collectAsStateWithLifecycle()
+    val currency by pumpInsightsViewModel.currency.collectAsStateWithLifecycle()
+    val distanceUnit by pumpInsightsViewModel.distanceUnit.collectAsStateWithLifecycle()
+    val volumeUnit by pumpInsightsViewModel.volumeUnit.collectAsStateWithLifecycle()
     val pumpDetail = remember(pumpId, pumpStats) {
         pumpInsightsViewModel.getPumpDetail(pumpId)
     }
-    val allPumpEntries by pumpInsightsViewModel.getAllEntriesForPump(pumpId).collectAsState()
+    val allPumpEntries by pumpInsightsViewModel.getAllEntriesForPump(pumpId).collectAsStateWithLifecycle()
 
     val detailMap = remember(pumpDetail) {
         pumpDetail.associateBy { it.entryId }
@@ -90,7 +91,7 @@ fun PumpDetailScreen(
         ) {
             stat?.let { s ->
                 item {
-                    PumpStatHeader(stat = s)
+                    PumpStatHeader(stat = s, distanceUnit = distanceUnit, volumeUnit = volumeUnit)
                 }
             }
 
@@ -106,7 +107,7 @@ fun PumpDetailScreen(
                         style = MaterialTheme.typography.titleMedium
                     )
                 }
-                items(items = sortedEntries, key = { "entry_${it.id}" }) { entry ->
+                items(items = sortedEntries, key = { it.id }) { entry ->
                     val detail = detailMap[entry.id]
                     PumpEntryCard(
                         entry = entry,
@@ -114,6 +115,8 @@ fun PumpDetailScreen(
                         distanceSinceLast = detail?.distanceSinceLastFill,
                         averageMileage = stat?.avgMileage,
                         currency = currency,
+                        distanceUnit = distanceUnit,
+                        volumeUnit = volumeUnit,
                         modifier = Modifier.animateItem()
                     )
                 }
@@ -123,7 +126,8 @@ fun PumpDetailScreen(
 }
 
 @Composable
-private fun PumpStatHeader(stat: PumpMileageStat) {
+private fun PumpStatHeader(stat: PumpMileageStat, distanceUnit: DistanceUnit, volumeUnit: VolumeUnit) {
+    val efficiencyLabel = UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)
     Column(verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -131,7 +135,7 @@ private fun PumpStatHeader(stat: PumpMileageStat) {
         ) {
             InfoCard(
                 label = "Avg Mileage",
-                value = "%.2f km/L".format(stat.avgMileage),
+                value = "%.2f $efficiencyLabel".format(stat.avgMileage),
                 icon = painterResource(R.drawable.ic_speed),
                 modifier = Modifier.weight(1f)
             )
@@ -148,13 +152,13 @@ private fun PumpStatHeader(stat: PumpMileageStat) {
         ) {
             InfoCard(
                 label = "Best Mileage",
-                value = "%.2f km/L".format(stat.bestMileage),
+                value = "%.2f $efficiencyLabel".format(stat.bestMileage),
                 icon = painterResource(R.drawable.ic_arrow_upward),
                 modifier = Modifier.weight(1f)
             )
             InfoCard(
                 label = "Worst Mileage",
-                value = "%.2f km/L".format(stat.worstMileage),
+                value = "%.2f $efficiencyLabel".format(stat.worstMileage),
                 icon = painterResource(R.drawable.ic_arrow_downward),
                 modifier = Modifier.weight(1f)
             )
@@ -210,9 +214,14 @@ private fun PumpEntryCard(
     distanceSinceLast: Double? = null,
     averageMileage: Double? = null,
     currency: String,
+    distanceUnit: DistanceUnit,
+    volumeUnit: VolumeUnit,
     modifier: Modifier = Modifier
 ) {
     val dateFormatter = remember { DateTimeFormatter.ofPattern("dd MMM yyyy") }
+    val efficiencyLabel = UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)
+    val distanceLabel = UnitConverter.getDistanceUnitLabel(distanceUnit)
+    val volumeLabel = UnitConverter.getVolumeUnitLabel(volumeUnit)
 
     Card(
         modifier = modifier.fillMaxWidth(),
@@ -247,7 +256,7 @@ private fun PumpEntryCard(
                         }
                     }
                     Text(
-                        text = "Odometer: ${"%.2f".format(entry.odometer)} km",
+                        text = "Odometer: ${"%.2f".format(entry.odometer)} $distanceLabel",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -263,26 +272,26 @@ private fun PumpEntryCard(
                 mileage?.let { m ->
                     val badgeColor = when {
                         averageMileage == null -> MaterialTheme.colorScheme.primaryContainer
-                        m >= averageMileage * 1.1 -> Color(0xFF4CAF50).copy(alpha = 0.15f)
-                        m <= averageMileage * 0.9 -> Color(0xFFF44336).copy(alpha = 0.15f)
+                        m >= averageMileage * 1.1 -> MaterialTheme.colorScheme.tertiaryContainer
+                        m <= averageMileage * 0.9 -> MaterialTheme.colorScheme.errorContainer
                         else -> MaterialTheme.colorScheme.primaryContainer
                     }
                     val textColor = when {
                         averageMileage == null -> MaterialTheme.colorScheme.onPrimaryContainer
-                        m >= averageMileage * 1.1 -> Color(0xFF4CAF50)
-                        m <= averageMileage * 0.9 -> Color(0xFFF44336)
+                        m >= averageMileage * 1.1 -> MaterialTheme.colorScheme.onTertiaryContainer
+                        m <= averageMileage * 0.9 -> MaterialTheme.colorScheme.onErrorContainer
                         else -> MaterialTheme.colorScheme.onPrimaryContainer
                     }
                     AppBadge(
-                        text = "%.2f km/L".format(m),
+                        text = "%.2f $efficiencyLabel".format(m),
                         backgroundColor = badgeColor,
                         textColor = textColor
                     )
                 }
-                AppBadge(text = "${"%.2f".format(entry.fuelVolume)} L")
+                AppBadge(text = "${"%.2f".format(entry.fuelVolume)} $volumeLabel")
                 AppBadge(text = CurrencyFormatter.formatCurrency(entry.fuelCost, currency))
                 distanceSinceLast?.let { d ->
-                    AppBadge(text = "${"%.0f".format(d)} km since last")
+                    AppBadge(text = "${"%.0f".format(d)} $distanceLabel since last")
                 }
             }
         }

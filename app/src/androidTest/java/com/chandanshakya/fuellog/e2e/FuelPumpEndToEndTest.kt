@@ -212,7 +212,7 @@ class FuelPumpEndToEndTest {
         assertEquals(pumpId, existingPump2!!.id)
 
         // Only one pump in DB
-        val allPumps = pumpDao.getAllList()
+        val allPumps = pumpDao.getAll().first()
         assertEquals(1, allPumps.size)
     }
 

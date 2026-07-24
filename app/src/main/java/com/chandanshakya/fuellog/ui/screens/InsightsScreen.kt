@@ -1,9 +1,11 @@
 package com.chandanshakya.fuellog.ui.screens
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,9 +28,11 @@ import com.chandanshakya.fuellog.ui.chart.FuelPriceChart
 import com.chandanshakya.fuellog.ui.chart.MileageChart
 import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.CurrencyFormatter
+import com.chandanshakya.fuellog.util.PumpMileageStat
 import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.viewmodel.InsightsViewModel
 import com.chandanshakya.fuellog.viewmodel.MileageTrend
+import com.chandanshakya.fuellog.viewmodel.PumpInsightsViewModel
 import com.chandanshakya.fuellog.viewmodel.PriceChartDataPoint
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,9 +40,12 @@ import com.chandanshakya.fuellog.viewmodel.PriceChartDataPoint
 fun InsightsScreen(
     vehicleId: Long,
     onNavigateToLog: () -> Unit,
-    viewModel: InsightsViewModel = hiltViewModel()
+    onNavigateToPumpDetail: (vehicleId: Long, pumpId: Long) -> Unit,
+    viewModel: InsightsViewModel = hiltViewModel(),
+    pumpInsightsViewModel: PumpInsightsViewModel = hiltViewModel()
 ) {
     val state by viewModel.insightsState.collectAsStateWithLifecycle()
+    val pumpStats by pumpInsightsViewModel.pumpStats.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -84,6 +91,8 @@ fun InsightsScreen(
                     mileageDataPoints = state.mileageDataPoints,
                     priceDataPoints = state.priceDataPoints,
                     mileageTrend = state.mileageTrend,
+                    pumpStats = pumpStats,
+                    onPumpClick = { pumpId -> onNavigateToPumpDetail(vehicleId, pumpId) },
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -107,6 +116,8 @@ fun StatisticsGrid(
     mileageDataPoints: List<com.chandanshakya.fuellog.viewmodel.ChartDataPoint>,
     priceDataPoints: List<PriceChartDataPoint>,
     mileageTrend: MileageTrend,
+    pumpStats: List<PumpMileageStat>,
+    onPumpClick: (Long) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val efficiencyLabel = UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)
@@ -278,6 +289,66 @@ fun StatisticsGrid(
                             currencyCode = currency,
                             modifier = Modifier.fillMaxWidth()
                         )
+                    }
+                }
+            }
+        }
+
+        item {
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                shape = MaterialTheme.shapes.medium,
+                elevation = Dimens.cardElevation()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(Dimens.spacingMd)
+                ) {
+                    Text(
+                        text = "Mileage by Fuel Pump",
+                        style = MaterialTheme.typography.titleMedium
+                    )
+
+                    Spacer(modifier = Modifier.height(Dimens.spacingMd))
+
+                    if (pumpStats.isEmpty()) {
+                        Text(
+                            text = "No fuel pump data recorded yet",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        pumpStats.forEachIndexed { index, stat ->
+                            if (index > 0) {
+                                HorizontalDivider(modifier = Modifier.padding(vertical = Dimens.spacingSm))
+                            }
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable { onPumpClick(stat.pumpId ?: -1L) }
+                                    .padding(vertical = Dimens.spacingSm),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stat.pumpName,
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    Text(
+                                        text = "${stat.fillCount} fill-up${if (stat.fillCount != 1) "s" else ""}",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Text(
+                                    text = "%.2f $efficiencyLabel".format(stat.avgMileage),
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
                     }
                 }
             }

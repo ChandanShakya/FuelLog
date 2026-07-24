@@ -14,11 +14,18 @@ import java.time.LocalDate
             parentColumns = ["id"],
             childColumns = ["vehicleId"],
             onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = FuelPump::class,
+            parentColumns = ["id"],
+            childColumns = ["fuelPumpId"],
+            onDelete = ForeignKey.SET_NULL
         )
     ],
     indices = [
         Index(value = ["vehicleId", "odometer"]),
-        Index(value = ["date"])
+        Index(value = ["date"]),
+        Index(value = ["fuelPumpId"])
     ]
 )
 data class FuelEntry(
@@ -27,5 +34,6 @@ data class FuelEntry(
     var date: LocalDate,
     var odometer: Double,
     var fuelVolume: Double,
-    var fuelCost: Double
+    var fuelCost: Double,
+    var fuelPumpId: Long? = null
 )

@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.room.Room
 import com.chandanshakya.fuellog.data.db.AppDatabase
 import com.chandanshakya.fuellog.data.db.FuelEntryDao
+import com.chandanshakya.fuellog.data.db.FuelPumpDao
 import com.chandanshakya.fuellog.data.db.UserSettingsDao
 import com.chandanshakya.fuellog.data.db.VehicleDao
 import dagger.Module
@@ -20,6 +21,7 @@ object AppModule {
     @Singleton
     fun provideDatabase(@ApplicationContext context: Context): AppDatabase {
         return Room.databaseBuilder(context, AppDatabase::class.java, "fuellog-db")
+            .addMigrations(AppDatabase.MIGRATION_7_8)
             .fallbackToDestructiveMigration()
             .build()
     }
@@ -35,4 +37,8 @@ object AppModule {
     @Provides
     @Singleton
     fun provideUserSettingsDao(database: AppDatabase): UserSettingsDao = database.userSettingsDao()
+
+    @Provides
+    @Singleton
+    fun provideFuelPumpDao(database: AppDatabase): FuelPumpDao = database.fuelPumpDao()
 }

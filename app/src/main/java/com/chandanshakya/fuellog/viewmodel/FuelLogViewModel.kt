@@ -3,9 +3,11 @@ package com.chandanshakya.fuellog.viewmodel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chandanshakya.fuellog.data.db.FuelEntryDao
+import com.chandanshakya.fuellog.data.db.FuelPumpDao
 import com.chandanshakya.fuellog.data.db.UserSettingsDao
 import com.chandanshakya.fuellog.data.db.VehicleDao
 import com.chandanshakya.fuellog.data.model.FuelEntry
+import com.chandanshakya.fuellog.data.model.FuelPump
 import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.util.MileageCalculator
 import com.chandanshakya.fuellog.util.Validation
@@ -31,12 +33,19 @@ class FuelLogViewModel @Inject constructor(
     private val fuelEntryDao: FuelEntryDao,
     private val vehicleDao: VehicleDao,
     private val userSettingsDao: UserSettingsDao,
+    private val fuelPumpDao: FuelPumpDao,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val currentVehicleId = savedStateHandle.getStateFlow(NavArgs.VEHICLE_ID, -1L)
     private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }
     private val settingsFlow = userSettingsDao.getSettings()
+
+    val fuelPumps: StateFlow<List<FuelPump>> = fuelPumpDao.getAll().stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = emptyList()
+    )
 
     val fuelLogState: StateFlow<FuelLogState> = combine(
         currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
@@ -68,39 +77,59 @@ class FuelLogViewModel @Inject constructor(
         initialValue = FuelLogState()
     )
 
+    suspend fun resolveOrCreatePump(name: String): Long {
+        val trimmed = name.trim()
+        if (trimmed.isEmpty()) return 0
+        val existing = fuelPumpDao.findByName(trimmed)
+        if (existing != null) return existing.id
+        return fuelPumpDao.insert(FuelPump(name = trimmed))
+    }
+
     fun addFuelEntry(
         date: LocalDate,
         odometer: Double,
         fuelVolume: Double,
-        fuelCost: Double
+        fuelCost: Double,
+        pumpName: String? = null
     ) {
         if (!Validation.validateFuelEntry(odometer, fuelVolume, fuelCost)) return
 
         viewModelScope.launch {
+            val resolvedPumpId = if (!pumpName.isNullOrBlank()) {
+                resolveOrCreatePump(pumpName)
+            } else null
+
             val entry = FuelEntry(
                 vehicleId = currentVehicleId.value,
                 date = date,
                 odometer = odometer,
                 fuelVolume = fuelVolume,
-                fuelCost = fuelCost
+                fuelCost = fuelCost,
+                fuelPumpId = resolvedPumpId
             )
             fuelEntryDao.insert(entry)
         }
     }
 
     fun updateFuelEntry(
-        id: Long, date: LocalDate, odometer: Double, fuelVolume: Double, fuelCost: Double
+        id: Long, date: LocalDate, odometer: Double, fuelVolume: Double, fuelCost: Double,
+        pumpName: String? = null
     ) {
         if (!Validation.validateFuelEntry(odometer, fuelVolume, fuelCost)) return
 
         viewModelScope.launch {
+            val resolvedPumpId = if (!pumpName.isNullOrBlank()) {
+                resolveOrCreatePump(pumpName)
+            } else null
+
             val entry = FuelEntry(
                 id = id,
                 vehicleId = currentVehicleId.value,
                 date = date,
                 odometer = odometer,
                 fuelVolume = fuelVolume,
-                fuelCost = fuelCost
+                fuelCost = fuelCost,
+                fuelPumpId = resolvedPumpId
             )
             fuelEntryDao.update(entry)
         }

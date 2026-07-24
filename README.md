@@ -6,18 +6,21 @@ A lightweight Android fuel tracking app built with Jetpack Compose, Room, and Hi
 
 - **Vehicle Management** - Add multiple vehicles with custom types (Car, Bus, Scooter, Bike, Truck, Jeep)
 - **Fuel Entry Tracking** - Log fuel fills with odometer, volume, cost, and notes
+- **Fuel Pump Tracking** - Optionally record which pump/station you refueled at, with autocomplete from previously-used pumps
 - **Auto-Calculation** - Enter any 2 of {volume, rate, cost} and the third is calculated automatically
 - **Unit Conversion** - Supports km/miles and liters/gallons with automatic data conversion when units change
 - **Global Currency** - Set your currency once, applies to all vehicles
-- **Insights & Charts** - Mileage trends, cost analysis, and fuel price tracking
+- **Insights & Charts** - Mileage trends, cost analysis, fuel price tracking, and per-pump mileage comparisons
+- **Pump Detail View** - Drill into any pump's fill-up history with a mileage trend chart
 - **Minimal Size** - ~1.2MB release APK
 
 ## Tech Stack
 
 - **UI:** Jetpack Compose + Material 3
-- **Database:** Room
+- **Database:** Room (with migrations)
 - **DI:** Hilt
 - **Architecture:** MVVM with Kotlin Flows
+- **Testing:** JUnit 4, Compose UI Testing, Espresso
 
 ## Run Locally
 
@@ -37,21 +40,58 @@ A lightweight Android fuel tracking app built with Jetpack Compose, Room, and Hi
 ./gradlew assembleRelease
 ```
 
+## Testing
+
+```bash
+# Run all unit tests
+./gradlew testDebugUnitTest
+
+# Run specific test class
+./gradlew testDebugUnitTest --tests "com.chandanshakya.fuellog.util.PumpMileageCalculatorTest"
+
+# Build instrumentation test APK (requires device/emulator)
+./gradlew assembleDebugAndroidTest
+
+# Run instrumentation tests on connected device
+./gradlew connectedDebugAndroidTest
+```
+
+### Test Coverage
+
+- **Unit tests** (`src/test/`) - Pure Kotlin logic: mileage calculators, currency formatting, unit conversion, validation, ViewModel logic
+- **DAO integration tests** (`src/androidTest/`) - Room database operations, schema migrations, foreign key behavior
+- **Compose UI tests** (`src/androidTest/`) - Dialog interactions, autocomplete dropdowns, button callbacks
+- **End-to-end navigation tests** (`src/androidTest/`) - Full user flows through all screens: Vehicles → Fuel Log → Insights → Pump Detail
+
 ## Project Structure
 
 ```
 app/src/main/java/com/chandanshakya/fuellog/
 ├── data/
-│   ├── db/          # Room DAOs and database
-│   └── model/       # Data classes (Vehicle, FuelEntry, UserSettings)
+│   ├── db/          # Room DAOs, database, migrations
+│   └── model/       # Data classes (Vehicle, FuelEntry, FuelPump, UserSettings)
 ├── ui/
-│   ├── components/  # Reusable composables
-│   ├── screens/     # Screen composables
-│   └── chart/       # Chart composables
-├── viewmodel/       # ViewModels
-├── util/            # Helpers (UnitConverter, CurrencyFormatter, etc.)
-└── di/              # Hilt modules
+│   ├── components/  # Reusable composables (AddFuelEntryDialog, AppTextField, etc.)
+│   ├── screens/     # Screen composables (FuelLogScreen, InsightsScreen, PumpDetailScreen, etc.)
+│   ├── chart/       # Canvas-based chart composables (LineChart, MileageChart, FuelPriceChart)
+│   └── navigation/  # NavRoutes, AppNavHost
+├── viewmodel/       # ViewModels (FuelLogViewModel, InsightsViewModel, PumpInsightsViewModel, etc.)
+├── util/            # Helpers (UnitConverter, CurrencyFormatter, MileageCalculator, PumpMileageCalculator)
+└── di/              # Hilt modules (AppModule)
 ```
+
+## Database
+
+Room database with 4 tables and version 8:
+
+| Table | Description |
+|-------|-------------|
+| `vehicles` | Vehicle profiles (name, type, distance/volume units) |
+| `fuel_entries` | Fuel fill records (odometer, volume, cost, date, FK to vehicle + pump) |
+| `fuel_pumps` | Fuel pump/station names |
+| `user_settings` | Global settings (currency, default units) |
+
+Migrations are handled explicitly (see `AppDatabase.MIGRATION_7_8`). `fallbackToDestructiveMigration()` is retained as a safety net for versions without an explicit migration path.
 
 ## License
 

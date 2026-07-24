@@ -144,35 +144,40 @@ fun FuelLogScreen(
     }
 
     if (showAddDialog) {
+        val fuelPumps by viewModel.fuelPumps.collectAsStateWithLifecycle()
         com.chandanshakya.fuellog.ui.components.AddFuelEntryDialog(
             vehicleId = vehicleId,
             distanceUnit = state.vehicle?.distanceUnit ?: DistanceUnit.KM,
             volumeUnit = state.vehicle?.volumeUnit ?: VolumeUnit.LITERS,
             currency = state.currency,
+            existingPumps = fuelPumps,
             onDismiss = { showAddDialog = false },
-            onSave = { date, odometer, fuelVolume, totalCost ->
-                viewModel.addFuelEntry(date, odometer, fuelVolume, totalCost)
+            onSave = { date, odometer, fuelVolume, totalCost, pumpName ->
+                viewModel.addFuelEntry(date, odometer, fuelVolume, totalCost, pumpName)
                 showAddDialog = false
             }
         )
     }
 
     if (entryToEdit != null) {
+        val fuelPumps by viewModel.fuelPumps.collectAsStateWithLifecycle()
         com.chandanshakya.fuellog.ui.components.AddFuelEntryDialog(
             vehicleId = vehicleId,
             entry = entryToEdit,
             distanceUnit = state.vehicle?.distanceUnit ?: DistanceUnit.KM,
             volumeUnit = state.vehicle?.volumeUnit ?: VolumeUnit.LITERS,
             currency = state.currency,
+            existingPumps = fuelPumps,
             onDismiss = { entryToEdit = null },
-            onSave = { date, odometer, fuelVolume, totalCost ->
+            onSave = { date, odometer, fuelVolume, totalCost, pumpName ->
                 entryToEdit?.let { existing ->
                     viewModel.updateFuelEntry(
                         id = existing.id,
                         date = date,
                         odometer = odometer,
                         fuelVolume = fuelVolume,
-                        fuelCost = totalCost
+                        fuelCost = totalCost,
+                        pumpName = pumpName
                     )
                 }
                 entryToEdit = null

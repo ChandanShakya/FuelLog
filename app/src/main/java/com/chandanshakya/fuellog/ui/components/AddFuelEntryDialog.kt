@@ -11,10 +11,14 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -34,6 +38,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.FuelEntry
+import com.chandanshakya.fuellog.data.model.FuelPump
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.UnitConverter
@@ -56,8 +61,10 @@ fun AddFuelEntryDialog(
     distanceUnit: DistanceUnit,
     volumeUnit: VolumeUnit,
     currency: String,
+    existingPumps: List<FuelPump> = emptyList(),
+    initialPumpName: String? = null,
     onDismiss: () -> Unit,
-    onSave: (LocalDate, Double, Double, Double) -> Unit
+    onSave: (LocalDate, Double, Double, Double, String?) -> Unit
 ) {
     var date by remember { mutableStateOf(entry?.date ?: LocalDate.now()) }
     var odometer by remember { mutableStateOf(entry?.odometer?.let { "%.2f".format(it) } ?: "") }
@@ -88,6 +95,14 @@ fun AddFuelEntryDialog(
 
     var showDatePicker by remember { mutableStateOf(false) }
 
+    var pumpText by remember { mutableStateOf(initialPumpName ?: "") }
+    var pumpDropdownExpanded by remember { mutableStateOf(false) }
+
+    val filteredPumps = remember(pumpText, existingPumps) {
+        if (pumpText.isBlank()) existingPumps
+        else existingPumps.filter { it.name.contains(pumpText, ignoreCase = true) }
+    }
+
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (entry != null) "Edit Fuel Entry" else "Add Fuel Entry", style = MaterialTheme.typography.titleLarge) },
@@ -110,6 +125,43 @@ fun AddFuelEntryDialog(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                     decimalPlaces = 2
                 )
+
+                Spacer(modifier = Modifier.height(Dimens.spacingMd))
+
+                ExposedDropdownMenuBox(
+                    expanded = pumpDropdownExpanded,
+                    onExpandedChange = { pumpDropdownExpanded = it }
+                ) {
+                    OutlinedTextField(
+                        value = pumpText,
+                        onValueChange = {
+                            pumpText = it
+                            pumpDropdownExpanded = true
+                        },
+                        label = { Text("Fuel Pump (optional)") },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .menuAnchor(MenuAnchorType.PrimaryNotEditable),
+                        singleLine = true,
+                        trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = pumpDropdownExpanded) }
+                    )
+                    if (filteredPumps.isNotEmpty() && pumpDropdownExpanded) {
+                        ExposedDropdownMenu(
+                            expanded = pumpDropdownExpanded,
+                            onDismissRequest = { pumpDropdownExpanded = false }
+                        ) {
+                            filteredPumps.forEach { pump ->
+                                DropdownMenuItem(
+                                    text = { Text(pump.name) },
+                                    onClick = {
+                                        pumpText = pump.name
+                                        pumpDropdownExpanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                }
 
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
 
@@ -272,7 +324,8 @@ fun AddFuelEntryDialog(
                         FuelInputMode.RATE_COST -> (if (r > 0) cost / r else vol) to cost
                     }
                     if (odometerError == null && fuelVolumeError == null && totalCostError == null) {
-                        onSave(date, odo, finalVol, finalCost)
+                        val pumpName = pumpText.trim().ifBlank { null }
+                        onSave(date, odo, finalVol, finalCost, pumpName)
                     }
                 },
                 enabled = odometerError == null && fuelVolumeError == null && totalCostError == null

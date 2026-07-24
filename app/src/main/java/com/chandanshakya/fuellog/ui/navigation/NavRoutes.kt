@@ -7,6 +7,7 @@ object NavRoutes {
     const val VEHICLES = "vehicles"
     const val FUEL_LOG_WITH_ARG = "log/{vehicleId}"
     const val INSIGHTS_WITH_ARG = "insights/{vehicleId}"
+    const val ODOMETER_LOGS_WITH_ARG = "odometer_logs/{vehicleId}"
     const val SETTINGS = "settings"
     const val PUMP_DETAIL_WITH_ARG = "pump_detail/{vehicleId}/{pumpId}"
 }

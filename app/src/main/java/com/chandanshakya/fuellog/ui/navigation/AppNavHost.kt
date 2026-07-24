@@ -12,6 +12,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.chandanshakya.fuellog.ui.screens.FuelLogScreen
 import com.chandanshakya.fuellog.ui.screens.InsightsScreen
+import com.chandanshakya.fuellog.ui.screens.OdometerLogsScreen
 import com.chandanshakya.fuellog.ui.screens.PumpDetailScreen
 import com.chandanshakya.fuellog.ui.screens.SettingsScreen
 import com.chandanshakya.fuellog.ui.screens.VehiclesScreen
@@ -79,6 +80,14 @@ fun AppNavHost(
                             restoreState = true
                         }
                     }
+                },
+                onNavigateToOdometerLogs = {
+                    navController.navigate(
+                        NavRoutes.ODOMETER_LOGS_WITH_ARG.replace(
+                            "{vehicleId}",
+                            vehicleId.toString()
+                        )
+                    )
                 }
             )
         }
@@ -103,6 +112,26 @@ fun AppNavHost(
                             .replace("{vehicleId}", vId.toString())
                             .replace("{pumpId}", pumpId.toString())
                     )
+                }
+            )
+        }
+
+        composable(
+            route = NavRoutes.ODOMETER_LOGS_WITH_ARG,
+            arguments = listOf(
+                navArgument(NavArgs.VEHICLE_ID) {
+                    type = androidx.navigation.NavType.LongType
+                }
+            )
+        ) { backStackEntry ->
+            val vehicleId = backStackEntry.arguments?.getLong(NavArgs.VEHICLE_ID) ?: return@composable
+            OdometerLogsScreen(
+                vehicleId = vehicleId,
+                onNavigateBack = {
+                    navController.popBackStack()
+                },
+                onAddReading = {
+                    // This will be handled by the FuelLogScreen's odometer dialog
                 }
             )
         }

@@ -47,8 +47,10 @@ class InsightsViewModel @Inject constructor(
         settingsFlow
     ) { entries, v, settings ->
         val sortedEntries = entries.sortedBy { it.odometer }
+        val distanceUnit = v?.distanceUnit ?: com.chandanshakya.fuellog.data.model.DistanceUnit.KM
+        val volumeUnit = v?.volumeUnit ?: com.chandanshakya.fuellog.data.model.VolumeUnit.LITERS
 
-        val pairs = sortedEntries.adjacentMileagePairs({ it.odometer }, { it.fuelVolume })
+        val pairs = sortedEntries.adjacentMileagePairs({ it.odometer }, { it.fuelVolume }, distanceUnit, volumeUnit)
         val mileages = pairs.map { it.mileage }
         val dataPoints = pairs.mapIndexed { index, pair ->
             ChartDataPoint(
@@ -69,14 +71,12 @@ class InsightsViewModel @Inject constructor(
         val bestMileage = mileages.maxOrNull()
         val worstMileage = mileages.minOrNull()
 
-        val totalDistanceKm = if (sortedEntries.isNotEmpty()) {
+        val totalDistanceRaw = if (sortedEntries.isNotEmpty()) {
             sortedEntries.last().odometer - sortedEntries.first().odometer
         } else 0.0
 
-        val totalFuelLiters = sortedEntries.sumOf { it.fuelVolume }
+        val totalFuelRaw = sortedEntries.sumOf { it.fuelVolume }
         val totalCost = sortedEntries.sumOf { it.fuelCost }
-
-        val costPerKm = if (totalDistanceKm > 0) totalCost / totalDistanceKm else null
 
         InsightsState(
             vehicle = v,
@@ -84,10 +84,10 @@ class InsightsViewModel @Inject constructor(
             averageMileageKmPerLiter = averageMileage,
             bestMileageKmPerLiter = bestMileage,
             worstMileageKmPerLiter = worstMileage,
-            totalDistanceKm = totalDistanceKm,
-            totalFuelLiters = totalFuelLiters,
+            totalDistanceKm = totalDistanceRaw,
+            totalFuelLiters = totalFuelRaw,
             totalCost = totalCost,
-            costPerKm = costPerKm,
+            costPerKm = if (totalDistanceRaw > 0) totalCost / totalDistanceRaw else null,
             mileageTrend = calculateTrend(mileages),
             entriesCount = sortedEntries.size,
             mileageDataPoints = dataPoints,
@@ -125,12 +125,15 @@ class InsightsViewModel @Inject constructor(
         initialValue = null
     )
 
-    val recentMileage: StateFlow<Double?> = currentVehicleId
-        .flatMapLatest { fuelEntryDao.getAllByVehicle(it) }
-        .map { entries ->
-            val recentEntries = entries.filter { it.fuelVolume > 0 }.sortedBy { it.odometer }
-            computeRecencyWeightedMileage(recentEntries)
-        }
+    val recentMileage: StateFlow<Double?> = combine(
+        currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
+        vehicleFlow
+    ) { entries, vehicle ->
+        val recentEntries = entries.filter { it.fuelVolume > 0 }.sortedBy { it.odometer }
+        val distanceUnit = vehicle?.distanceUnit ?: com.chandanshakya.fuellog.data.model.DistanceUnit.KM
+        val volumeUnit = vehicle?.volumeUnit ?: com.chandanshakya.fuellog.data.model.VolumeUnit.LITERS
+        computeRecencyWeightedMileage(recentEntries, 3, distanceUnit, volumeUnit)
+    }
         .flowOn(Dispatchers.Default)
         .stateIn(
             scope = viewModelScope,

@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.chandanshakya.fuellog.data.db.FuelEntryDao
 import com.chandanshakya.fuellog.data.db.UserSettingsDao
+import com.chandanshakya.fuellog.data.db.VehicleDao
 import com.chandanshakya.fuellog.ui.navigation.NavArgs
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.util.PumpFillDetail
@@ -16,6 +17,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.map
@@ -27,11 +29,19 @@ import javax.inject.Inject
 @HiltViewModel
 class PumpInsightsViewModel @Inject constructor(
     private val fuelEntryDao: FuelEntryDao,
+    private val vehicleDao: VehicleDao,
     private val userSettingsDao: UserSettingsDao,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
 
     private val currentVehicleId = savedStateHandle.getStateFlow(NavArgs.VEHICLE_ID, -1L)
+    private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }
+
+    private val vehicleState = vehicleFlow.stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
 
     private val entriesWithPump = currentVehicleId
         .flatMapLatest { fuelEntryDao.getAllByVehicleWithPump(it) }
@@ -42,8 +52,14 @@ class PumpInsightsViewModel @Inject constructor(
             initialValue = emptyList()
         )
 
-    val pumpStats: StateFlow<List<PumpMileageStat>> = entriesWithPump
-        .map { computePumpMileageStats(it) }
+    val pumpStats: StateFlow<List<PumpMileageStat>> = combine(
+        entriesWithPump,
+        vehicleState
+    ) { entries, vehicle ->
+        val distanceUnit = vehicle?.distanceUnit ?: com.chandanshakya.fuellog.data.model.DistanceUnit.KM
+        val volumeUnit = vehicle?.volumeUnit ?: com.chandanshakya.fuellog.data.model.VolumeUnit.LITERS
+        computePumpMileageStats(entries, distanceUnit, volumeUnit)
+    }
         .flowOn(Dispatchers.Default)
         .stateIn(
             scope = viewModelScope,
@@ -60,7 +76,10 @@ class PumpInsightsViewModel @Inject constructor(
         )
 
     fun getPumpDetail(pumpId: Long?): List<PumpFillDetail> {
-        return computePumpFillHistory(entriesWithPump.value, pumpId)
+        val vehicle = vehicleState.value
+        val distanceUnit = vehicle?.distanceUnit ?: com.chandanshakya.fuellog.data.model.DistanceUnit.KM
+        val volumeUnit = vehicle?.volumeUnit ?: com.chandanshakya.fuellog.data.model.VolumeUnit.LITERS
+        return computePumpFillHistory(entriesWithPump.value, pumpId, distanceUnit, volumeUnit)
     }
 
     fun getAllEntriesForPump(pumpId: Long?): StateFlow<List<FuelEntry>> {

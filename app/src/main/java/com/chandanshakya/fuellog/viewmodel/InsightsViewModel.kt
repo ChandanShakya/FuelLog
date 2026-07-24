@@ -8,9 +8,10 @@ import com.chandanshakya.fuellog.data.db.VehicleDao
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.util.CapacitySuggestion
+import com.chandanshakya.fuellog.util.adjacentMileagePairs
 import com.chandanshakya.fuellog.util.MileageCalculator
 import com.chandanshakya.fuellog.util.computeRecencyWeightedMileage
-import com.chandanshakya.fuellog.util.shouldSuggestUpdate
+import com.chandanshakya.fuellog.util.observeCapacitySuggestion
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -47,23 +48,14 @@ class InsightsViewModel @Inject constructor(
     ) { entries, v, settings ->
         val sortedEntries = entries.sortedBy { it.odometer }
 
-        val mileages = mutableListOf<Double>()
-        val dataPoints = mutableListOf<ChartDataPoint>()
-        for (i in 1 until sortedEntries.size) {
-            val mileage = MileageCalculator.calculateMileageBase(
-                sortedEntries[i],
-                sortedEntries[i - 1]
+        val pairs = sortedEntries.adjacentMileagePairs({ it.odometer }, { it.fuelVolume })
+        val mileages = pairs.map { it.mileage }
+        val dataPoints = pairs.mapIndexed { index, pair ->
+            ChartDataPoint(
+                odometer = sortedEntries[index + 1].odometer,
+                mileage = pair.mileage,
+                date = sortedEntries[index + 1].date
             )
-            mileage?.let {
-                mileages.add(it)
-                dataPoints.add(
-                    ChartDataPoint(
-                        odometer = sortedEntries[i].odometer,
-                        mileage = it,
-                        date = sortedEntries[i].date
-                    )
-                )
-            }
         }
 
         val priceDataPoints = sortedEntries.map { entry ->
@@ -124,13 +116,10 @@ class InsightsViewModel @Inject constructor(
         }
     }
 
-    val capacitySuggestion: StateFlow<CapacitySuggestion?> = combine(
-        currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
-        vehicleFlow
-    ) { entries, vehicle ->
-        val fullTankEntries = entries.filter { it.isFullTank }.sortedBy { it.odometer }
-        shouldSuggestUpdate(vehicle?.tankCapacity, fullTankEntries)
-    }.flowOn(Dispatchers.Default).stateIn(
+    val capacitySuggestion: StateFlow<CapacitySuggestion?> = observeCapacitySuggestion(
+        entriesFlow = currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
+        vehicleFlow = vehicleFlow
+    ).flowOn(Dispatchers.Default).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null

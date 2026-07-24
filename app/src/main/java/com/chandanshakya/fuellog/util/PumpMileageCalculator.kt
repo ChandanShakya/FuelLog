@@ -69,14 +69,9 @@ private data class AttributedPair(
 )
 
 private fun computeAllPairs(entries: List<FuelEntryWithPump>): List<AttributedPair> {
-    val result = mutableListOf<AttributedPair>()
-    for (i in 1 until entries.size) {
-        val prev = entries[i - 1]
-        val curr = entries[i]
-        val distance = curr.entry.odometer - prev.entry.odometer
-        if (distance <= 0 || prev.entry.fuelVolume <= 0) continue
-        val mileage = distance / prev.entry.fuelVolume
-        result.add(
+    return entries.adjacentMileagePairs({ it.entry.odometer }, { it.entry.fuelVolume })
+        .mapIndexed { index, pair ->
+            val prev = entries[index]
             AttributedPair(
                 pumpId = prev.entry.fuelPumpId,
                 pumpName = prev.pumpName,
@@ -86,11 +81,9 @@ private fun computeAllPairs(entries: List<FuelEntryWithPump>): List<AttributedPa
                     odometer = prev.entry.odometer,
                     fuelVolume = prev.entry.fuelVolume,
                     fuelCost = prev.entry.fuelCost,
-                    distanceSinceLastFill = distance,
-                    mileage = mileage
+                    distanceSinceLastFill = pair.distance,
+                    mileage = pair.mileage
                 )
             )
-        )
-    }
-    return result
+        }
 }

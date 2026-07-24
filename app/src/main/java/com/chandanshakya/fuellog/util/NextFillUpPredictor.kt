@@ -24,15 +24,7 @@ fun computeRecencyWeightedMileage(
 ): Double? {
     if (entries.size < 2) return null
 
-    val mileages = mutableListOf<Double>()
-    for (i in 1 until entries.size) {
-        val prev = entries[i - 1]
-        val curr = entries[i]
-        val distance = curr.odometer - prev.odometer
-        if (distance <= 0 || prev.fuelVolume <= 0) continue
-        mileages.add(distance / prev.fuelVolume)
-    }
-
+    val mileages = entries.adjacentMileagePairs({ it.odometer }, { it.fuelVolume }).map { it.mileage }
     if (mileages.isEmpty()) return null
 
     val recent = mileages.takeLast(windowSize)

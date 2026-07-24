@@ -13,10 +13,11 @@ import com.chandanshakya.fuellog.data.model.OdometerReading
 import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.util.CapacitySuggestion
 import com.chandanshakya.fuellog.util.FillUpPrediction
+import com.chandanshakya.fuellog.util.adjacentMileagePairs
 import com.chandanshakya.fuellog.util.MileageCalculator
 import com.chandanshakya.fuellog.util.Validation
 import com.chandanshakya.fuellog.util.predictNextFillUp
-import com.chandanshakya.fuellog.util.shouldSuggestUpdate
+import com.chandanshakya.fuellog.util.observeCapacitySuggestion
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Dispatchers
@@ -68,19 +69,10 @@ class FuelLogViewModel @Inject constructor(
         settingsFlow
     ) { entriesWithPump, v, settings ->
         val sortedEntries = entriesWithPump.sortedBy { it.entry.odometer }
+        val pairs = sortedEntries.adjacentMileagePairs({ it.entry.odometer }, { it.entry.fuelVolume })
 
         val entriesWithMileage = sortedEntries.mapIndexed { index, entryWithPump ->
-            val next = if (index < sortedEntries.size - 1) sortedEntries[index + 1] else null
-            val mileage = if (next != null && v != null && entryWithPump.entry.fuelVolume > 0) {
-                val distance = next.entry.odometer - entryWithPump.entry.odometer
-                if (distance > 0) {
-                    when (v.distanceUnit) {
-                        com.chandanshakya.fuellog.data.model.DistanceUnit.KM -> distance / entryWithPump.entry.fuelVolume
-                        com.chandanshakya.fuellog.data.model.DistanceUnit.MILES -> distance / entryWithPump.entry.fuelVolume
-                    }
-                } else null
-            } else null
-            EntryWithMileage(entry = entryWithPump.entry, mileage = mileage, pumpName = entryWithPump.pumpName)
+            EntryWithMileage(entry = entryWithPump.entry, mileage = pairs.getOrNull(index)?.mileage, pumpName = entryWithPump.pumpName)
         }.reversed()
 
         val rawEntries = sortedEntries.map { it.entry }
@@ -119,13 +111,10 @@ class FuelLogViewModel @Inject constructor(
         initialValue = null
     )
 
-    val capacitySuggestion: StateFlow<CapacitySuggestion?> = combine(
-        currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
-        vehicleFlow
-    ) { entries, vehicle ->
-        val fullTankEntries = entries.filter { it.isFullTank }.sortedBy { it.odometer }
-        shouldSuggestUpdate(vehicle?.tankCapacity, fullTankEntries)
-    }.flowOn(Dispatchers.Default).stateIn(
+    val capacitySuggestion: StateFlow<CapacitySuggestion?> = observeCapacitySuggestion(
+        entriesFlow = currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
+        vehicleFlow = vehicleFlow
+    ).flowOn(Dispatchers.Default).stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5000),
         initialValue = null
@@ -146,30 +135,16 @@ class FuelLogViewModel @Inject constructor(
         fuelCost: Double,
         pumpName: String? = null,
         isFullTank: Boolean = false
-    ) {
-        if (!Validation.validateFuelEntry(odometer, fuelVolume, fuelCost)) return
-
-        viewModelScope.launch {
-            val resolvedPumpId = if (!pumpName.isNullOrBlank()) {
-                resolveOrCreatePump(pumpName)
-            } else null
-
-            val entry = FuelEntry(
-                vehicleId = currentVehicleId.value,
-                date = date,
-                odometer = odometer,
-                fuelVolume = fuelVolume,
-                fuelCost = fuelCost,
-                fuelPumpId = resolvedPumpId,
-                isFullTank = isFullTank
-            )
-            fuelEntryDao.insert(entry)
-        }
-    }
+    ) = saveFuelEntry(null, date, odometer, fuelVolume, fuelCost, pumpName, isFullTank)
 
     fun updateFuelEntry(
         id: Long, date: LocalDate, odometer: Double, fuelVolume: Double, fuelCost: Double,
         pumpName: String? = null, isFullTank: Boolean = false
+    ) = saveFuelEntry(id, date, odometer, fuelVolume, fuelCost, pumpName, isFullTank)
+
+    private fun saveFuelEntry(
+        id: Long?, date: LocalDate, odometer: Double, fuelVolume: Double, fuelCost: Double,
+        pumpName: String?, isFullTank: Boolean
     ) {
         if (!Validation.validateFuelEntry(odometer, fuelVolume, fuelCost)) return
 
@@ -179,7 +154,7 @@ class FuelLogViewModel @Inject constructor(
             } else null
 
             val entry = FuelEntry(
-                id = id,
+                id = id ?: 0,
                 vehicleId = currentVehicleId.value,
                 date = date,
                 odometer = odometer,
@@ -188,7 +163,7 @@ class FuelLogViewModel @Inject constructor(
                 fuelPumpId = resolvedPumpId,
                 isFullTank = isFullTank
             )
-            fuelEntryDao.update(entry)
+            if (id != null) fuelEntryDao.update(entry) else fuelEntryDao.insert(entry)
         }
     }
 

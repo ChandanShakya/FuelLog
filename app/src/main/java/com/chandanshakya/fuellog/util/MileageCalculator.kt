@@ -4,6 +4,25 @@ import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 
+data class MileagePair(val distance: Double, val mileage: Double)
+
+fun <T> Iterable<T>.adjacentMileagePairs(
+    odometer: (T) -> Double,
+    fuelVolume: (T) -> Double
+): List<MileagePair> {
+    val list = this.toList()
+    val result = mutableListOf<MileagePair>()
+    for (i in 1 until list.size) {
+        val prev = list[i - 1]
+        val curr = list[i]
+        val distance = odometer(curr) - odometer(prev)
+        if (distance > 0 && fuelVolume(prev) > 0) {
+            result.add(MileagePair(distance, distance / fuelVolume(prev)))
+        }
+    }
+    return result
+}
+
 object MileageCalculator {
     fun calculateMileage(
         current: FuelEntry,
@@ -42,15 +61,9 @@ object MileageCalculator {
         distanceUnit: DistanceUnit,
         volumeUnit: VolumeUnit
     ): Double? {
-        if (entries.size < 2) return null
-
-        val mileages = mutableListOf<Double>()
-        for (i in 1 until entries.size) {
-            val mileage = calculateMileage(entries[i], entries[i - 1], distanceUnit, volumeUnit)
-            mileage?.let { mileages.add(it) }
-        }
-
-        return if (mileages.isNotEmpty()) mileages.average() else null
+        val pairs = entries.adjacentMileagePairs({ it.odometer }, { it.fuelVolume })
+        if (pairs.isEmpty()) return null
+        return pairs.map { UnitConverter.convertEfficiency(it.mileage, distanceUnit, volumeUnit) }.average()
     }
 
     fun calculateTotalDistance(

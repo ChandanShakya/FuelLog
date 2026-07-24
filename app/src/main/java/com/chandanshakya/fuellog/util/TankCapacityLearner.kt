@@ -1,6 +1,9 @@
 package com.chandanshakya.fuellog.util
 
 import com.chandanshakya.fuellog.data.model.FuelEntry
+import com.chandanshakya.fuellog.data.model.Vehicle
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.combine
 
 data class CapacitySuggestion(
     val learnedCapacity: Double,
@@ -60,4 +63,12 @@ fun shouldSuggestUpdate(currentCapacity: Double?, fullTankEntries: List<FuelEntr
 
     val diff = kotlin.math.abs(suggestion.learnedCapacity - currentCapacity) / currentCapacity
     return if (diff > 0.05) suggestion else null
+}
+
+fun observeCapacitySuggestion(
+    entriesFlow: Flow<List<FuelEntry>>,
+    vehicleFlow: Flow<Vehicle?>
+): Flow<CapacitySuggestion?> = combine(entriesFlow, vehicleFlow) { entries, vehicle ->
+    val fullTankEntries = entries.filter { it.isFullTank }.sortedBy { it.odometer }
+    shouldSuggestUpdate(vehicle?.tankCapacity, fullTankEntries)
 }

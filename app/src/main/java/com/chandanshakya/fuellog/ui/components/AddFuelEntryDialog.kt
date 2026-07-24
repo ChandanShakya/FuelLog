@@ -29,6 +29,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -101,7 +102,20 @@ fun AddFuelEntryDialog(
 
     var showDatePicker by remember { mutableStateOf(false) }
 
-    var pumpText by remember { mutableStateOf(initialPumpName ?: "") }
+    var pumpText by remember {
+        mutableStateOf(
+            initialPumpName
+                ?: entry?.fuelPumpId?.let { id -> existingPumps.find { it.id == id }?.name }
+                ?: ""
+        )
+    }
+
+    // Resolve pump name once existingPumps loads (handles timing with StateFlow)
+    LaunchedEffect(existingPumps, entry) {
+        if (pumpText.isBlank() && entry?.fuelPumpId != null && existingPumps.isNotEmpty()) {
+            pumpText = existingPumps.find { it.id == entry.fuelPumpId }?.name ?: ""
+        }
+    }
     var pumpDropdownExpanded by remember { mutableStateOf(false) }
 
     val filteredPumps = remember(pumpText, existingPumps) {

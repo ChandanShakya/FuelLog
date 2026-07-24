@@ -63,27 +63,35 @@ class FuelLogViewModel @Inject constructor(
         )
 
     val fuelLogState: StateFlow<FuelLogState> = combine(
-        currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicle(it) },
+        currentVehicleId.flatMapLatest { fuelEntryDao.getAllByVehicleWithPump(it) },
         vehicleFlow,
         settingsFlow
-    ) { entries, v, settings ->
-        val sortedEntries = entries.sortedBy { it.odometer }
+    ) { entriesWithPump, v, settings ->
+        val sortedEntries = entriesWithPump.sortedBy { it.entry.odometer }
 
-        val entriesWithMileage = sortedEntries.mapIndexed { index, entry ->
-            val previous = if (index > 0) sortedEntries[index - 1] else null
-            val mileage = if (previous != null && v != null) {
-                MileageCalculator.calculateMileage(entry, previous, v.distanceUnit, v.volumeUnit)
+        val entriesWithMileage = sortedEntries.mapIndexed { index, entryWithPump ->
+            val next = if (index < sortedEntries.size - 1) sortedEntries[index + 1] else null
+            val mileage = if (next != null && v != null && entryWithPump.entry.fuelVolume > 0) {
+                val distance = next.entry.odometer - entryWithPump.entry.odometer
+                if (distance > 0) {
+                    when (v.distanceUnit) {
+                        com.chandanshakya.fuellog.data.model.DistanceUnit.KM -> distance / entryWithPump.entry.fuelVolume
+                        com.chandanshakya.fuellog.data.model.DistanceUnit.MILES -> distance / entryWithPump.entry.fuelVolume
+                    }
+                } else null
             } else null
-            EntryWithMileage(entry = entry, mileage = mileage)
+            EntryWithMileage(entry = entryWithPump.entry, mileage = mileage, pumpName = entryWithPump.pumpName)
         }.reversed()
+
+        val rawEntries = sortedEntries.map { it.entry }
 
         FuelLogState(
             vehicle = v,
             entries = entriesWithMileage,
-            averageMileage = if (v != null) MileageCalculator.calculateAverageMileage(sortedEntries, v.distanceUnit, v.volumeUnit) else null,
-            totalDistance = if (v != null) MileageCalculator.calculateTotalDistance(sortedEntries, v.distanceUnit) else 0.0,
-            totalFuel = if (v != null) MileageCalculator.calculateTotalFuel(sortedEntries, v.volumeUnit) else 0.0,
-            totalCost = MileageCalculator.calculateTotalCost(sortedEntries),
+            averageMileage = if (v != null) MileageCalculator.calculateAverageMileage(rawEntries, v.distanceUnit, v.volumeUnit) else null,
+            totalDistance = if (v != null) MileageCalculator.calculateTotalDistance(rawEntries, v.distanceUnit) else 0.0,
+            totalFuel = if (v != null) MileageCalculator.calculateTotalFuel(rawEntries, v.volumeUnit) else 0.0,
+            totalCost = MileageCalculator.calculateTotalCost(rawEntries),
             currency = settings?.defaultCurrency ?: "USD"
         )
     }.flowOn(Dispatchers.Default).stateIn(
@@ -229,5 +237,6 @@ data class FuelLogState(
 
 data class EntryWithMileage(
     val entry: FuelEntry,
-    val mileage: Double?
+    val mileage: Double?,
+    val pumpName: String? = null
 )

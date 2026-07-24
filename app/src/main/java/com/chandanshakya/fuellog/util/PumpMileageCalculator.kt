@@ -38,6 +38,11 @@ fun computePumpMileageStats(
 ): List<PumpMileageStat> {
     val allPairs = computeAllPairs(entriesSortedByOdometer)
 
+    // Count actual fill-ups per pump (entries where user refueled at that pump)
+    val fillCounts = entriesSortedByOdometer
+        .groupBy { it.entry.fuelPumpId }
+        .mapValues { it.value.size }
+
     return allPairs
         .groupBy { it.pumpId }
         .mapNotNull { (pId, pairs) ->
@@ -49,7 +54,7 @@ fun computePumpMileageStats(
                 pumpId = pId,
                 pumpName = pumpName,
                 avgMileage = avg,
-                fillCount = pairs.size,
+                fillCount = fillCounts[pId] ?: pairs.size,
                 bestMileage = mileages.max(),
                 worstMileage = mileages.min()
             )
@@ -69,18 +74,18 @@ private fun computeAllPairs(entries: List<FuelEntryWithPump>): List<AttributedPa
         val prev = entries[i - 1]
         val curr = entries[i]
         val distance = curr.entry.odometer - prev.entry.odometer
-        if (distance <= 0 || curr.entry.fuelVolume <= 0) continue
-        val mileage = distance / curr.entry.fuelVolume
+        if (distance <= 0 || prev.entry.fuelVolume <= 0) continue
+        val mileage = distance / prev.entry.fuelVolume
         result.add(
             AttributedPair(
-                pumpId = curr.entry.fuelPumpId,
-                pumpName = curr.pumpName,
+                pumpId = prev.entry.fuelPumpId,
+                pumpName = prev.pumpName,
                 detail = PumpFillDetail(
-                    entryId = curr.entry.id,
-                    date = curr.entry.date,
-                    odometer = curr.entry.odometer,
-                    fuelVolume = curr.entry.fuelVolume,
-                    fuelCost = curr.entry.fuelCost,
+                    entryId = prev.entry.id,
+                    date = prev.entry.date,
+                    odometer = prev.entry.odometer,
+                    fuelVolume = prev.entry.fuelVolume,
+                    fuelCost = prev.entry.fuelCost,
                     distanceSinceLastFill = distance,
                     mileage = mileage
                 )

@@ -19,18 +19,18 @@ data class FillUpPrediction(
  * Only full-tank entries where fuelVolume > 0 and distance > 0 are considered.
  */
 fun computeRecencyWeightedMileage(
-    fullTankEntries: List<FuelEntry>,
+    entries: List<FuelEntry>,
     windowSize: Int = 3
 ): Double? {
-    if (fullTankEntries.size < 2) return null
+    if (entries.size < 2) return null
 
     val mileages = mutableListOf<Double>()
-    for (i in 1 until fullTankEntries.size) {
-        val prev = fullTankEntries[i - 1]
-        val curr = fullTankEntries[i]
+    for (i in 1 until entries.size) {
+        val prev = entries[i - 1]
+        val curr = entries[i]
         val distance = curr.odometer - prev.odometer
-        if (distance <= 0 || curr.fuelVolume <= 0) continue
-        mileages.add(distance / curr.fuelVolume)
+        if (distance <= 0 || prev.fuelVolume <= 0) continue
+        mileages.add(distance / prev.fuelVolume)
     }
 
     if (mileages.isEmpty()) return null
@@ -60,8 +60,8 @@ fun predictNextFillUp(
 ): FillUpPrediction? {
     if (tankCapacity == null || tankCapacity <= 0) return null
 
-    val fullTankEntries = entries.filter { it.isFullTank && it.fuelVolume > 0 }
-    val recentMileage = computeRecencyWeightedMileage(fullTankEntries, recentWindowSize) ?: return null
+    val usableEntries = entries.filter { it.fuelVolume > 0 }.sortedBy { it.odometer }
+    val recentMileage = computeRecencyWeightedMileage(usableEntries, recentWindowSize) ?: return null
 
     // Find the most recent odometer point (highest odometer from any source)
     val latestFuelOdo = entries.maxOfOrNull { it.odometer } ?: 0.0

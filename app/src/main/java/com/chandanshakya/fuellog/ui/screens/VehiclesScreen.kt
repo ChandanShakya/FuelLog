@@ -40,6 +40,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.ui.components.AddVehicleDialog
+import com.chandanshakya.fuellog.ui.components.EmptyState
 import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.viewmodel.VehiclesViewModel
@@ -190,20 +191,5 @@ fun VehicleCard(
                 DropdownMenuItem(text = { Text("Delete") }, onClick = { showMenu = false; onDelete() }, leadingIcon = { Icon(painter = painterResource(R.drawable.ic_delete), null) })
             }
         }
-    }
-}
-
-@Composable
-fun EmptyState(icon: androidx.compose.ui.graphics.painter.Painter, title: String, description: String) {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.Center
-    ) {
-        Icon(painter = icon, contentDescription = null, modifier = Modifier.size(64.dp), tint = MaterialTheme.colorScheme.onSurfaceVariant)
-        Spacer(modifier = Modifier.height(Dimens.spacingLg))
-        Text(text = title, style = MaterialTheme.typography.titleLarge)
-        Spacer(modifier = Modifier.height(Dimens.spacingSm))
-        Text(text = description, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant, maxLines = 2)
     }
 }

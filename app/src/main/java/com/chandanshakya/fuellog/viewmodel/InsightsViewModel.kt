@@ -139,8 +139,8 @@ class InsightsViewModel @Inject constructor(
     val recentMileage: StateFlow<Double?> = currentVehicleId
         .flatMapLatest { fuelEntryDao.getAllByVehicle(it) }
         .map { entries ->
-            val fullTankEntries = entries.filter { it.isFullTank && it.fuelVolume > 0 }.sortedBy { it.odometer }
-            computeRecencyWeightedMileage(fullTankEntries)
+            val recentEntries = entries.filter { it.fuelVolume > 0 }.sortedBy { it.odometer }
+            computeRecencyWeightedMileage(recentEntries)
         }
         .flowOn(Dispatchers.Default)
         .stateIn(

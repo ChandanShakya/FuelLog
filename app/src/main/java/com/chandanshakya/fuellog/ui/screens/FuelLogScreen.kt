@@ -34,6 +34,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -46,6 +47,8 @@ import com.chandanshakya.fuellog.ui.components.AppBadge
 import com.chandanshakya.fuellog.ui.components.AppButton
 import com.chandanshakya.fuellog.ui.components.AppButtonOutlined
 import com.chandanshakya.fuellog.ui.components.AppTextField
+import com.chandanshakya.fuellog.ui.components.EmptyState
+import com.chandanshakya.fuellog.ui.components.InfoCard
 import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.CurrencyFormatter
 import com.chandanshakya.fuellog.util.FillUpPrediction
@@ -87,7 +90,7 @@ fun FuelLogScreen(
             )
         },
         floatingActionButton = {
-            Column(horizontalAlignment = Alignment.End) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
                 SmallFloatingActionButton(
                     onClick = { showOdometerDialog = true },
                     containerColor = MaterialTheme.colorScheme.secondaryContainer,
@@ -168,11 +171,14 @@ fun FuelLogScreen(
                             FuelEntryCard(
                                 entry = entryWithMileage.entry,
                                 mileage = entryWithMileage.mileage,
+                                averageMileage = state.averageMileage,
+                                pumpName = entryWithMileage.pumpName,
                                 distanceUnit = currentVehicle?.distanceUnit ?: DistanceUnit.KM,
                                 volumeUnit = currentVehicle?.volumeUnit ?: VolumeUnit.LITERS,
                                 currency = state.currency,
                                 onEdit = { entryToEdit = entryWithMileage.entry },
-                                onDelete = { viewModel.deleteFuelEntry(entryWithMileage.entry.id) }
+                                onDelete = { viewModel.deleteFuelEntry(entryWithMileage.entry.id) },
+                                modifier = Modifier.animateItem()
                             )
                         }
                     }
@@ -364,48 +370,21 @@ fun SummaryStats(
 }
 
 @Composable
-fun InfoCard(label: String, value: String, icon: androidx.compose.ui.graphics.painter.Painter, modifier: Modifier = Modifier) {
-    Card(modifier = modifier, shape = MaterialTheme.shapes.medium, elevation = Dimens.cardElevation()) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = Dimens.spacingSm, vertical = Dimens.spacingMd),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-            Icon(painter = icon, contentDescription = null, modifier = Modifier.size(Dimens.iconMedium), tint = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.height(Dimens.spacingSm))
-            Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium.copy(
-                    fontSize = if (value.length > 8) MaterialTheme.typography.titleSmall.fontSize else MaterialTheme.typography.titleMedium.fontSize
-                ),
-                maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                maxLines = 1,
-                overflow = androidx.compose.ui.text.style.TextOverflow.Ellipsis
-            )
-        }
-    }
-}
-
-@Composable
 fun FuelEntryCard(
     entry: FuelEntry,
     mileage: Double?,
+    averageMileage: Double? = null,
+    pumpName: String? = null,
     distanceUnit: DistanceUnit,
     volumeUnit: VolumeUnit,
     currency: String,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
 
-    Card(modifier = Modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, elevation = Dimens.cardElevation()) {
+    Card(modifier = modifier.fillMaxWidth(), shape = MaterialTheme.shapes.medium, elevation = Dimens.cardElevation()) {
         Column(modifier = Modifier.fillMaxWidth().padding(Dimens.spacingMd)) {
             Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
                 Icon(painter = painterResource(R.drawable.ic_local_gas_station), contentDescription = null, modifier = Modifier.size(Dimens.iconMedium), tint = MaterialTheme.colorScheme.primary)
@@ -433,8 +412,27 @@ fun FuelEntryCard(
                 if (entry.isFullTank) {
                     AppBadge(text = "Full Tank")
                 }
+                pumpName?.let { name ->
+                    AppBadge(text = name)
+                }
                 mileage?.let { m ->
-                    AppBadge(text = "%.2f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(m))
+                    val badgeColor = when {
+                        averageMileage == null -> MaterialTheme.colorScheme.primaryContainer
+                        m >= averageMileage * 1.1 -> Color(0xFF4CAF50).copy(alpha = 0.15f)
+                        m <= averageMileage * 0.9 -> Color(0xFFF44336).copy(alpha = 0.15f)
+                        else -> MaterialTheme.colorScheme.primaryContainer
+                    }
+                    val textColor = when {
+                        averageMileage == null -> MaterialTheme.colorScheme.onPrimaryContainer
+                        m >= averageMileage * 1.1 -> Color(0xFF4CAF50)
+                        m <= averageMileage * 0.9 -> Color(0xFFF44336)
+                        else -> MaterialTheme.colorScheme.onPrimaryContainer
+                    }
+                    AppBadge(
+                        text = "%.2f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(m),
+                        backgroundColor = badgeColor,
+                        textColor = textColor
+                    )
                 }
                 AppBadge(text = "${"%.2f".format(entry.fuelVolume)} ${UnitConverter.getVolumeUnitLabel(volumeUnit)}")
                 AppBadge(text = CurrencyFormatter.formatCurrency(entry.fuelCost, currency))

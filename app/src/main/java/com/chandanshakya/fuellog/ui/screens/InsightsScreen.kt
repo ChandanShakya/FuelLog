@@ -19,6 +19,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import com.chandanshakya.fuellog.ui.components.AppButton
+import com.chandanshakya.fuellog.ui.components.EmptyState
+import com.chandanshakya.fuellog.ui.components.InfoCard
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -171,19 +173,19 @@ fun StatisticsGrid(
                         ) {
                             when (mileageTrend) {
                                 MileageTrend.IMPROVING -> {
-                                    Icon(painter = painterResource(R.drawable.ic_arrow_upward), contentDescription = null, tint = Color.Green)
+                                    Icon(painter = painterResource(R.drawable.ic_arrow_upward), contentDescription = null, tint = MaterialTheme.colorScheme.tertiary)
                                     Spacer(modifier = Modifier.width(Dimens.spacingXs))
-                                    Text("Improving", color = Color.Green, style = MaterialTheme.typography.bodySmall)
+                                    Text("Improving", color = MaterialTheme.colorScheme.tertiary, style = MaterialTheme.typography.bodySmall)
                                 }
                                 MileageTrend.DECLINING -> {
-                                    Icon(painter = painterResource(R.drawable.ic_arrow_downward), contentDescription = null, tint = Color.Red)
+                                    Icon(painter = painterResource(R.drawable.ic_arrow_downward), contentDescription = null, tint = MaterialTheme.colorScheme.error)
                                     Spacer(modifier = Modifier.width(Dimens.spacingXs))
-                                    Text("Declining", color = Color.Red, style = MaterialTheme.typography.bodySmall)
+                                    Text("Declining", color = MaterialTheme.colorScheme.error, style = MaterialTheme.typography.bodySmall)
                                 }
                                 MileageTrend.STABLE -> {
-                                    Icon(painter = painterResource(R.drawable.ic_trending_flat), contentDescription = null, tint = Color.Gray)
+                                    Icon(painter = painterResource(R.drawable.ic_trending_flat), contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
                                     Spacer(modifier = Modifier.width(Dimens.spacingXs))
-                                    Text("Stable", color = Color.Gray, style = MaterialTheme.typography.bodySmall)
+                                    Text("Stable", color = MaterialTheme.colorScheme.onSurfaceVariant, style = MaterialTheme.typography.bodySmall)
                                 }
                             }
                         }

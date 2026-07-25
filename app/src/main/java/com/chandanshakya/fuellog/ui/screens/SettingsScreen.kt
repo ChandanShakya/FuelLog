@@ -114,7 +114,7 @@ fun SettingsScreen(
                 item {
                     SettingCard(
                         title = "Default Distance Unit",
-                        icon = painterResource(R.drawable.ic_scale),
+                        icon = painterResource(R.drawable.ic_arrow_range),
                         description = "Distance unit used for new vehicles"
                     ) {
                         Column {
@@ -147,7 +147,7 @@ fun SettingsScreen(
                 item {
                     SettingCard(
                         title = "Default Volume Unit",
-                        icon = painterResource(R.drawable.ic_scale),
+                        icon = painterResource(R.drawable.ic_airwave),
                         description = "Volume unit used for new vehicles"
                     ) {
                         Column {

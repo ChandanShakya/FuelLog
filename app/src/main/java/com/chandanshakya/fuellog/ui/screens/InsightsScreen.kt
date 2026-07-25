@@ -283,7 +283,7 @@ fun StatisticsGrid(
                 InfoCard(
                     label = "Cost per km",
                     value = costPerKm?.let { CurrencyFormatter.formatCurrency(it, currency) } ?: "N/A",
-                    icon = painterResource(R.drawable.ic_speed),
+                    icon = painterResource(R.drawable.ic_point_of_sale),
                     modifier = Modifier.weight(1f)
                 )
             }

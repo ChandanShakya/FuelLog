@@ -405,9 +405,9 @@ fun SummaryStats(
         modifier = Modifier.fillMaxWidth(),
         horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm)
     ) {
-        InfoCard(label = "Avg Mileage", value = averageMileage?.let { "%.2f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(it) } ?: "N/A", icon = painterResource(R.drawable.ic_speed), modifier = Modifier.weight(1f))
+        InfoCard(label = "Avg Mileage", value = averageMileage?.let { "%.2f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(it) } ?: "N/A", icon = painterResource(R.drawable.ic_avg_pace), modifier = Modifier.weight(1f))
         InfoCard(label = "Total Distance", value = "%.2f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance), icon = painterResource(R.drawable.ic_road), modifier = Modifier.weight(1f))
-        InfoCard(label = "Total Cost", value = CurrencyFormatter.formatCurrency(totalCost, currency), icon = painterResource(R.drawable.ic_local_gas_station), modifier = Modifier.weight(1f))
+        InfoCard(label = "Total Cost", value = CurrencyFormatter.formatCurrency(totalCost, currency), icon = painterResource(R.drawable.ic_payments), modifier = Modifier.weight(1f))
     }
 }
 

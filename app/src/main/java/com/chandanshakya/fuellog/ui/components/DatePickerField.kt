@@ -45,7 +45,7 @@ fun DatePickerField(
             modifier = Modifier.weight(1f)
         )
         IconButton(onClick = { showPicker = true }) {
-            Icon(painter = painterResource(R.drawable.ic_calendar), contentDescription = "Pick date")
+            Icon(painter = painterResource(R.drawable.ic_date_range), contentDescription = "Pick date")
         }
     }
 

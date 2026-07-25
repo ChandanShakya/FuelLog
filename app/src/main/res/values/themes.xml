@@ -2,9 +2,9 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
     <!-- Base application theme. -->
     <style name="Base.Theme.FuelLog" parent="android:Theme.Material.Light.NoActionBar">
-        <!-- Minimal platform theme for Jetpack Compose, no external dependencies needed -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <item name="android:windowBackground">#FF625B77</item>
     </style>
 
     <style name="Theme.FuelLog" parent="Base.Theme.FuelLog" />

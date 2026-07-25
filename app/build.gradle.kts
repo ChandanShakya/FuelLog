@@ -22,6 +22,8 @@ android {
         ndk {
             abiFilters += listOf("arm64-v8a", "armeabi-v7a")
         }
+
+        resourceConfigurations += listOf("en")
     }
 
     signingConfigs {
@@ -68,6 +70,7 @@ android {
             excludes += "DebugProbesKt.bin"
             excludes += "kotlin/**"
             excludes += "META-INF/*.version"
+            excludes += "META-INF/services/*"
         }
         jniLibs.keepDebugSymbols += "**/libandroidx.graphics.path.so"
     }

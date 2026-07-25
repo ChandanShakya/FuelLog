@@ -6,5 +6,5 @@
 -keep class dagger.hilt.android.internal.** { *; }
 -keep class * extends dagger.hilt.android.internal.managers.ViewComponentManager$FragmentContextWrapper { *; }
 
-# Kotlin - keep metadata for serialization only
--keepattributes *Annotation*
+# Kotlin - strip builtins metadata (not used - no reflection/serialization)
+-dontwarn kotlin.**

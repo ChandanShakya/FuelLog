@@ -8,14 +8,14 @@ on:
   workflow_dispatch:
 
 env:
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.parallel=true"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.parallel=true -Dorg.gradle.caching=true"
 
 permissions:
   contents: write
 
 jobs:
-  build-and-test:
-    name: Build and Test
+  build-test-release:
+    name: Build, Test, and Release
     runs-on: ubuntu-latest
 
     steps:
@@ -36,11 +36,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
-
-      - name: Run unit tests
-        run: ./gradlew testDebugUnitTest --no-daemon
+      - name: Build debug APK and run tests
+        run: ./gradlew assembleDebug testDebugUnitTest --no-daemon
 
       - name: Upload test results
         if: always()
@@ -55,46 +52,23 @@ jobs:
           name: debug-apk
           path: app/build/outputs/apk/debug/app-debug.apk
 
-  publish-release:
-    name: Publish Release
-    needs: build-and-test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
-        with:
-          java-version: '17'
-          distribution: 'temurin'
-
-      - name: Setup Gradle
-        uses: gradle/actions/setup-gradle@v4
-        with:
-          gradle-version: '8.11.1'
-
-      - name: Grant execute permission for gradlew
-        run: chmod +x gradlew
-
       - name: Decode keystore
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         run: echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
 
-      - name: Build release APK
-        run: ./gradlew assembleRelease --no-daemon
-
-      - name: Build release bundle
-        run: ./gradlew bundleRelease --no-daemon
+      - name: Build release APK and bundle
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: ./gradlew assembleRelease bundleRelease --no-daemon
 
       - name: Get version info
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         id: version
         run: |
           VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | grep -o '"[0-9.]*"' | tr -d '"' | head -1)
           echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
 
       - name: Find APK and AAB paths
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         id: paths
         run: |
           APK_PATH=$(find app/build/outputs -name "*.apk" -path "*/release/*" | head -1)
@@ -103,6 +77,7 @@ jobs:
           echo "AAB_PATH=$AAB_PATH" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
           tag_name: v${{ steps.version.outputs.VERSION_NAME }}

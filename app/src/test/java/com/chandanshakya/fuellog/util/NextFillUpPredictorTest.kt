@@ -7,6 +7,7 @@ import com.chandanshakya.fuellog.data.model.VolumeUnit
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
 
@@ -43,14 +44,14 @@ class NextFillUpPredictorTest {
             fullEntry(3, 2000.0, 50.0)
         )
 
-        // Mileages: 500/50=10, 500/50=10 → avg=10
+        // Mileages: [10, 10], alpha=2/6=1/3, EWMA stays at 10
         val result = computeRecencyWeightedMileage(entries)
         assertNotNull(result)
         assertEquals(10.0, result!!, 0.001)
     }
 
     @Test
-    fun `computeRecencyWeightedMileage - window size limits to recent pairs`() {
+    fun `computeRecencyWeightedMileage - effectiveWindow controls EWMA decay`() {
         val entries = listOf(
             fullEntry(1, 1000.0, 50.0),   // mileage 10
             fullEntry(2, 1500.0, 50.0),   // mileage 10
@@ -59,10 +60,11 @@ class NextFillUpPredictorTest {
             fullEntry(5, 3200.0, 50.0)    // mileage 12
         )
 
-        // With windowSize=2: last 2 pairs are (3→4: 12, 4→5: 12) → avg=12
-        val result = computeRecencyWeightedMileage(entries, windowSize = 2)
+        // effectiveWindow=2 → alpha=2/3
+        // EWMA: start=10, then 10, 10, 11.333, 11.778
+        val result = computeRecencyWeightedMileage(entries, effectiveWindow = 2)
         assertNotNull(result)
-        assertEquals(12.0, result!!, 0.001)
+        assertEquals(11.778, result!!, 0.01)
     }
 
     @Test
@@ -210,5 +212,36 @@ class NextFillUpPredictorTest {
         // fullTankEntries = [entry1, entry3] (entry2 excluded: not full tank)
         // Pair 1-3: distance = 2000-1000 = 1000, fuelVolume = 50 → mileage = 20
         assertEquals(20.0, result!!.recentMileage, 0.001)
+    }
+
+    @Test
+    fun `computeRecencyWeightedMileage - EWMA favors recent regime over lifetime average`() {
+        // Early fill-ups: high efficiency (~12.5 km/L), later ones: declining (~10 km/L)
+        // adjacentMileagePairs computes distance/currentFuelVolume per pair
+        // Pair mileages: [12.5, 12.5, 12.5, 10, 10, 10]
+        val entries = listOf(
+            fullEntry(1, 1000.0, 40.0),   // pair 1→2: 500/40 = 12.5
+            fullEntry(2, 1500.0, 40.0),   // pair 2→3: 500/40 = 12.5
+            fullEntry(3, 2000.0, 40.0),   // pair 3→4: 500/40 = 12.5
+            fullEntry(4, 2500.0, 50.0),   // pair 4→5: 500/50 = 10
+            fullEntry(5, 3000.0, 50.0),   // pair 5→6: 500/50 = 10
+            fullEntry(6, 3500.0, 50.0)    // pair 6→7: 500/50 = 10
+        )
+
+        val ewmaResult = computeRecencyWeightedMileage(entries, effectiveWindow = 5)
+        assertNotNull(ewmaResult)
+
+        val naiveAverage = entries
+            .adjacentMileagePairs({ it.odometer }, { it.fuelVolume }, DistanceUnit.KM, VolumeUnit.LITERS)
+            .map { it.mileage }
+            .average()
+
+        // EWMA with effectiveWindow=5 (alpha=1/3) weights recent 10s more heavily
+        // Expected: 12.5→12.5→12.5→11.667→11.111→10.741
+        assertEquals(10.741, ewmaResult!!, 0.01)
+        assertTrue(
+            "EWMA ($ewmaResult) should be below naive average ($naiveAverage)",
+            ewmaResult < naiveAverage
+        )
     }
 }

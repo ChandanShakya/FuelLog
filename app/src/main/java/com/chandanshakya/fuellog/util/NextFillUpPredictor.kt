@@ -16,12 +16,12 @@ data class FillUpPrediction(
 )
 
 /**
- * Compute recency-weighted mileage from the last N consecutive full-tank pairs.
+ * Compute recency-weighted mileage from full-tank pairs using an EWMA.
  * Only full-tank entries where fuelVolume > 0 and distance > 0 are considered.
  */
 fun computeRecencyWeightedMileage(
     entries: List<FuelEntry>,
-    windowSize: Int = 3,
+    effectiveWindow: Int = 5,
     distanceUnit: DistanceUnit = DistanceUnit.KM,
     volumeUnit: VolumeUnit = VolumeUnit.LITERS
 ): Double? {
@@ -30,8 +30,12 @@ fun computeRecencyWeightedMileage(
     val mileages = entries.adjacentMileagePairs({ it.odometer }, { it.fuelVolume }, distanceUnit, volumeUnit).map { it.mileage }
     if (mileages.isEmpty()) return null
 
-    val recent = mileages.takeLast(windowSize)
-    return recent.average()
+    val alpha = 2.0 / (effectiveWindow + 1)
+    var ewma = mileages.first()
+    for (i in 1 until mileages.size) {
+        ewma = alpha * mileages[i] + (1 - alpha) * ewma
+    }
+    return ewma
 }
 
 /**
@@ -43,7 +47,7 @@ fun computeRecencyWeightedMileage(
  * @param tankCapacity in the vehicle's volume unit
  * @param distanceUnit for the result
  * @param volumeUnit for capacity conversion
- * @param recentWindowSize number of recent full-tank pairs for mileage (default 3)
+ * @param recentWindowSize EWMA effective window for mileage (default 5)
  */
 fun predictNextFillUp(
     entries: List<FuelEntry>,
@@ -51,7 +55,7 @@ fun predictNextFillUp(
     tankCapacity: Double?,
     distanceUnit: DistanceUnit,
     volumeUnit: VolumeUnit,
-    recentWindowSize: Int = 3
+    recentWindowSize: Int = 5
 ): FillUpPrediction? {
     if (tankCapacity == null || tankCapacity <= 0) return null
 

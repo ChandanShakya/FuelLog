@@ -35,7 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.Vehicle
@@ -50,7 +50,7 @@ import com.chandanshakya.fuellog.viewmodel.VehiclesViewModel
 fun VehiclesScreen(
     onVehicleSelected: (Long) -> Unit,
     onNavigateToSettings: () -> Unit = {},
-    viewModel: VehiclesViewModel = hiltViewModel()
+    viewModel: VehiclesViewModel = viewModel(factory = VehiclesViewModel.Factory)
 ) {
     val state by viewModel.vehiclesState.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }

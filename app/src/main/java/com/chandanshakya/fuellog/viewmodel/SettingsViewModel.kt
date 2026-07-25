@@ -1,9 +1,15 @@
 package com.chandanshakya.fuellog.viewmodel
 
+import android.app.Application
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.chandanshakya.fuellog.FuelLogApplication
 import com.chandanshakya.fuellog.data.backup.BackupManager
 import com.chandanshakya.fuellog.data.db.FuelEntryDao
 import com.chandanshakya.fuellog.data.db.FuelPumpDao
@@ -14,23 +20,29 @@ import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.UserSettings
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.util.Validation
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class SettingsViewModel @Inject constructor(
+class SettingsViewModel(
     private val userSettingsDao: UserSettingsDao,
     private val vehicleDao: VehicleDao,
     private val fuelEntryDao: FuelEntryDao,
     private val fuelPumpDao: FuelPumpDao,
     private val odometerReadingDao: OdometerReadingDao
 ) : ViewModel() {
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val app = this[APPLICATION_KEY] as FuelLogApplication
+                SettingsViewModel(app.container.userSettingsDao, app.container.vehicleDao, app.container.fuelEntryDao, app.container.fuelPumpDao, app.container.odometerReadingDao)
+            }
+        }
+    }
 
     private val backupManager = BackupManager(
         vehicleDao, fuelEntryDao, fuelPumpDao, odometerReadingDao, userSettingsDao

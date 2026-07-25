@@ -29,7 +29,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.DistanceUnit
@@ -50,7 +50,7 @@ fun OdometerLogsScreen(
     vehicleId: Long,
     onNavigateBack: () -> Unit,
     onAddReading: () -> Unit,
-    viewModel: FuelLogViewModel = hiltViewModel()
+    viewModel: FuelLogViewModel = viewModel(factory = FuelLogViewModel.Factory)
 ) {
     val readings by viewModel.odometerReadings.collectAsStateWithLifecycle()
     val vehicle = viewModel.fuelLogState.collectAsStateWithLifecycle().value.vehicle

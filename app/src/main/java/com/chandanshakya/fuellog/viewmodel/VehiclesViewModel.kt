@@ -1,7 +1,13 @@
 package com.chandanshakya.fuellog.viewmodel
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.chandanshakya.fuellog.FuelLogApplication
 import com.chandanshakya.fuellog.data.db.FuelEntryDao
 import com.chandanshakya.fuellog.data.db.UserSettingsDao
 import com.chandanshakya.fuellog.data.db.VehicleDao
@@ -11,7 +17,6 @@ import com.chandanshakya.fuellog.data.model.VehicleType
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.util.Validation
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -19,14 +24,21 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
-import javax.inject.Inject
 
-@HiltViewModel
-class VehiclesViewModel @Inject constructor(
+class VehiclesViewModel(
     private val vehicleDao: VehicleDao,
     private val userSettingsDao: UserSettingsDao,
     private val fuelEntryDao: FuelEntryDao
 ) : ViewModel() {
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val app = this[APPLICATION_KEY] as FuelLogApplication
+                VehiclesViewModel(app.container.vehicleDao, app.container.userSettingsDao, app.container.fuelEntryDao)
+            }
+        }
+    }
 
     val vehiclesState: StateFlow<VehiclesState> = combine(
         vehicleDao.getAll(),

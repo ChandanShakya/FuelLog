@@ -32,7 +32,7 @@ import com.chandanshakya.fuellog.ui.components.AppButton
 import com.chandanshakya.fuellog.ui.components.EmptyState
 import com.chandanshakya.fuellog.ui.components.InfoCard
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.DistanceUnit
@@ -54,8 +54,8 @@ fun InsightsScreen(
     vehicleId: Long,
     onNavigateToLog: () -> Unit,
     onNavigateToPumpDetail: (vehicleId: Long, pumpId: Long) -> Unit,
-    viewModel: InsightsViewModel = hiltViewModel(),
-    pumpInsightsViewModel: PumpInsightsViewModel = hiltViewModel()
+    viewModel: InsightsViewModel = viewModel(factory = InsightsViewModel.Factory),
+    pumpInsightsViewModel: PumpInsightsViewModel = viewModel(factory = PumpInsightsViewModel.Factory)
 ) {
     val state by viewModel.insightsState.collectAsStateWithLifecycle()
     val pumpStats by pumpInsightsViewModel.pumpStats.collectAsStateWithLifecycle()

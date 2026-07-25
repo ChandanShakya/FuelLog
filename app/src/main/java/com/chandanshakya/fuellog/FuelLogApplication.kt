@@ -1,12 +1,14 @@
 package com.chandanshakya.fuellog
 
 import android.app.Application
-import dagger.hilt.android.HiltAndroidApp
+import com.chandanshakya.fuellog.di.AppContainer
 
-/**
- * FuelLog application class.
- * 
- * Initializes Hilt dependency injection.
- */
-@HiltAndroidApp
-class FuelLogApplication : Application()
+class FuelLogApplication : Application() {
+    lateinit var container: AppContainer
+        private set
+
+    override fun onCreate() {
+        super.onCreate()
+        container = AppContainer(this)
+    }
+}

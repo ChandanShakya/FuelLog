@@ -37,7 +37,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.DistanceUnit
@@ -58,7 +58,7 @@ fun PumpDetailScreen(
     vehicleId: Long,
     pumpId: Long?,
     onNavigateBack: () -> Unit,
-    pumpInsightsViewModel: PumpInsightsViewModel = hiltViewModel()
+    pumpInsightsViewModel: PumpInsightsViewModel = viewModel(factory = PumpInsightsViewModel.Factory)
 ) {
     val pumpStats by pumpInsightsViewModel.pumpStats.collectAsStateWithLifecycle()
     val currency by pumpInsightsViewModel.currency.collectAsStateWithLifecycle()

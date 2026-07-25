@@ -1,7 +1,14 @@
 package com.chandanshakya.fuellog.viewmodel
 
+import android.app.Application
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.createSavedStateHandle
+import androidx.lifecycle.viewmodel.viewModelFactory
+import com.chandanshakya.fuellog.FuelLogApplication
 import com.chandanshakya.fuellog.data.db.FuelEntryDao
 import com.chandanshakya.fuellog.data.db.FuelPumpDao
 import com.chandanshakya.fuellog.data.db.OdometerReadingDao
@@ -18,7 +25,6 @@ import com.chandanshakya.fuellog.util.MileageCalculator
 import com.chandanshakya.fuellog.util.Validation
 import com.chandanshakya.fuellog.util.predictNextFillUp
 import com.chandanshakya.fuellog.util.observeCapacitySuggestion
-import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.SharingStarted
@@ -30,14 +36,12 @@ import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
-import javax.inject.Inject
 
 import androidx.lifecycle.SavedStateHandle
 import com.chandanshakya.fuellog.ui.navigation.NavArgs
 
 @OptIn(ExperimentalCoroutinesApi::class)
-@HiltViewModel
-class FuelLogViewModel @Inject constructor(
+class FuelLogViewModel(
     private val fuelEntryDao: FuelEntryDao,
     private val vehicleDao: VehicleDao,
     private val userSettingsDao: UserSettingsDao,
@@ -45,6 +49,23 @@ class FuelLogViewModel @Inject constructor(
     private val odometerReadingDao: OdometerReadingDao,
     savedStateHandle: SavedStateHandle
 ) : ViewModel() {
+
+    companion object {
+        val Factory: ViewModelProvider.Factory = viewModelFactory {
+            initializer {
+                val app = this[APPLICATION_KEY] as FuelLogApplication
+                val savedStateHandle = createSavedStateHandle()
+                FuelLogViewModel(
+                    app.container.fuelEntryDao,
+                    app.container.vehicleDao,
+                    app.container.userSettingsDao,
+                    app.container.fuelPumpDao,
+                    app.container.odometerReadingDao,
+                    savedStateHandle
+                )
+            }
+        }
+    }
 
     private val currentVehicleId = savedStateHandle.getStateFlow(NavArgs.VEHICLE_ID, -1L)
     private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }

@@ -149,6 +149,8 @@ class FakeFuelEntryDaoForPump : FuelEntryDao {
     override fun getAllByVehicleWithNullPump(vehicleId: Long) = flowOf(
         entries.filter { it.vehicleId == vehicleId && it.fuelPumpId == null }
     )
+    override suspend fun deleteAll() { entries.clear() }
+    override suspend fun getAll() = entries.toList()
 }
 
 class FakeUserSettingsDaoForPump : UserSettingsDao {
@@ -157,4 +159,5 @@ class FakeUserSettingsDaoForPump : UserSettingsDao {
     override suspend fun getSettingsSuspend() = settings
     override suspend fun insert(settings: UserSettings) { this.settings = settings }
     override suspend fun update(settings: UserSettings) { this.settings = settings }
+    override suspend fun deleteAll() { settings = null }
 }

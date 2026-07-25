@@ -17,4 +17,10 @@ interface OdometerReadingDao {
 
     @Query("DELETE FROM odometer_readings WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("DELETE FROM odometer_readings")
+    suspend fun deleteAll()
+
+    @Query("SELECT * FROM odometer_readings ORDER BY odometer ASC")
+    suspend fun getAll(): List<OdometerReading>
 }

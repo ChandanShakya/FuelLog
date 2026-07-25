@@ -46,4 +46,10 @@ interface FuelEntryDao {
 
     @Query("SELECT * FROM fuel_entries WHERE fuelPumpId IS NULL AND vehicleId = :vehicleId ORDER BY odometer ASC")
     fun getAllByVehicleWithNullPump(vehicleId: Long): Flow<List<FuelEntry>>
+
+    @Query("DELETE FROM fuel_entries")
+    suspend fun deleteAll()
+
+    @Query("SELECT * FROM fuel_entries ORDER BY odometer ASC")
+    suspend fun getAll(): List<FuelEntry>
 }

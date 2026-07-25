@@ -24,4 +24,7 @@ interface UserSettingsDao {
 
     @Update
     suspend fun update(settings: UserSettings)
+
+    @Query("DELETE FROM user_settings")
+    suspend fun deleteAll()
 }

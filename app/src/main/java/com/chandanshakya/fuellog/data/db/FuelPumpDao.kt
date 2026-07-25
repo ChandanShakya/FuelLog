@@ -24,4 +24,7 @@ interface FuelPumpDao {
 
     @Query("DELETE FROM fuel_pumps WHERE id = :id")
     suspend fun deleteById(id: Long)
+
+    @Query("DELETE FROM fuel_pumps")
+    suspend fun deleteAll()
 }

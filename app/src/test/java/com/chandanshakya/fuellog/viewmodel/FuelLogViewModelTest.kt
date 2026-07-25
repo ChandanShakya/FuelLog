@@ -215,6 +215,8 @@ class FakeFuelEntryDao : FuelEntryDao {
     override fun getAllByVehicleWithNullPump(vehicleId: Long) = flowOf(
         entries.filter { it.vehicleId == vehicleId && it.fuelPumpId == null }
     )
+    override suspend fun deleteAll() { entries.clear(); updateFlow() }
+    override suspend fun getAll() = entries.toList()
 }
 
 class FakeVehicleDao : VehicleDao {
@@ -231,6 +233,7 @@ class FakeVehicleDao : VehicleDao {
         if (idx >= 0) vehicles[idx] = vehicle
     }
     override suspend fun deleteById(id: Long) { vehicles.removeAll { it.id == id } }
+    override suspend fun deleteAll() { vehicles.clear() }
 }
 
 class FakeUserSettingsDao : UserSettingsDao {
@@ -239,6 +242,7 @@ class FakeUserSettingsDao : UserSettingsDao {
     override suspend fun getSettingsSuspend() = settings
     override suspend fun insert(settings: UserSettings) { this.settings = settings }
     override suspend fun update(settings: UserSettings) { this.settings = settings }
+    override suspend fun deleteAll() { settings = null }
 }
 
 class FakeFuelPumpDao : FuelPumpDao {
@@ -262,6 +266,7 @@ class FakeFuelPumpDao : FuelPumpDao {
         val idx = pumps.indexOfFirst { it.id == pump.id }
         if (idx >= 0) pumps[idx] = pump
     }
+    override suspend fun deleteAll() { pumps.clear() }
 }
 
 class FakeOdometerReadingDao : OdometerReadingDao {
@@ -269,4 +274,6 @@ class FakeOdometerReadingDao : OdometerReadingDao {
     override fun getByVehicle(vehicleId: Long) = flowOf(readings.filter { it.vehicleId == vehicleId })
     override suspend fun insert(reading: OdometerReading): Long { readings.add(reading); return reading.id }
     override suspend fun deleteById(id: Long) { readings.removeAll { it.id == id } }
+    override suspend fun deleteAll() { readings.clear() }
+    override suspend fun getAll() = readings.toList()
 }

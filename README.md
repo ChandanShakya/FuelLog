@@ -1,108 +1,111 @@
 # FuelLog
 
-A lightweight Android fuel tracking app built with Jetpack Compose, Room, and Hilt.
+A fuel tracking app for Android. Log fill-ups, track mileage across multiple vehicles, and get predictions for your next refuel.
+
+Built with Jetpack Compose, Room, and manual dependency injection. Ships at 1.2MB.
 
 ## Features
 
-- **Vehicle Management** - Add multiple vehicles with custom types (Car, Bus, Scooter, Bike, Truck, Jeep)
-- **Fuel Entry Tracking** - Log fuel fills with odometer, volume, cost, and full-tank marker
-- **Fuel Pump Tracking** - Optionally record which pump/station you refueled at, with autocomplete from previously-used pumps (edit/delete pump names)
-- **Tank Capacity** - Set estimated tank capacity per vehicle, refined automatically from full-tank fill history
-- **Next Fill-Up Prediction** - See remaining distance (~X km left) and predicted date based on recent average mileage and tank capacity
-- **Odometer Check-ins** - Log standalone odometer readings between fill-ups to keep predictions fresh
-- **Auto-Calculation** - Enter any 2 of {volume, rate, cost} and the third is calculated automatically
-- **Unit Conversion** - Supports km/miles and liters/gallons with automatic data conversion when units change
-- **Global Currency** - Set your currency once, applies to all vehicles
-- **Insights & Charts** - Mileage trends, cost analysis, fuel price tracking, per-pump mileage comparisons, and tank info with capacity suggestions
-- **Pump Detail View** - Drill into any pump's full fill-up history and mileage trend chart
-- **Minimal Size** - ~1.2MB release APK
+**Vehicle and fuel management**
+- Multiple vehicles with type classification (car, bus, scooter, bike, truck, jeep)
+- Fuel entry logging with odometer, volume, cost, and full-tank marker
+- Per-pump tracking with autocomplete from previously used stations
+- Edit and delete pump names
 
-## Tech Stack
+**Predictions and analysis**
+- Tank capacity learning from full-tank fill history (median-based, with confidence levels)
+- Next fill-up prediction: remaining distance and estimated date
+- Mileage trends, cost analysis, and fuel price tracking over time
+- Per-pump mileage comparisons with drill-down detail view
+- Standalone odometer check-ins to keep predictions accurate between fill-ups
 
-- **UI:** Jetpack Compose + Material 3
-- **Database:** Room (with migrations)
-- **DI:** Hilt
-- **Architecture:** MVVM with Kotlin Flows
-- **Testing:** JUnit 4, Compose UI Testing, Espresso
+**Practical tools**
+- Auto-calculation: enter any two of volume, rate, cost and the third is computed
+- Unit support: km/miles, liters/gallons with automatic conversion on unit change
+- Global currency setting applied across all vehicles
+- Backup and restore via JSON export/import (Storage Access Framework)
+- Clear all data option with confirmation
 
-## Run Locally
+## Tech stack
 
-**Prerequisites:** [Android Studio](https://developer.android.com/studio)
+| Layer | Technology |
+|-------|-----------|
+| UI | Jetpack Compose + Material 3 |
+| Database | Room (5 tables, version 11) |
+| DI | Manual (AppContainer pattern) |
+| Navigation | Sealed class + AnimatedContent (no Navigation Compose) |
+| Architecture | MVVM with Kotlin Flows |
+| Build | Kotlin, KSP, R8 full mode |
 
-1. Clone the repository
-2. Open in Android Studio
-3. Run on emulator or physical device (minSdk 26)
+## Getting started
 
-## Build
+Requires [Android Studio](https://developer.android.com/studio) and minSdk 26.
 
 ```bash
-# Debug
+git clone <repo-url>
+cd FuelLog
 ./gradlew assembleDebug
-
-# Release
-./gradlew assembleRelease
 ```
+
+Install the debug APK on a device or emulator.
+
+## Building
+
+```bash
+./gradlew assembleDebug      # debug build
+./gradlew assembleRelease    # release build (requires release.keystore)
+```
+
+Release builds use R8 minification, resource shrinking, and locale stripping (English only).
 
 ## Testing
 
 ```bash
-# Run all unit tests
-./gradlew testDebugUnitTest
-
-# Run specific test class
-./gradlew testDebugUnitTest --tests "com.chandanshakya.fuellog.util.PumpMileageCalculatorTest"
-
-# Build instrumentation test APK (requires device/emulator)
-./gradlew assembleDebugAndroidTest
-
-# Run instrumentation tests on connected device
-./gradlew connectedDebugAndroidTest
+./gradlew test                           # all unit tests
+./gradlew testDebugUnitTest              # debug unit tests only
+./gradlew connectedDebugAndroidTest      # instrumentation tests (device required)
 ```
 
-### Test Coverage
+Test coverage:
+- Unit tests: mileage calculators, tank capacity learner, fill-up predictor, currency formatting, unit conversion, validation, ViewModel logic
+- Instrumentation tests: Room operations, Compose UI interactions, full navigation flows across all screens
 
-- **Unit tests** (`src/test/`) - Pure Kotlin logic: mileage calculators, tank capacity learner, fill-up predictor, currency formatting, unit conversion, validation, ViewModel logic
-- **DAO integration tests** (`src/androidTest/`) - Room database operations, schema migrations, foreign key behavior
-- **Compose UI tests** (`src/androidTest/`) - Dialog interactions, autocomplete dropdowns, button callbacks
-- **End-to-end navigation tests** (`src/androidTest/`) - Full user flows through all screens: Vehicles → Fuel Log → Insights → Pump Detail
-
-## Project Structure
+## Project structure
 
 ```
 app/src/main/java/com/chandanshakya/fuellog/
-├── data/
-│   ├── db/          # Room DAOs, database, migrations
-│   └── model/       # Data classes (Vehicle, FuelEntry, FuelPump, OdometerReading, UserSettings)
-├── ui/
-│   ├── components/  # Reusable composables (AddFuelEntryDialog, AppTextField, etc.)
-│   ├── screens/     # Screen composables (FuelLogScreen, InsightsScreen, PumpDetailScreen, etc.)
-│   ├── chart/       # Canvas-based chart composables (LineChart, MileageChart, FuelPriceChart)
-│   └── navigation/  # NavRoutes, AppNavHost
-├── viewmodel/       # ViewModels (FuelLogViewModel, InsightsViewModel, PumpInsightsViewModel, etc.)
-├── util/            # Helpers (UnitConverter, CurrencyFormatter, MileageCalculator, PumpMileageCalculator, TankCapacityLearner, NextFillUpPredictor)
-└── di/              # Hilt modules (AppModule)
+  data/
+    backup/       JSON export/import for backup/restore
+    db/           Room database, DAOs, type converters
+    model/        Entity classes and enums
+  ui/
+    chart/        Canvas-based line charts
+    components/   Reusable composables (dialogs, text fields, badges, cards)
+    navigation/   Screen sealed class, manual nav host with AnimatedContent
+    screens/      Screen composables
+  viewmodel/      ViewModels with factory-based instantiation
+  util/           Unit converter, currency formatter, mileage calculator,
+                  tank capacity learner, fill-up predictor
+  di/             AppContainer (manual dependency injection)
 ```
 
 ## Database
 
-Room database with 5 tables and version 9:
+Five tables with foreign key constraints:
 
-| Table | Description |
-|-------|-------------|
-| `vehicles` | Vehicle profiles (name, type, distance/volume units, tank capacity) |
-| `fuel_entries` | Fuel fill records (odometer, volume, cost, date, full-tank flag, FK to vehicle + pump) |
-| `fuel_pumps` | Fuel pump/station names |
-| `odometer_readings` | Standalone odometer check-ins (no fuel purchase) |
-| `user_settings` | Global settings (currency, default units) |
+| Table | Purpose |
+|-------|---------|
+| `vehicles` | Vehicle profiles: name, type, distance/volume units, tank capacity |
+| `fuel_entries` | Fill records: odometer, volume, cost, date, full-tank flag, FK to vehicle and pump |
+| `fuel_pumps` | Named fuel pumps/stations |
+| `odometer_readings` | Standalone odometer check-ins between fill-ups |
+| `user_settings` | Global defaults: currency, distance unit, volume unit |
 
-Migrations are handled explicitly (see `AppDatabase.MIGRATION_7_8`, `MIGRATION_8_9`). `fallbackToDestructiveMigration()` is retained as a safety net for versions without an explicit migration path.
+Migrations are handled explicitly. `fallbackToDestructiveMigration()` is kept as a safety net for development builds.
 
-## Capacity Learning
+## How capacity learning works
 
-The app learns your tank capacity from full-tank fill history:
-- When you mark fill-ups as "Full tank?", the app tracks fuel volumes added between consecutive full fills
-- A median-based algorithm computes a suggested capacity with confidence levels (Low/Medium/High)
-- Suggestions appear on the Insights screen with a one-tap "Apply" button — never auto-overwrites your number
+When you mark a fill-up as "full tank", the app records the fuel volume added. Between two consecutive full-tank fill-ups, the volume added approximates the actual tank capacity. The algorithm computes a median-based suggestion with confidence levels (low/medium/high) based on how many full-tank pairs are available. Suggestions appear on the Insights screen and are applied manually -- the app never overwrites your value.
 
 ## License
 

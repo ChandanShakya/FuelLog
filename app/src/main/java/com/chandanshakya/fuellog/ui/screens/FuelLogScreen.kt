@@ -1,7 +1,10 @@
 package com.chandanshakya.fuellog.ui.screens
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -11,10 +14,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.HorizontalDivider
@@ -33,6 +40,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,7 +49,6 @@ import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.VolumeUnit
-import com.chandanshakya.fuellog.ui.components.AppBadge
 import com.chandanshakya.fuellog.ui.components.AppButton
 import com.chandanshakya.fuellog.ui.components.AppButtonOutlined
 import com.chandanshakya.fuellog.ui.components.AppTextField
@@ -135,7 +143,7 @@ fun FuelLogScreen(
                     Spacer(modifier = Modifier.height(Dimens.spacingSm))
 
                     if (prediction != null) {
-                        NextFillUpCard(prediction = prediction!!, distanceUnit = vehicle.distanceUnit, volumeUnit = vehicle.volumeUnit)
+                        NextFillUpCard(prediction = prediction!!, distanceUnit = vehicle.distanceUnit, volumeUnit = vehicle.volumeUnit, entryCount = state.entries.size)
                     } else if (vehicle.tankCapacity == null || vehicle.tankCapacity!! <= 0) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -271,6 +279,7 @@ fun NextFillUpCard(
     prediction: FillUpPrediction,
     distanceUnit: DistanceUnit,
     volumeUnit: VolumeUnit,
+    entryCount: Int = 0,
     modifier: Modifier = Modifier
 ) {
     val distanceLabel = UnitConverter.getDistanceUnitLabel(distanceUnit)
@@ -278,10 +287,21 @@ fun NextFillUpCard(
         ChronoUnit.DAYS.between(LocalDate.now(), it).coerceAtLeast(0)
     }
 
+    val isLowUrgency = daysUntil != null && daysUntil <= 1
+
     Card(
-        modifier = modifier.fillMaxWidth(),
+        modifier = modifier
+            .fillMaxWidth()
+            .then(if (isLowUrgency) Modifier.border(1.dp, MaterialTheme.colorScheme.errorContainer, MaterialTheme.shapes.medium) else Modifier),
         shape = MaterialTheme.shapes.medium,
-        elevation = Dimens.cardElevation()
+        elevation = Dimens.cardElevation(),
+        colors = CardDefaults.cardColors(
+            containerColor = if (isLowUrgency) {
+                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.35f)
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0f)
+            }
+        )
     ) {
         Column(
             modifier = Modifier
@@ -349,11 +369,24 @@ fun NextFillUpCard(
             }
 
             Spacer(modifier = Modifier.height(Dimens.spacingSm))
-            Text(
-                text = "Based on ${"%.2f".format(prediction.recentMileage)} ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)} recent avg",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            if (entryCount < 5) {
+                Text(
+                    text = "Estimate based on limited history — $entryCount entries logged",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = "Avg: ${"%.2f".format(prediction.recentMileage)} ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                Text(
+                    text = "Based on ${"%.2f".format(prediction.recentMileage)} ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)} recent avg",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -378,7 +411,7 @@ fun SummaryStats(
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun FuelEntryCard(
     entry: FuelEntry,
@@ -391,56 +424,129 @@ fun FuelEntryCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val fuelIconShape = RoundedCornerShape(6.dp)
+
     Card(
         onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         shape = MaterialTheme.shapes.medium,
         elevation = Dimens.cardElevation()
     ) {
-        Column(modifier = Modifier.fillMaxWidth().padding(Dimens.spacingMd)) {
-            Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                Icon(painter = painterResource(R.drawable.ic_local_gas_station), contentDescription = null, modifier = Modifier.size(Dimens.iconMedium), tint = MaterialTheme.colorScheme.primary)
-                Spacer(modifier = Modifier.size(Dimens.spacingMd))
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 14.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp)
+        ) {
+            // Line 1: header row — icon + date/odo on left, mileage on right
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Box(
+                    modifier = Modifier
+                        .size(26.dp)
+                        .background(MaterialTheme.colorScheme.primaryContainer, fuelIconShape),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_local_gas_station),
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                }
+                Spacer(modifier = Modifier.size(8.dp))
                 Column(modifier = Modifier.weight(1f)) {
-                    Text(text = DateTimeFormatter.ISO_LOCAL_DATE.format(entry.date), style = MaterialTheme.typography.titleMedium)
                     Text(
-                        text = "Odometer: ${"%.2f".format(entry.odometer)} ${UnitConverter.getDistanceUnitLabel(distanceUnit)}",
+                        text = DateTimeFormatter.ISO_LOCAL_DATE.format(entry.date),
+                        style = MaterialTheme.typography.titleSmall
+                    )
+                    Text(
+                        text = "${"%.0f".format(entry.odometer)} ${UnitConverter.getDistanceUnitLabel(distanceUnit)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            }
-
-            Spacer(modifier = Modifier.height(Dimens.spacingSm))
-
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)) {
-                if (entry.isFullTank) {
-                    AppBadge(text = "Full Tank")
-                }
-                pumpName?.let { name ->
-                    AppBadge(text = name)
-                }
-                mileage?.let { m ->
-                    val badgeColor = when {
-                        averageMileage == null -> MaterialTheme.colorScheme.primaryContainer
-                        m >= averageMileage * 1.1 -> MaterialTheme.colorScheme.tertiaryContainer
-                        m <= averageMileage * 0.9 -> MaterialTheme.colorScheme.errorContainer
-                        else -> MaterialTheme.colorScheme.primaryContainer
+                if (mileage != null) {
+                    val mileageColor = when {
+                        averageMileage == null -> MaterialTheme.colorScheme.primary
+                        mileage >= averageMileage * 1.1 -> MaterialTheme.colorScheme.tertiary
+                        mileage <= averageMileage * 0.9 -> MaterialTheme.colorScheme.error
+                        else -> MaterialTheme.colorScheme.primary
                     }
-                    val textColor = when {
-                        averageMileage == null -> MaterialTheme.colorScheme.onPrimaryContainer
-                        m >= averageMileage * 1.1 -> MaterialTheme.colorScheme.onTertiaryContainer
-                        m <= averageMileage * 0.9 -> MaterialTheme.colorScheme.onErrorContainer
-                        else -> MaterialTheme.colorScheme.onPrimaryContainer
-                    }
-                    AppBadge(
-                        text = "%.2f ${UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)}".format(m),
-                        backgroundColor = badgeColor,
-                        textColor = textColor
+                    Text(
+                        text = "%.2f".format(mileage),
+                        style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Bold),
+                        color = mileageColor
+                    )
+                    Spacer(modifier = Modifier.size(2.dp))
+                    Text(
+                        text = UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit),
+                        style = MaterialTheme.typography.labelSmall,
+                        color = mileageColor
                     )
                 }
-                AppBadge(text = "${"%.2f".format(entry.fuelVolume)} ${UnitConverter.getVolumeUnitLabel(volumeUnit)}")
-                AppBadge(text = CurrencyFormatter.formatCurrency(entry.fuelCost, currency))
+            }
+
+            // Divider
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant, thickness = 1.dp)
+
+            // Line 2: detail row
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Left: tags
+                FlowRow(
+                    modifier = Modifier.weight(1f),
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(2.dp)
+                ) {
+                    if (entry.isFullTank) {
+                        Box(
+                            modifier = Modifier
+                                .background(MaterialTheme.colorScheme.tertiaryContainer, RoundedCornerShape(4.dp))
+                                .padding(horizontal = 6.dp, vertical = 2.dp)
+                        ) {
+                            Text(
+                                text = "Full",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onTertiaryContainer
+                            )
+                        }
+                    }
+                    if (entry.isFullTank && pumpName != null) {
+                        Text(
+                            text = "·",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.outline
+                        )
+                    }
+                    pumpName?.let { name ->
+                        Text(
+                            text = name,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.widthIn(max = 150.dp)
+                        )
+                    }
+                }
+
+                // Right: volume + cost
+                Text(
+                    text = "${"%.2f".format(entry.fuelVolume)} ${UnitConverter.getVolumeUnitLabel(volumeUnit)}",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Spacer(modifier = Modifier.size(8.dp))
+                Text(
+                    text = CurrencyFormatter.formatCurrency(entry.fuelCost.toLong().toDouble(), currency),
+                    style = MaterialTheme.typography.labelMedium.copy(fontWeight = FontWeight.Medium),
+                    color = MaterialTheme.colorScheme.primary
+                )
             }
         }
     }

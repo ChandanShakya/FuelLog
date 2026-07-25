@@ -6,7 +6,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
 import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
-import androidx.lifecycle.createSavedStateHandle
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.chandanshakya.fuellog.FuelLogApplication
 import com.chandanshakya.fuellog.data.db.FuelEntryDao
@@ -21,6 +20,7 @@ import com.chandanshakya.fuellog.util.computeRecencyWeightedMileage
 import com.chandanshakya.fuellog.util.observeCapacitySuggestion
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
@@ -31,28 +31,24 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.flow.stateIn
 
-import androidx.lifecycle.SavedStateHandle
-import com.chandanshakya.fuellog.ui.navigation.NavArgs
-
 @OptIn(ExperimentalCoroutinesApi::class)
 class InsightsViewModel(
     private val fuelEntryDao: FuelEntryDao,
     private val vehicleDao: VehicleDao,
     private val userSettingsDao: UserSettingsDao,
-    savedStateHandle: SavedStateHandle
+    vehicleId: Long
 ) : ViewModel() {
 
     companion object {
-        val Factory: ViewModelProvider.Factory = viewModelFactory {
+        fun factory(vehicleId: Long): ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as FuelLogApplication
-                val savedStateHandle = createSavedStateHandle()
-                InsightsViewModel(app.container.fuelEntryDao, app.container.vehicleDao, app.container.userSettingsDao, savedStateHandle)
+                InsightsViewModel(app.container.fuelEntryDao, app.container.vehicleDao, app.container.userSettingsDao, vehicleId)
             }
         }
     }
 
-    private val currentVehicleId = savedStateHandle.getStateFlow(NavArgs.VEHICLE_ID, -1L)
+    private val currentVehicleId = MutableStateFlow(vehicleId)
     private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }
     private val settingsFlow = userSettingsDao.getSettings().distinctUntilChanged()
 

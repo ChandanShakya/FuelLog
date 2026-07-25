@@ -58,7 +58,7 @@ fun PumpDetailScreen(
     vehicleId: Long,
     pumpId: Long?,
     onNavigateBack: () -> Unit,
-    pumpInsightsViewModel: PumpInsightsViewModel = viewModel(factory = PumpInsightsViewModel.Factory)
+    pumpInsightsViewModel: PumpInsightsViewModel = viewModel(factory = PumpInsightsViewModel.factory(vehicleId))
 ) {
     val pumpStats by pumpInsightsViewModel.pumpStats.collectAsStateWithLifecycle()
     val currency by pumpInsightsViewModel.currency.collectAsStateWithLifecycle()

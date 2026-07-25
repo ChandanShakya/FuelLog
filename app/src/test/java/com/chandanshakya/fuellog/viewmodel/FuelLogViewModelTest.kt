@@ -157,16 +157,13 @@ class FuelLogViewModelTest {
     }
 
     private fun createViewModel(): FuelLogViewModel {
-        val savedStateHandle = androidx.lifecycle.SavedStateHandle(
-            mapOf("vehicleId" to 1L)
-        )
         return FuelLogViewModel(
             fuelEntryDao = fakeFuelEntryDao,
             vehicleDao = fakeVehicleDao,
             userSettingsDao = fakeUserSettingsDao,
             fuelPumpDao = fakeFuelPumpDao,
             odometerReadingDao = fakeOdometerReadingDao,
-            savedStateHandle = savedStateHandle
+            vehicleId = 1L
         )
     }
 }

@@ -50,7 +50,7 @@ fun OdometerLogsScreen(
     vehicleId: Long,
     onNavigateBack: () -> Unit,
     onAddReading: () -> Unit,
-    viewModel: FuelLogViewModel = viewModel(factory = FuelLogViewModel.Factory)
+    viewModel: FuelLogViewModel = viewModel(factory = FuelLogViewModel.factory(vehicleId))
 ) {
     val readings by viewModel.odometerReadings.collectAsStateWithLifecycle()
     val vehicle = viewModel.fuelLogState.collectAsStateWithLifecycle().value.vehicle

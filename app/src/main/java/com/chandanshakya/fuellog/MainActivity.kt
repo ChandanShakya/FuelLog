@@ -9,7 +9,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.navigation.compose.rememberNavController
 import com.chandanshakya.fuellog.ui.navigation.AppNavHost
 import com.chandanshakya.fuellog.ui.theme.FuelLogTheme
 
@@ -30,8 +29,7 @@ fun FuelLogApp() {
             modifier = Modifier.fillMaxSize(),
             color = MaterialTheme.colorScheme.background
         ) {
-            val navController = rememberNavController()
-            AppNavHost(navController = navController)
+            AppNavHost()
         }
     }
 }

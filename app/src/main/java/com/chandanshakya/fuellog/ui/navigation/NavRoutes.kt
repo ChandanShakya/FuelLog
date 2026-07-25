@@ -1,28 +1,20 @@
 package com.chandanshakya.fuellog.ui.navigation
 
 /**
- * Navigation route constants for FuelLog.
+ * Sealed class representing all navigation destinations.
+ * Each screen is a data class with its arguments.
  */
-object NavRoutes {
-    const val VEHICLES = "vehicles"
-    const val FUEL_LOG_WITH_ARG = "log/{vehicleId}"
-    const val INSIGHTS_WITH_ARG = "insights/{vehicleId}"
-    const val ODOMETER_LOGS_WITH_ARG = "odometer_logs/{vehicleId}"
-    const val SETTINGS = "settings"
-    const val PUMP_DETAIL_WITH_ARG = "pump_detail/{vehicleId}/{pumpId}"
-}
-
-/**
- * Argument keys for navigation.
- */
-object NavArgs {
-    const val VEHICLE_ID = "vehicleId"
-    const val PUMP_ID = "pumpId"
+sealed class Screen {
+    data object Vehicles : Screen()
+    data class FuelLog(val vehicleId: Long) : Screen()
+    data class Insights(val vehicleId: Long) : Screen()
+    data class OdometerLogs(val vehicleId: Long) : Screen()
+    data class PumpDetail(val vehicleId: Long, val pumpId: Long?) : Screen()
+    data object Settings : Screen()
 }
 
 /**
  * Sentinel value for pumpId when representing the "Unknown / Not recorded" pump group.
- * Jetpack Navigation Compose cannot pass null Long args, so -1L is used as a stand-in.
- * Convert back to null at the point of use: if (pumpId == -1L) null else pumpId
+ * Nullable types handle this natively now, but kept for backward compatibility.
  */
 const val UNKNOWN_PUMP_SENTINEL = -1L

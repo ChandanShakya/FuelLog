@@ -54,8 +54,8 @@ fun InsightsScreen(
     vehicleId: Long,
     onNavigateToLog: () -> Unit,
     onNavigateToPumpDetail: (vehicleId: Long, pumpId: Long) -> Unit,
-    viewModel: InsightsViewModel = viewModel(factory = InsightsViewModel.Factory),
-    pumpInsightsViewModel: PumpInsightsViewModel = viewModel(factory = PumpInsightsViewModel.Factory)
+    viewModel: InsightsViewModel = viewModel(factory = InsightsViewModel.factory(vehicleId)),
+    pumpInsightsViewModel: PumpInsightsViewModel = viewModel(factory = PumpInsightsViewModel.factory(vehicleId))
 ) {
     val state by viewModel.insightsState.collectAsStateWithLifecycle()
     val pumpStats by pumpInsightsViewModel.pumpStats.collectAsStateWithLifecycle()

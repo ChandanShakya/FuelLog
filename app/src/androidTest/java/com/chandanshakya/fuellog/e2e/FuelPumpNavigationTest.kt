@@ -7,8 +7,6 @@ import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
-import androidx.lifecycle.SavedStateHandle
-import androidx.navigation.compose.rememberNavController
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
 import com.chandanshakya.fuellog.data.db.AppDatabase
@@ -72,33 +70,31 @@ class FuelPumpNavigationTest {
     }
 
     private fun createFuelLogViewModel(vehicleId: Long): FuelLogViewModel {
-        val savedStateHandle = SavedStateHandle(mapOf("vehicleId" to vehicleId))
         return FuelLogViewModel(
             fuelEntryDao = database.fuelEntryDao(),
             vehicleDao = database.vehicleDao(),
             userSettingsDao = database.userSettingsDao(),
             fuelPumpDao = database.fuelPumpDao(),
             odometerReadingDao = database.odometerReadingDao(),
-            savedStateHandle = savedStateHandle
+            vehicleId = vehicleId
         )
     }
 
     private fun createInsightsViewModel(vehicleId: Long): InsightsViewModel {
-        val savedStateHandle = SavedStateHandle(mapOf("vehicleId" to vehicleId))
         return InsightsViewModel(
             fuelEntryDao = database.fuelEntryDao(),
             vehicleDao = database.vehicleDao(),
             userSettingsDao = database.userSettingsDao(),
-            savedStateHandle = savedStateHandle
+            vehicleId = vehicleId
         )
     }
 
     private fun createPumpInsightsViewModel(vehicleId: Long): PumpInsightsViewModel {
-        val savedStateHandle = SavedStateHandle(mapOf("vehicleId" to vehicleId))
         return PumpInsightsViewModel(
             fuelEntryDao = database.fuelEntryDao(),
+            vehicleDao = database.vehicleDao(),
             userSettingsDao = database.userSettingsDao(),
-            savedStateHandle = savedStateHandle
+            vehicleId = vehicleId
         )
     }
 
@@ -117,13 +113,31 @@ class FuelPumpNavigationTest {
     private fun setContent() {
         composeTestRule.setContent {
             FuelLogTheme {
-                val navController = rememberNavController()
+                val fuelLogVM = FuelLogViewModel(
+                    fuelEntryDao = database.fuelEntryDao(),
+                    vehicleDao = database.vehicleDao(),
+                    userSettingsDao = database.userSettingsDao(),
+                    fuelPumpDao = database.fuelPumpDao(),
+                    odometerReadingDao = database.odometerReadingDao(),
+                    vehicleId = testVehicleId
+                )
+                val insightsVM = InsightsViewModel(
+                    fuelEntryDao = database.fuelEntryDao(),
+                    vehicleDao = database.vehicleDao(),
+                    userSettingsDao = database.userSettingsDao(),
+                    vehicleId = testVehicleId
+                )
+                val pumpInsightsVM = PumpInsightsViewModel(
+                    fuelEntryDao = database.fuelEntryDao(),
+                    vehicleDao = database.vehicleDao(),
+                    userSettingsDao = database.userSettingsDao(),
+                    vehicleId = testVehicleId
+                )
                 TestAppNavHost(
-                    navController = navController,
                     vehiclesViewModel = vehiclesViewModel,
-                    fuelLogViewModelFactory = { createFuelLogViewModel(it) },
-                    insightsViewModelFactory = { createInsightsViewModel(it) },
-                    pumpInsightsViewModelFactory = { createPumpInsightsViewModel(it) }
+                    fuelLogViewModel = fuelLogVM,
+                    insightsViewModel = insightsVM,
+                    pumpInsightsViewModel = pumpInsightsVM
                 )
             }
         }

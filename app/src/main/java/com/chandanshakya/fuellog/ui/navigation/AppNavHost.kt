@@ -1,15 +1,18 @@
 package com.chandanshakya.fuellog.ui.navigation
 
-import androidx.compose.animation.AnimatedContentTransitionScope
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import com.chandanshakya.fuellog.ui.screens.FuelLogScreen
 import com.chandanshakya.fuellog.ui.screens.InsightsScreen
 import com.chandanshakya.fuellog.ui.screens.OdometerLogsScreen
@@ -18,152 +21,84 @@ import com.chandanshakya.fuellog.ui.screens.SettingsScreen
 import com.chandanshakya.fuellog.ui.screens.VehiclesScreen
 
 @Composable
-fun AppNavHost(
-    navController: NavHostController
-) {
-    NavHost(
-        navController = navController,
-        startDestination = NavRoutes.VEHICLES,
-        enterTransition = { fadeIn(tween(200)) + slideIntoContainer(AnimatedContentTransitionScope.SlideDirection.Start, tween(200)) },
-        exitTransition = { fadeOut(tween(200)) },
-        popEnterTransition = { fadeIn(tween(200)) },
-        popExitTransition = { fadeOut(tween(200)) + slideOutOfContainer(AnimatedContentTransitionScope.SlideDirection.End, tween(200)) }
-    ) {
-        composable(NavRoutes.VEHICLES) {
-            VehiclesScreen(
+fun AppNavHost() {
+    val backStack = remember { mutableStateListOf<Screen>(Screen.Vehicles) }
+    val currentScreen = remember { mutableStateOf<Screen>(Screen.Vehicles) }
+
+    fun navigate(screen: Screen) {
+        backStack.add(screen)
+        currentScreen.value = screen
+    }
+
+    fun popBack(): Boolean {
+        if (backStack.size > 1) {
+            backStack.removeLast()
+            currentScreen.value = backStack.last()
+            return true
+        }
+        return false
+    }
+
+    AnimatedContent(
+        targetState = currentScreen.value,
+        transitionSpec = {
+            fadeIn(tween(200)) + slideInHorizontally(tween(200)) { it } togetherWith
+                    fadeOut(tween(200)) + slideOutHorizontally(tween(200)) { -it / 3 }
+        },
+        label = "nav"
+    ) { screen ->
+        when (screen) {
+            is Screen.Vehicles -> VehiclesScreen(
                 onVehicleSelected = { vehicleId ->
-                    navController.navigate(NavRoutes.FUEL_LOG_WITH_ARG.replace(
-                        "{vehicleId}",
-                        vehicleId.toString()
-                    )) {
-                        popUpTo(navController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
+                    navigate(Screen.FuelLog(vehicleId))
                 },
                 onNavigateToSettings = {
-                    navController.navigate(NavRoutes.SETTINGS) {
-                        launchSingleTop = true
-                    }
+                    navigate(Screen.Settings)
                 }
             )
-        }
 
-        composable(
-            route = NavRoutes.FUEL_LOG_WITH_ARG,
-            arguments = listOf(
-                navArgument(NavArgs.VEHICLE_ID) {
-                    type = androidx.navigation.NavType.LongType
-                }
-            )
-        ) { backStackEntry ->
-            val vehicleId = backStackEntry.arguments?.getLong(NavArgs.VEHICLE_ID) ?: return@composable
-            FuelLogScreen(
-                vehicleId = vehicleId,
+            is Screen.FuelLog -> FuelLogScreen(
+                vehicleId = screen.vehicleId,
                 onNavigateToInsights = {
-                    navController.navigate(
-                        NavRoutes.INSIGHTS_WITH_ARG.replace(
-                            "{vehicleId}",
-                            vehicleId.toString()
-                        )
-                    )
+                    navigate(Screen.Insights(screen.vehicleId))
                 },
                 onNavigateToVehicles = {
-                    if (!navController.popBackStack()) {
-                        navController.navigate(NavRoutes.VEHICLES) {
-                            popUpTo(navController.graph.findStartDestination().id) {
-                                saveState = true
-                            }
-                            launchSingleTop = true
-                            restoreState = true
-                        }
-                    }
+                    popBack()
                 },
                 onNavigateToOdometerLogs = {
-                    navController.navigate(
-                        NavRoutes.ODOMETER_LOGS_WITH_ARG.replace(
-                            "{vehicleId}",
-                            vehicleId.toString()
-                        )
-                    )
+                    navigate(Screen.OdometerLogs(screen.vehicleId))
                 }
             )
-        }
 
-        composable(
-            route = NavRoutes.INSIGHTS_WITH_ARG,
-            arguments = listOf(
-                navArgument(NavArgs.VEHICLE_ID) {
-                    type = androidx.navigation.NavType.LongType
-                }
-            )
-        ) { backStackEntry ->
-            val vehicleId = backStackEntry.arguments?.getLong(NavArgs.VEHICLE_ID) ?: return@composable
-            InsightsScreen(
-                vehicleId = vehicleId,
+            is Screen.Insights -> InsightsScreen(
+                vehicleId = screen.vehicleId,
                 onNavigateToLog = {
-                    navController.popBackStack()
+                    popBack()
                 },
                 onNavigateToPumpDetail = { vId, pumpId ->
-                    navController.navigate(
-                        NavRoutes.PUMP_DETAIL_WITH_ARG
-                            .replace("{vehicleId}", vId.toString())
-                            .replace("{pumpId}", pumpId.toString())
-                    )
+                    navigate(Screen.PumpDetail(vId, pumpId))
                 }
             )
-        }
 
-        composable(
-            route = NavRoutes.ODOMETER_LOGS_WITH_ARG,
-            arguments = listOf(
-                navArgument(NavArgs.VEHICLE_ID) {
-                    type = androidx.navigation.NavType.LongType
-                }
-            )
-        ) { backStackEntry ->
-            val vehicleId = backStackEntry.arguments?.getLong(NavArgs.VEHICLE_ID) ?: return@composable
-            OdometerLogsScreen(
-                vehicleId = vehicleId,
+            is Screen.OdometerLogs -> OdometerLogsScreen(
+                vehicleId = screen.vehicleId,
                 onNavigateBack = {
-                    navController.popBackStack()
+                    popBack()
                 },
-                onAddReading = {
-                    // This will be handled by the FuelLogScreen's odometer dialog
-                }
+                onAddReading = {}
             )
-        }
 
-        composable(
-            route = NavRoutes.PUMP_DETAIL_WITH_ARG,
-            arguments = listOf(
-                navArgument(NavArgs.VEHICLE_ID) {
-                    type = androidx.navigation.NavType.LongType
-                },
-                navArgument(NavArgs.PUMP_ID) {
-                    type = androidx.navigation.NavType.LongType
-                }
-            )
-        ) { backStackEntry ->
-            val vehicleId = backStackEntry.arguments?.getLong(NavArgs.VEHICLE_ID) ?: return@composable
-            val pumpIdArg = backStackEntry.arguments?.getLong(NavArgs.PUMP_ID) ?: UNKNOWN_PUMP_SENTINEL
-            // Convert sentinel back to nullable: -1L means "Unknown / Not recorded" pump group
-            val pumpId = if (pumpIdArg == UNKNOWN_PUMP_SENTINEL) null else pumpIdArg
-            PumpDetailScreen(
-                vehicleId = vehicleId,
-                pumpId = pumpId,
+            is Screen.PumpDetail -> PumpDetailScreen(
+                vehicleId = screen.vehicleId,
+                pumpId = screen.pumpId,
                 onNavigateBack = {
-                    navController.popBackStack()
+                    popBack()
                 }
             )
-        }
 
-        composable(NavRoutes.SETTINGS) {
-            SettingsScreen(
+            is Screen.Settings -> SettingsScreen(
                 onNavigateToVehicles = {
-                    navController.popBackStack()
+                    popBack()
                 }
             )
         }

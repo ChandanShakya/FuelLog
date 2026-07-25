@@ -70,7 +70,7 @@ fun FuelLogScreen(
     onNavigateToInsights: () -> Unit,
     onNavigateToVehicles: () -> Unit,
     onNavigateToOdometerLogs: () -> Unit = {},
-    viewModel: FuelLogViewModel = viewModel(factory = FuelLogViewModel.Factory)
+    viewModel: FuelLogViewModel = viewModel(factory = FuelLogViewModel.factory(vehicleId))
 ) {
     val state by viewModel.fuelLogState.collectAsStateWithLifecycle()
     val prediction by viewModel.nextFillUpPrediction.collectAsStateWithLifecycle()

@@ -38,6 +38,7 @@ android {
         release {
             isMinifyEnabled = true
             isShrinkResources = true
+            isDebuggable = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
@@ -71,7 +72,6 @@ android {
             excludes += "META-INF/*.version"
             excludes += "META-INF/services/*"
         }
-        jniLibs.keepDebugSymbols += "**/libandroidx.graphics.path.so"
     }
 }
 
@@ -95,8 +95,8 @@ dependencies {
     debugImplementation("androidx.compose.ui:ui-tooling-preview")
     debugImplementation("androidx.compose.ui:ui-tooling")
 
-    // Navigation
-    implementation("androidx.navigation:navigation-compose:2.8.5")
+    // Lifecycle (for viewModel() in Compose)
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
 
     // Room
     implementation("androidx.room:room-runtime:2.6.1")

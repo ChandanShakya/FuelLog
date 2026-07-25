@@ -1,5 +1,6 @@
 package com.chandanshakya.fuellog.ui.components
 
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -96,11 +97,27 @@ fun AddFuelEntryDialog(
                 ?: ""
         )
     }
+    var selectedPumpId by remember { mutableStateOf(entry?.fuelPumpId) }
 
     // Resolve pump name once existingPumps loads (handles timing with StateFlow)
     LaunchedEffect(existingPumps, entry) {
         if (pumpText.isBlank() && entry?.fuelPumpId != null && existingPumps.isNotEmpty()) {
             pumpText = existingPumps.find { it.id == entry.fuelPumpId }?.name ?: ""
+            selectedPumpId = entry.fuelPumpId
+        }
+    }
+
+    // Keep pumpText in sync with live pump names, and handle deleted pumps
+    LaunchedEffect(existingPumps, selectedPumpId) {
+        val id = selectedPumpId
+        if (id != null) {
+            val current = existingPumps.find { it.id == id }
+            if (current != null) {
+                if (current.name != pumpText) pumpText = current.name
+            } else {
+                selectedPumpId = null
+                pumpText = ""
+            }
         }
     }
     var pumpDropdownExpanded by remember { mutableStateOf(false) }
@@ -145,6 +162,7 @@ fun AddFuelEntryDialog(
                         value = pumpText,
                         onValueChange = {
                             pumpText = it
+                            selectedPumpId = null
                             pumpDropdownExpanded = true
                         },
                         label = { Text("Fuel Pump (optional)") },
@@ -164,6 +182,7 @@ fun AddFuelEntryDialog(
                                     text = { Text(pump.name) },
                                     onClick = {
                                         pumpText = pump.name
+                                        selectedPumpId = pump.id
                                         pumpDropdownExpanded = false
                                     },
                                     trailingIcon = {
@@ -352,7 +371,7 @@ fun AddFuelEntryDialog(
             )
         },
         dismissButton = {
-            Row {
+            Row(horizontalArrangement = Arrangement.spacedBy(Dimens.spacingSm)) {
                 if (entry != null && onDelete != null) {
                     AppButton(
                         text = "Delete",

@@ -150,7 +150,7 @@ private fun PumpStatHeader(stat: PumpMileageStat, distanceUnit: DistanceUnit, vo
             InfoCard(
                 label = "Fill-ups",
                 value = stat.fillCount.toString(),
-                icon = painterResource(R.drawable.ic_payments),
+                icon = painterResource(R.drawable.ic_local_gas_station),
                 modifier = Modifier.weight(1f)
             )
         }

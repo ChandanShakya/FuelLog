@@ -211,30 +211,9 @@ fun StatisticsGrid(
                 horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
             ) {
                 InfoCard(
-                    label = "Average Mileage",
-                    value = averageMileage?.let { "%.2f $efficiencyLabel".format(it) } ?: "N/A",
-                    icon = painterResource(R.drawable.ic_speed),
-                    modifier = Modifier.weight(1f)
-                )
-
-                InfoCard(
                     label = "Best Mileage",
                     value = bestMileage?.let { "%.2f $efficiencyLabel".format(it) } ?: "N/A",
                     icon = painterResource(R.drawable.ic_arrow_upward),
-                    modifier = Modifier.weight(1f)
-                )
-            }
-        }
-
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
-            ) {
-                InfoCard(
-                    label = "Worst Mileage",
-                    value = worstMileage?.let { "%.2f $efficiencyLabel".format(it) } ?: "N/A",
-                    icon = painterResource(R.drawable.ic_arrow_downward),
                     modifier = Modifier.weight(1f)
                 )
 
@@ -253,9 +232,9 @@ fun StatisticsGrid(
                 horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
             ) {
                 InfoCard(
-                    label = "Total Distance",
-                    value = "%.2f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance),
-                    icon = painterResource(R.drawable.ic_road),
+                    label = "Average Mileage",
+                    value = averageMileage?.let { "%.2f $efficiencyLabel".format(it) } ?: "N/A",
+                    icon = painterResource(R.drawable.ic_speed),
                     modifier = Modifier.weight(1f)
                 )
 
@@ -274,9 +253,30 @@ fun StatisticsGrid(
                 horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
             ) {
                 InfoCard(
+                    label = "Worst Mileage",
+                    value = worstMileage?.let { "%.2f $efficiencyLabel".format(it) } ?: "N/A",
+                    icon = painterResource(R.drawable.ic_arrow_downward),
+                    modifier = Modifier.weight(1f)
+                )
+
+                InfoCard(
                     label = "Total Cost",
                     value = CurrencyFormatter.formatCurrency(totalCost, currency),
                     icon = painterResource(R.drawable.ic_payments),
+                    modifier = Modifier.weight(1f)
+                )
+            }
+        }
+
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
+            ) {
+                InfoCard(
+                    label = "Total Distance",
+                    value = "%.2f ${UnitConverter.getDistanceUnitLabel(distanceUnit)}".format(totalDistance),
+                    icon = painterResource(R.drawable.ic_road),
                     modifier = Modifier.weight(1f)
                 )
 

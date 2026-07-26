@@ -1,11 +1,9 @@
 package com.chandanshakya.fuellog.ui.screens
 
-import android.app.Activity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -13,16 +11,27 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Card
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
+import androidx.compose.material3.OutlinedButton
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
@@ -37,20 +46,23 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.chandanshakya.fuellog.R
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.VolumeUnit
-import com.chandanshakya.fuellog.ui.components.AppButton
-import com.chandanshakya.fuellog.ui.components.AppButtonOutlined
-import com.chandanshakya.fuellog.ui.components.AppTextField
-import com.chandanshakya.fuellog.ui.theme.Dimens
-import com.chandanshakya.fuellog.util.Validation
 import com.chandanshakya.fuellog.viewmodel.SettingsViewModel
+import com.chandanshakya.fuellog.util.Validation
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 
@@ -71,7 +83,6 @@ fun SettingsScreen(
     var volumeUnit by remember { mutableStateOf(VolumeUnit.LITERS) }
     var currencyError by remember { mutableStateOf<String?>(null) }
     var showClearDialog by remember { mutableStateOf(false) }
-    var showImportDialog by remember { mutableStateOf(false) }
     var pendingImportUri by remember { mutableStateOf<android.net.Uri?>(null) }
 
     val exportLauncher = rememberLauncherForActivityResult(
@@ -85,7 +96,8 @@ fun SettingsScreen(
     ) { uri ->
         uri?.let {
             pendingImportUri = it
-            showImportDialog = true
+            showClearDialog = false
+            viewModel.importData(context, it)
         }
     }
 
@@ -121,289 +133,300 @@ fun SettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .padding(Dimens.spacingMd)
+                .verticalScroll(rememberScrollState())
         ) {
-            LazyColumn(
-                contentPadding = PaddingValues(bottom = Dimens.spacingXl),
-                verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
-            ) {
-                item {
-                    SettingCard(
-                        title = "Default Currency",
-                        icon = painterResource(R.drawable.ic_currency_exchange),
-                        description = "Currency used for new vehicles"
-                    ) {
-                        AppTextField(
-                            value = currency,
-                            onValueChange = { newValue ->
-                                currency = newValue.uppercase()
-                                currencyError = Validation.getCurrencyCodeError(newValue)
-                            },
-                            label = "Currency Code",
-                            error = currencyError,
-                            supportingText = "ISO 4217 code (e.g., USD, EUR, INR)"
-                        )
-                    }
-                }
+            // --- Section: Defaults ---
+            SectionHeader("DEFAULTS FOR NEW VEHICLES")
 
-                item {
-                    SettingCard(
-                        title = "Default Distance Unit",
-                        icon = painterResource(R.drawable.ic_arrow_range),
-                        description = "Distance unit used for new vehicles"
-                    ) {
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = distanceUnit == DistanceUnit.KM,
-                                    onClick = { distanceUnit = DistanceUnit.KM }
-                                )
-                                Spacer(modifier = Modifier.size(Dimens.spacingSm))
-                                Text("Kilometers (km)")
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = distanceUnit == DistanceUnit.MILES,
-                                    onClick = { distanceUnit = DistanceUnit.MILES }
-                                )
-                                Spacer(modifier = Modifier.size(Dimens.spacingSm))
-                                Text("Miles (mi)")
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    SettingCard(
-                        title = "Default Volume Unit",
-                        icon = painterResource(R.drawable.ic_airwave),
-                        description = "Volume unit used for new vehicles"
-                    ) {
-                        Column {
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = volumeUnit == VolumeUnit.LITERS,
-                                    onClick = { volumeUnit = VolumeUnit.LITERS }
-                                )
-                                Spacer(modifier = Modifier.size(Dimens.spacingSm))
-                                Text("Liters (L)")
-                            }
-                            Row(
-                                modifier = Modifier.fillMaxWidth(),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                RadioButton(
-                                    selected = volumeUnit == VolumeUnit.GALLONS,
-                                    onClick = { volumeUnit = VolumeUnit.GALLONS }
-                                )
-                                Spacer(modifier = Modifier.size(Dimens.spacingSm))
-                                Text("Gallons (gal)")
-                            }
-                        }
-                    }
-                }
-
-                item {
-                    Spacer(modifier = Modifier.height(Dimens.spacingLg))
-
-                    AppButton(
-                        text = "Save Settings",
-                        onClick = {
-                            if (currencyError == null) {
+            // Default Currency
+            ListItem(
+                headlineContent = { Text("Currency") },
+                leadingContent = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_currency_exchange),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                trailingContent = {
+                    OutlinedTextField(
+                        value = currency,
+                        onValueChange = { newValue ->
+                            val filtered = newValue.uppercase().take(3)
+                            currency = filtered
+                            currencyError = Validation.getCurrencyCodeError(filtered)
+                            if (currencyError == null && filtered.length == 3) {
                                 viewModel.updateSettings(
-                                    currency = currency,
+                                    currency = filtered,
                                     distanceUnit = distanceUnit,
                                     volumeUnit = volumeUnit
                                 )
                                 scope.launch {
+                                    delay(500)
                                     snackbarHostState.showSnackbar("Settings saved")
                                 }
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
-                        enabled = currencyError == null
+                        modifier = Modifier.width(64.dp),
+                        singleLine = true,
+                        isError = currencyError != null,
+                        textStyle = MaterialTheme.typography.bodyLarge.copy(
+                            textAlign = TextAlign.Center,
+                            fontWeight = FontWeight.Bold
+                        ),
+                        keyboardOptions = KeyboardOptions(
+                            capitalization = KeyboardCapitalization.Characters,
+                            keyboardType = KeyboardType.Text
+                        )
                     )
-                }
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+            )
 
-                // --- Data Management Section ---
-                item {
-                    Spacer(modifier = Modifier.height(Dimens.spacingLg))
-                    HorizontalDivider()
-                    Spacer(modifier = Modifier.height(Dimens.spacingMd))
-                    Text(
-                        text = "Data Management",
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+            // Default Distance Unit
+            ListItem(
+                headlineContent = { Text("Distance") },
+                leadingContent = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_arrow_range),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
                     )
-                }
+                },
+                trailingContent = {
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.width(140.dp)) {
+                        SegmentedButton(
+                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                            onClick = {
+                                distanceUnit = DistanceUnit.KM
+                                viewModel.updateSettings(currency, DistanceUnit.KM, volumeUnit)
+                                scope.launch {
+                                    delay(500)
+                                    snackbarHostState.showSnackbar("Settings saved")
+                                }
+                            },
+                            selected = distanceUnit == DistanceUnit.KM,
+                            label = { Text("km", fontSize = 13.sp) }
+                        )
+                        SegmentedButton(
+                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                            onClick = {
+                                distanceUnit = DistanceUnit.MILES
+                                viewModel.updateSettings(currency, DistanceUnit.MILES, volumeUnit)
+                                scope.launch {
+                                    delay(500)
+                                    snackbarHostState.showSnackbar("Settings saved")
+                                }
+                            },
+                            selected = distanceUnit == DistanceUnit.MILES,
+                            label = { Text("mi", fontSize = 13.sp) }
+                        )
+                    }
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+            )
 
-                item {
-                    SettingCard(
-                        title = "Export Data",
-                        icon = painterResource(R.drawable.ic_point_of_sale),
-                        description = "Save a backup of all your data to a file"
-                    ) {
-                        AppButton(
-                            text = "Export to File",
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+            // Default Volume Unit
+            ListItem(
+                headlineContent = { Text("Volume") },
+                leadingContent = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_airwave),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                trailingContent = {
+                    SingleChoiceSegmentedButtonRow(modifier = Modifier.width(140.dp)) {
+                        SegmentedButton(
+                            shape = SegmentedButtonDefaults.itemShape(index = 0, count = 2),
+                            onClick = {
+                                volumeUnit = VolumeUnit.LITERS
+                                viewModel.updateSettings(currency, distanceUnit, VolumeUnit.LITERS)
+                                scope.launch {
+                                    delay(500)
+                                    snackbarHostState.showSnackbar("Settings saved")
+                                }
+                            },
+                            selected = volumeUnit == VolumeUnit.LITERS,
+                            label = { Text("L", fontSize = 13.sp) }
+                        )
+                        SegmentedButton(
+                            shape = SegmentedButtonDefaults.itemShape(index = 1, count = 2),
+                            onClick = {
+                                volumeUnit = VolumeUnit.GALLONS
+                                viewModel.updateSettings(currency, distanceUnit, VolumeUnit.GALLONS)
+                                scope.launch {
+                                    delay(500)
+                                    snackbarHostState.showSnackbar("Settings saved")
+                                }
+                            },
+                            selected = volumeUnit == VolumeUnit.GALLONS,
+                            label = { Text("gal", fontSize = 13.sp) }
+                        )
+                    }
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+            )
+
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+
+            // --- Section: Data Management ---
+            Spacer(modifier = Modifier.height(16.dp))
+            SectionHeader("DATA MANAGEMENT")
+
+            // Backup & Restore
+            ListItem(
+                headlineContent = { Text("Backup & restore") },
+                leadingContent = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_date_range),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                trailingContent = {
+                    Row {
+                        OutlinedButton(
+                            onClick = { importLauncher.launch(arrayOf("application/json")) },
+                            modifier = Modifier.height(32.dp),
+                            contentPadding = ButtonDefaults.ContentPadding
+                        ) {
+                            Text("Import", fontSize = 12.sp)
+                        }
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Button(
                             onClick = {
                                 val filename = "fuellog_backup_${LocalDate.now()}.json"
                                 exportLauncher.launch(filename)
                             },
-                            modifier = Modifier.fillMaxWidth()
-                        )
+                            modifier = Modifier.height(32.dp),
+                            contentPadding = ButtonDefaults.ContentPadding
+                        ) {
+                            Text("Export", fontSize = 12.sp)
+                        }
                     }
-                }
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+            )
 
-                item {
-                    SettingCard(
-                        title = "Import Data",
-                        icon = painterResource(R.drawable.ic_date_range),
-                        description = "Restore data from a previously exported backup"
-                    ) {
-                        AppButtonOutlined(
-                            text = "Import from File",
-                            onClick = {
-                                importLauncher.launch(arrayOf("application/json"))
-                            },
-                            modifier = Modifier.fillMaxWidth()
-                        )
-                    }
-                }
+            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
 
-                item {
-                    SettingCard(
-                        title = "Clear All Data",
-                        icon = painterResource(R.drawable.ic_delete),
-                        description = "Permanently delete all vehicles, entries, and settings"
-                    ) {
-                        AppButton(
+            // Clear All Data — with eyebrow label
+            ListItem(
+                headlineContent = {
+                    Column {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text(
+                                text = "IRREVERSIBLE",
+                                style = MaterialTheme.typography.labelSmall.copy(
+                                    fontWeight = FontWeight.Bold,
+                                    fontSize = 10.sp,
+                                    letterSpacing = 1.sp
+                                ),
+                                color = MaterialTheme.colorScheme.error
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Icon(
+                                painter = painterResource(R.drawable.ic_error),
+                                contentDescription = null,
+                                modifier = Modifier.size(10.dp),
+                                tint = MaterialTheme.colorScheme.error
+                            )
+                        }
+                        Text(
                             text = "Clear All Data",
-                            onClick = { showClearDialog = true },
-                            modifier = Modifier.fillMaxWidth(),
-                            containerColor = MaterialTheme.colorScheme.error,
-                            contentColor = MaterialTheme.colorScheme.onError
+                            color = MaterialTheme.colorScheme.error
                         )
                     }
-                }
-            }
+                },
+                leadingContent = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_delete),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                },
+                trailingContent = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_arrow_range),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent),
+                modifier = Modifier.clickable { showClearDialog = true }
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
         }
     }
 
     // Clear All Data Confirmation Dialog
     if (showClearDialog) {
+        var deleteText by remember { mutableStateOf("") }
+        val isDeleteEnabled = deleteText == "DELETE"
+
         AlertDialog(
-            onDismissRequest = { showClearDialog = false },
+            onDismissRequest = { showClearDialog = false; deleteText = "" },
             title = { Text("Clear All Data?") },
             text = {
-                Text("This will permanently delete all vehicles, fuel entries, odometer readings, pump data, and settings. This action cannot be undone.")
+                Column {
+                    Text(
+                        "This will permanently delete all vehicles, fuel entries, odometer readings, pump data, and settings. This action cannot be undone."
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    OutlinedTextField(
+                        value = deleteText,
+                        onValueChange = { deleteText = it },
+                        label = { Text("Type DELETE to confirm") },
+                        singleLine = true,
+                        modifier = Modifier.fillMaxWidth(),
+                        keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Text)
+                    )
+                }
             },
             confirmButton = {
                 TextButton(
                     onClick = {
                         showClearDialog = false
+                        deleteText = ""
                         viewModel.clearAllData()
-                    }
+                    },
+                    enabled = isDeleteEnabled,
+                    colors = ButtonDefaults.textButtonColors(
+                        contentColor = MaterialTheme.colorScheme.error,
+                        disabledContentColor = MaterialTheme.colorScheme.error.copy(alpha = 0.38f)
+                    )
                 ) {
-                    Text("Delete Everything", color = MaterialTheme.colorScheme.error)
+                    Text("Delete Everything")
                 }
             },
             dismissButton = {
-                TextButton(onClick = { showClearDialog = false }) {
+                TextButton(onClick = { showClearDialog = false; deleteText = "" }) {
                     Text("Cancel")
                 }
-            }
-        )
-    }
-
-    // Import Confirmation Dialog
-    if (showImportDialog) {
-        AlertDialog(
-            onDismissRequest = { showImportDialog = false; pendingImportUri = null },
-            title = { Text("Import Data?") },
-            text = {
-                Text("This will replace ALL existing data with the backup file contents. This action cannot be undone. Continue?")
             },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        pendingImportUri?.let { uri ->
-                            viewModel.importData(context, uri)
-                        }
-                        showImportDialog = false
-                        pendingImportUri = null
-                    }
-                ) {
-                    Text("Import", color = MaterialTheme.colorScheme.primary)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = { showImportDialog = false; pendingImportUri = null }) {
-                    Text("Cancel")
-                }
-            }
+            shape = RoundedCornerShape(28.dp)
         )
     }
 }
 
 @Composable
-fun SettingCard(
-    title: String,
-    icon: androidx.compose.ui.graphics.painter.Painter,
-    description: String,
-    content: @Composable () -> Unit
-) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.medium,
-        elevation = Dimens.cardElevation()
-    ) {
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(Dimens.spacingMd)
-        ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(
-                    painter = icon,
-                    contentDescription = null,
-                    modifier = Modifier.size(Dimens.iconMedium),
-                    tint = MaterialTheme.colorScheme.primary
-                )
-
-                Spacer(modifier = Modifier.size(Dimens.spacingMd))
-
-                Column {
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.titleMedium
-                    )
-                    Text(
-                        text = description,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(Dimens.spacingMd))
-
-            HorizontalDivider()
-
-            Spacer(modifier = Modifier.height(Dimens.spacingMd))
-
-            content()
-        }
-    }
+private fun SectionHeader(title: String) {
+    Text(
+        text = title,
+        style = MaterialTheme.typography.labelSmall.copy(
+            fontWeight = FontWeight.Bold,
+            letterSpacing = 1.sp
+        ),
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 12.dp)
+    )
 }

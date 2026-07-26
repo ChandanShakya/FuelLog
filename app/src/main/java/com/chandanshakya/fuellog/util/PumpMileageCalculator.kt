@@ -85,7 +85,7 @@ private fun computeAllPairs(
         // Mileage: forward-looking — how efficient was this fill-up?
         val mileage = if (i < entries.size - 1) {
             val dist = entries[i + 1].entry.odometer - entries[i].entry.odometer
-            if (dist > 0 && entries[i].entry.fuelVolume > 0) dist / entries[i].entry.fuelVolume else null
+            if (dist > 0 && entries[i + 1].entry.fuelVolume > 0) dist / entries[i + 1].entry.fuelVolume else null
         } else null
 
         // Distance since last: backward-looking

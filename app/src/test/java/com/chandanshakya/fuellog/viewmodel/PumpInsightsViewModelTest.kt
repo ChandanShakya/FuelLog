@@ -61,13 +61,13 @@ class PumpInsightsViewModelTest {
 
         val stats = computePumpMileageStats(entriesWithPump)
 
-        // Shell (pump 1): e1(mileage=2.0), e2(mileage=2.5) → mileages [2.0, 2.5], avg=2.25
-        // BP (pump 2): e3 is last entry → mileage=null → excluded from stats
+        // Shell (pump 1): e1(mileage=100/40=2.5), e2(mileage=100/45≈2.222) → [2.5, 2.222], avg≈2.361
+        // BP (pump 2): e3 is last entry → mileage=null → excluded
         assertEquals(1, stats.size)
         val shell = stats.first { it.pumpId == 1L }
         assertEquals("Shell", shell.pumpName)
         assertEquals(2, shell.fillCount)
-        assertEquals(2.25, shell.avgMileage, 0.001)
+        assertEquals((2.5 + 100.0 / 45.0) / 2, shell.avgMileage, 0.001)
     }
 
     @Test
@@ -94,8 +94,8 @@ class PumpInsightsViewModelTest {
         assertEquals(1, stats.size)
         assertEquals("Unknown / Not recorded", stats[0].pumpName)
         assertEquals(2, stats[0].fillCount)
-        // e1(mileage=2.0), e2(mileage=null) → mileages=[2.0], avg=2.0
-        assertEquals(2.0, stats[0].avgMileage, 0.001)
+        // e1(mileage=100/40=2.5), e2(mileage=null) → [2.5], avg=2.5
+        assertEquals(2.5, stats[0].avgMileage, 0.001)
     }
 
     @Test
@@ -120,7 +120,7 @@ class PumpInsightsViewModelTest {
         assertEquals(1, stats.size)
         val shell = stats[0]
         assertEquals(3, shell.fillCount)
-        // pair1: 100/50=2.0, pair2: 100/40=2.5
+        // e1(mileage=100/e2.vol(40)=2.5), e2(mileage=100/e3.vol(50)=2.0) → [2.5, 2.0]
         assertEquals(2.25, shell.avgMileage, 0.001)
         assertEquals(2.5, shell.bestMileage, 0.001)
         assertEquals(2.0, shell.worstMileage, 0.001)

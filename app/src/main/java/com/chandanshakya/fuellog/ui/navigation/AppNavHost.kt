@@ -1,5 +1,6 @@
 package com.chandanshakya.fuellog.ui.navigation
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -9,9 +10,9 @@ import androidx.compose.animation.slideOutHorizontally
 import androidx.compose.animation.togetherWith
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.chandanshakya.fuellog.ui.screens.FuelLogScreen
 import com.chandanshakya.fuellog.ui.screens.InsightsScreen
@@ -20,27 +21,56 @@ import com.chandanshakya.fuellog.ui.screens.PumpDetailScreen
 import com.chandanshakya.fuellog.ui.screens.SettingsScreen
 import com.chandanshakya.fuellog.ui.screens.VehiclesScreen
 
+private fun encodeRoute(screen: Screen): String = when (screen) {
+    is Screen.Vehicles -> "V"
+    is Screen.FuelLog -> "F:${screen.vehicleId}"
+    is Screen.Insights -> "I:${screen.vehicleId}"
+    is Screen.OdometerLogs -> "O:${screen.vehicleId}"
+    is Screen.PumpDetail -> "P:${screen.vehicleId}:${screen.pumpId ?: -1}"
+    is Screen.Settings -> "S"
+}
+
+private fun decodeRoute(str: String): Screen {
+    val parts = str.split(":")
+    return when (parts[0]) {
+        "V" -> Screen.Vehicles
+        "F" -> Screen.FuelLog(parts[1].toLong())
+        "I" -> Screen.Insights(parts[1].toLong())
+        "O" -> Screen.OdometerLogs(parts[1].toLong())
+        "P" -> Screen.PumpDetail(parts[1].toLong(), parts[2].toLong().takeIf { it != -1L })
+        "S" -> Screen.Settings
+        else -> Screen.Vehicles
+    }
+}
+
 @Composable
 fun AppNavHost() {
-    val backStack = remember { mutableStateListOf<Screen>(Screen.Vehicles) }
-    val currentScreen = remember { mutableStateOf<Screen>(Screen.Vehicles) }
+    var backStackStr by rememberSaveable { mutableStateOf("V") }
+
+    val routes = remember(backStackStr) {
+        backStackStr.split("|").map { decodeRoute(it) }
+    }
+    val currentScreen = routes.last()
 
     fun navigate(screen: Screen) {
-        backStack.add(screen)
-        currentScreen.value = screen
+        backStackStr = backStackStr + "|" + encodeRoute(screen)
     }
 
     fun popBack(): Boolean {
-        if (backStack.size > 1) {
-            backStack.removeLast()
-            currentScreen.value = backStack.last()
+        val parts = backStackStr.split("|")
+        if (parts.size > 1) {
+            backStackStr = parts.dropLast(1).joinToString("|")
             return true
         }
         return false
     }
 
+    BackHandler(enabled = routes.size > 1) {
+        backStackStr = backStackStr.split("|").dropLast(1).joinToString("|")
+    }
+
     AnimatedContent(
-        targetState = currentScreen.value,
+        targetState = currentScreen,
         transitionSpec = {
             fadeIn(tween(200)) + slideInHorizontally(tween(200)) { it } togetherWith
                     fadeOut(tween(200)) + slideOutHorizontally(tween(200)) { -it / 3 }

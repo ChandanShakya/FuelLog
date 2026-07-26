@@ -46,18 +46,21 @@ class PumpMileageCalculatorTest {
 
         val result = computePumpFillHistory(entries, 1L)
 
-        assertEquals(2, result.size)
-        // Pair attributed to current entry: e2(Shell): dist=100, mileage=100/40=2.5
-        assertEquals(2.5, result[0].mileage, 0.001)
-        assertEquals(100.0, result[0].distanceSinceLastFill, 0.001)
-        // Pair attributed to current entry: e4(Shell): dist=100, mileage=100/35≈2.857
-        assertEquals(100.0 / 35.0, result[1].mileage, 0.001)
-        assertEquals(100.0, result[1].distanceSinceLastFill, 0.001)
+        assertEquals(3, result.size)
+        // e1(Shell): mileage=(1100-1000)/50=2.0, distanceSinceLast=null (first entry)
+        assertEquals(2.0, result[0].mileage!!, 0.001)
+        assertNull(result[0].distanceSinceLastFill)
+        // e2(Shell): mileage=(1200-1100)/40=2.5, distanceSinceLast=1100-1000=100
+        assertEquals(2.5, result[1].mileage!!, 0.001)
+        assertEquals(100.0, result[1].distanceSinceLastFill!!, 0.001)
+        // e4(Shell): mileage=null (last entry), distanceSinceLast=1300-1200=100
+        assertNull(result[2].mileage)
+        assertEquals(100.0, result[2].distanceSinceLastFill!!, 0.001)
         // Sorted by date ascending
-        assertTrue(result[0].date < result[1].date)
+        assertTrue(result[0].date < result[1].date && result[1].date < result[2].date)
     }
 
-@Test
+    @Test
     fun `computePumpFillHistory - pairing runs across all pumps before filtering`() {
         val entries = listOf(
             entry(1, 1000.0, 50.0, 100.0, 1L, LocalDate.of(2024, 1, 1)),
@@ -67,15 +70,17 @@ class PumpMileageCalculatorTest {
 
         val result = computePumpFillHistory(entries, 1L)
 
-        assertEquals(1, result.size)
-        // Pair 1→2: current=e2(BP), pump=2 → excluded
-        // Pair 2→3: current=e3(Shell), pump=1 → included. dist=1250-1100=150, mileage=150/50=3.0
-        assertEquals(150.0, result[0].distanceSinceLastFill, 0.001)
-        assertEquals(3.0, result[0].mileage, 0.001)
+        assertEquals(2, result.size)
+        // e1(Shell): mileage=(1100-1000)/50=2.0, distanceSinceLast=null
+        assertEquals(2.0, result[0].mileage!!, 0.001)
+        assertNull(result[0].distanceSinceLastFill)
+        // e3(Shell): mileage=null (last entry), distanceSinceLast=1250-1100=150
+        assertNull(result[1].mileage)
+        assertEquals(150.0, result[1].distanceSinceLastFill!!, 0.001)
     }
 
     @Test
-    fun `computePumpFillHistory - single fill at pump returns result when next entry exists`() {
+    fun `computePumpFillHistory - single fill at pump includes mileage from forward pair`() {
         val entries = listOf(
             entry(1, 1000.0, 50.0, 100.0, 1L),
             entry(2, 1100.0, 40.0, 80.0, 2L)
@@ -83,9 +88,9 @@ class PumpMileageCalculatorTest {
 
         val result = computePumpFillHistory(entries, 1L)
 
-        // With curr-attribution, the single fill at pump 1 has no curr entry at pump 1
-        // The next entry is at pump 2, so the pair is attributed to pump 2
-        assertEquals(0, result.size)
+        // e1(Shell): mileage=(1100-1000)/50=2.0, distanceSinceLast=null
+        assertEquals(1, result.size)
+        assertEquals(2.0, result[0].mileage!!, 0.001)
     }
 
     @Test
@@ -97,9 +102,11 @@ class PumpMileageCalculatorTest {
 
         val result = computePumpFillHistory(entries, null)
 
-        assertEquals(1, result.size)
-        // Pair attributed to current entry e2(null): dist=100, mileage=100/40=2.5
-        assertEquals(2.5, result[0].mileage, 0.001)
+        assertEquals(2, result.size)
+        // e1(null): mileage=(1100-1000)/50=2.0
+        assertEquals(2.0, result[0].mileage!!, 0.001)
+        // e2(null): distanceSinceLast=100
+        assertEquals(100.0, result[1].distanceSinceLastFill!!, 0.001)
     }
 
     @Test
@@ -112,10 +119,15 @@ class PumpMileageCalculatorTest {
 
         val result = computePumpFillHistory(entries, 1L)
 
-        // Pair 1→2: distance = 950-1000 = -50 → skip
-        // Pair 2→3: distance = 1100-950 = 150, current=e3(vol=30), mileage=150/30=5.0
-        assertEquals(1, result.size)
-        assertEquals(150.0 / 30.0, result[0].mileage, 0.001)
+        // e1: forward dist=-50 → mileage=null, distanceSinceLast=null (first) → excluded
+        // e2: forward dist=150, mileage=150/40=3.75, backward dist=-50 → distanceSinceLast=null
+        // e3: backward dist=150, distanceSinceLast=150, mileage=null (last)
+        // Sorted by date: e3(now-3), e2(now-2)
+        assertEquals(2, result.size)
+        assertNull(result[0].mileage)
+        assertEquals(150.0, result[0].distanceSinceLastFill!!, 0.001)
+        assertEquals(150.0 / 40.0, result[1].mileage!!, 0.001)
+        assertNull(result[1].distanceSinceLastFill)
     }
 
     @Test
@@ -127,9 +139,14 @@ class PumpMileageCalculatorTest {
 
         val result = computePumpFillHistory(entries, 1L)
 
-        // Pair 1→2: current=e2(vol=0), fuelVolume(curr)=0 → skip
-        // No valid pairs
-        assertEquals(0, result.size)
+        // e1: forward dist=100, fuelVolume=50 → mileage=100/50=2.0
+        // e2: backward dist=100 → distanceSinceLast=100, mileage=null (last)
+        // Sorted by date: e2(now-2), e1(now-1)
+        assertEquals(2, result.size)
+        assertEquals(100.0, result[0].distanceSinceLastFill!!, 0.001)
+        assertNull(result[0].mileage)
+        assertEquals(2.0, result[1].mileage!!, 0.001)
+        assertNull(result[1].distanceSinceLastFill)
     }
 
     @Test
@@ -145,15 +162,15 @@ class PumpMileageCalculatorTest {
 
         assertEquals(2, stats.size)
 
-        // Shell (pump 1): 3 entries, pairs at e2 and e4 → mileages [2.5, 100/35≈2.857]
+        // Shell (pump 1): e1(mileage=2.0), e2(mileage=2.5), e4(mileage=null) → mileages [2.0, 2.5]
         val shell = stats.first { it.pumpId == 1L }
         assertEquals("Shell", shell.pumpName)
         assertEquals(3, shell.fillCount)
-        assertEquals(2.5, shell.worstMileage, 0.001)
-        assertEquals(100.0 / 35.0, shell.bestMileage, 0.001)
-        assertEquals((2.5 + 100.0 / 35.0) / 2, shell.avgMileage, 0.001)
+        assertEquals(2.0, shell.worstMileage, 0.001)
+        assertEquals(2.5, shell.bestMileage, 0.001)
+        assertEquals(2.25, shell.avgMileage, 0.001)
 
-        // BP (pump 2): 1 entry, pair at e3 → mileages [100/45=2.222]
+        // BP (pump 2): e3(mileage=(1300-1200)/45=2.222) → mileages [2.222]
         val bp = stats.first { it.pumpId == 2L }
         assertEquals("BP", bp.pumpName)
         assertEquals(1, bp.fillCount)
@@ -170,19 +187,14 @@ class PumpMileageCalculatorTest {
 
         val stats = computePumpMileageStats(entries)
 
-        // Unknown (pump=null): pairs at e2 → mileages [2.5]
-        // Shell (pump=1): pair at e3 → mileages [2.222]
-        assertEquals(2, stats.size)
+        // Unknown (pump=null): e1(mileage=2.0), e2(mileage=2.5) → mileages [2.0, 2.5]
+        // Shell (pump=1): e3 is last entry, mileage=null → filtered out
+        assertEquals(1, stats.size)
 
         val unknown = stats.first { it.pumpId == null }
         assertEquals("Unknown / Not recorded", unknown.pumpName)
         assertEquals(2, unknown.fillCount)
-        assertEquals(2.5, unknown.avgMileage, 0.001)
-
-        val shell = stats.first { it.pumpId == 1L }
-        assertEquals("Shell", shell.pumpName)
-        assertEquals(1, shell.fillCount)
-        assertEquals(100.0 / 45.0, shell.avgMileage, 0.001)
+        assertEquals(2.25, unknown.avgMileage, 0.001)
     }
 
     @Test
@@ -195,9 +207,10 @@ class PumpMileageCalculatorTest {
 
         val stats = computePumpMileageStats(entries)
 
-        // Shell (pump 1): 1 entry at index 0. No pair has curr=pump=1 (e2 is BP).
-        // BP (pump 2): 2 entries, pairs at e2 and e3 → included
-        assertEquals(1, stats.size)
+        // Shell (pump 1): e1 has mileage=(1100-1000)/50=2.0 → included
+        // BP (pump 2): e2 has mileage=(1200-1100)/40=2.5, e3 is last → mileages [2.5]
+        assertEquals(2, stats.size)
+        assertTrue(stats.any { it.pumpId == 1L })
         assertTrue(stats.any { it.pumpId == 2L })
     }
 

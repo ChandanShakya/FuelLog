@@ -520,7 +520,8 @@ fun FuelEntryCard(
                         Text(
                             text = "·",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.outline
+                            color = MaterialTheme.colorScheme.outline,
+                            modifier = Modifier.padding(vertical = 2.dp)
                         )
                     }
                     pumpName?.let { name ->
@@ -530,7 +531,9 @@ fun FuelEntryCard(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.widthIn(max = 150.dp)
+                            modifier = Modifier
+                                .padding(vertical = 2.dp)
+                                .widthIn(max = 150.dp)
                         )
                     }
                 }

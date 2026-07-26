@@ -11,8 +11,8 @@ data class PumpFillDetail(
     val odometer: Double,
     val fuelVolume: Double,
     val fuelCost: Double,
-    val distanceSinceLastFill: Double,
-    val mileage: Double
+    val distanceSinceLastFill: Double?,
+    val mileage: Double?
 )
 
 data class PumpMileageStat(
@@ -52,7 +52,7 @@ fun computePumpMileageStats(
     return allPairs
         .groupBy { it.pumpId }
         .mapNotNull { (pId, pairs) ->
-            val mileages = pairs.map { it.detail.mileage }
+            val mileages = pairs.mapNotNull { it.detail.mileage }
             if (mileages.isEmpty()) return@mapNotNull null
             val avg = mileages.average()
             val pumpName = pairs.firstOrNull()?.pumpName ?: "Unknown / Not recorded"
@@ -79,21 +79,35 @@ private fun computeAllPairs(
     distanceUnit: DistanceUnit = DistanceUnit.KM,
     volumeUnit: VolumeUnit = VolumeUnit.LITERS
 ): List<AttributedPair> {
-    return entries.adjacentMileagePairs({ it.entry.odometer }, { it.entry.fuelVolume }, distanceUnit, volumeUnit)
-        .mapIndexed { index, pair ->
-            val curr = entries[index + 1]
-            AttributedPair(
-                pumpId = curr.entry.fuelPumpId,
-                pumpName = curr.pumpName,
-                detail = PumpFillDetail(
-                    entryId = curr.entry.id,
-                    date = curr.entry.date,
-                    odometer = curr.entry.odometer,
-                    fuelVolume = curr.entry.fuelVolume,
-                    fuelCost = curr.entry.fuelCost,
-                    distanceSinceLastFill = pair.distance,
-                    mileage = pair.mileage
-                )
+    if (entries.size < 2) return emptyList()
+
+    return entries.mapIndexedNotNull { i, entryWithPump ->
+        // Mileage: forward-looking — how efficient was this fill-up?
+        val mileage = if (i < entries.size - 1) {
+            val dist = entries[i + 1].entry.odometer - entries[i].entry.odometer
+            if (dist > 0 && entries[i].entry.fuelVolume > 0) dist / entries[i].entry.fuelVolume else null
+        } else null
+
+        // Distance since last: backward-looking
+        val distanceSinceLast = if (i > 0) {
+            val dist = entries[i].entry.odometer - entries[i - 1].entry.odometer
+            if (dist > 0) dist else null
+        } else null
+
+        if (mileage == null && distanceSinceLast == null) return@mapIndexedNotNull null
+
+        AttributedPair(
+            pumpId = entryWithPump.entry.fuelPumpId,
+            pumpName = entryWithPump.pumpName,
+            detail = PumpFillDetail(
+                entryId = entryWithPump.entry.id,
+                date = entryWithPump.entry.date,
+                odometer = entryWithPump.entry.odometer,
+                fuelVolume = entryWithPump.entry.fuelVolume,
+                fuelCost = entryWithPump.entry.fuelCost,
+                distanceSinceLastFill = distanceSinceLast,
+                mileage = mileage
             )
-        }
+        )
+    }
 }

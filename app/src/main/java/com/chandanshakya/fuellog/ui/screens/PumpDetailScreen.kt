@@ -201,8 +201,9 @@ private fun PumpTrendChart(pumpDetail: List<PumpFillDetail>) {
                     modifier = Modifier.padding(Dimens.spacingMd)
                 )
             } else {
-                val values = remember(pumpDetail) { pumpDetail.map { it.mileage } }
-                val dates = remember(pumpDetail) { pumpDetail.map { it.date } }
+                val chartData = remember(pumpDetail) { pumpDetail.filter { it.mileage != null } }
+                val values = remember(chartData) { chartData.map { it.mileage!! } }
+                val dates = remember(chartData) { chartData.map { it.date } }
                 LineChart(
                     values = values,
                     dates = dates,
@@ -325,7 +326,8 @@ private fun PumpEntryCard(
                         Text(
                             text = "${"%.0f".format(d)} $distanceLabel since last",
                             style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(vertical = 2.dp)
                         )
                     }
                 }

@@ -59,23 +59,17 @@ Install the debug APK on a device or emulator.
 
 ### Release signing
 
-Release credentials are **never** in source. Set these environment variables (or CI secrets):
+Passwords live in `app/build.gradle.kts` (alias `fuellog`). The keystore file itself is gitignored.
 
-| Variable | Purpose |
-|----------|---------|
-| `FUELLOG_STORE_FILE` | Path to the keystore (defaults to `<root>/release.keystore`) |
-| `FUELLOG_STORE_PASSWORD` | Keystore password |
-| `FUELLOG_KEY_ALIAS` | Key alias (defaults to `fuellog`) |
-| `FUELLOG_KEY_PASSWORD` | Key password |
+Place `release.keystore` in the project root, then:
 
 ```bash
-export FUELLOG_STORE_PASSWORD=...
-export FUELLOG_KEY_PASSWORD=...
-export FUELLOG_KEY_ALIAS=fuellog
 ./gradlew assembleRelease
 ```
 
-CI (GitHub Actions / Forgejo) injects the same names from repository secrets. Release builds use R8 minification, resource shrinking, and locale stripping (English only).
+**CI:** only `RELEASE_KEYSTORE_BASE64` is required (base64 of `release.keystore`). Workflows decode it to `release.keystore` before `assembleRelease`. Codeberg also needs `CODEBERG_TOKEN` to publish the release.
+
+Release builds use R8 minification, resource shrinking, and locale stripping (English only).
 
 ## Testing
 

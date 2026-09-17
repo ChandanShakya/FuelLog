@@ -26,15 +26,13 @@ android {
     }
 
     signingConfigs {
-        // Credentials come from environment / CI secrets — never hardcode passwords.
-        // Required when building release: FUELLOG_STORE_FILE, FUELLOG_STORE_PASSWORD,
-        // FUELLOG_KEY_ALIAS, FUELLOG_KEY_PASSWORD
-        val storeFilePath = System.getenv("FUELLOG_STORE_FILE") ?: "${rootDir}/release.keystore"
+        // Keystore file is not committed (see .gitignore). CI decodes RELEASE_KEYSTORE_BASE64
+        // to ${rootDir}/release.keystore before assembleRelease.
         create("release") {
-            storeFile = file(storeFilePath)
-            storePassword = System.getenv("FUELLOG_STORE_PASSWORD")
-            keyAlias = System.getenv("FUELLOG_KEY_ALIAS") ?: "fuellog"
-            keyPassword = System.getenv("FUELLOG_KEY_PASSWORD")
+            storeFile = file("${rootDir}/release.keystore")
+            storePassword = "fuellog123"
+            keyAlias = "fuellog"
+            keyPassword = "fuellog123"
         }
     }
 
@@ -47,10 +45,7 @@ android {
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            // Only attach signing when credentials are present (CI or local env).
-            if (System.getenv("FUELLOG_STORE_PASSWORD") != null) {
-                signingConfig = signingConfigs.getByName("release")
-            }
+            signingConfig = signingConfigs.getByName("release")
         }
         debug {
             isMinifyEnabled = false

@@ -66,17 +66,7 @@ jobs:
 
       - name: Build release APK and bundle
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        env:
-          FUELLOG_STORE_FILE: ${{ github.workspace }}/release.keystore
-          FUELLOG_STORE_PASSWORD: ${{ secrets.FUELLOG_STORE_PASSWORD }}
-          FUELLOG_KEY_ALIAS: ${{ secrets.FUELLOG_KEY_ALIAS }}
-          FUELLOG_KEY_PASSWORD: ${{ secrets.FUELLOG_KEY_PASSWORD }}
-        run: |
-          if [ -z "$FUELLOG_STORE_PASSWORD" ] || [ -z "$FUELLOG_KEY_PASSWORD" ]; then
-            echo "FUELLOG_STORE_PASSWORD / FUELLOG_KEY_PASSWORD secrets are required for release signing" >&2
-            exit 1
-          fi
-          ./gradlew assembleRelease bundleRelease --no-daemon
+        run: ./gradlew assembleRelease bundleRelease --no-daemon
 
       - name: Get version info
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'

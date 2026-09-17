@@ -6,7 +6,7 @@ A fuel tracking app for Android. Log fill-ups, track mileage across multiple veh
 
 Built with Jetpack Compose, Room, and manual dependency injection. Ships at ~1.2MB.
 
-Landing page source: [`website/`](website/) (Astro). Obtainium URL: `obtainium://app/https://github.com/ChandanShakya/FuelLog`
+Landing page source: [`website/`](website/) (Astro, black-and-white neubrutalism). Obtainium URL: `obtainium://app/https://github.com/ChandanShakya/FuelLog`
 
 ## Features
 

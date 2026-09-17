@@ -78,12 +78,12 @@ const features = [
 ];
 
 const shots = [
-  { src: '/shots/vehicles.svg', cap: 'Vehicles list' },
-  { src: '/shots/fuel-log.svg', cap: 'Fuel log and prediction' },
-  { src: '/shots/insights.svg', cap: 'Insights and monthly summary' },
-  { src: '/shots/nearby.svg', cap: 'Nearby pumps list' },
-  { src: '/shots/trip.svg', cap: 'Trip cost calculator' },
-  { src: '/shots/add-vehicle.svg', cap: 'Vehicle form and EV options' },
+  { src: '/shots/vehicles.svg', cap: 'Vehicles list', alt: 'Vehicles list mockup' },
+  { src: '/shots/fuel-log.svg', cap: 'Fuel log and prediction', alt: 'Fuel log screen mockup' },
+  { src: '/shots/insights.svg', cap: 'Insights and monthly summary', alt: 'Insights screen mockup' },
+  { src: '/shots/nearby.svg', cap: 'Nearby pumps list', alt: 'Nearby fuel pumps mockup' },
+  { src: '/shots/trip.svg', cap: 'Trip cost calculator', alt: 'Trip cost dialog mockup' },
+  { src: '/shots/add-vehicle.svg', cap: 'Vehicle form and EV options', alt: 'Add vehicle form mockup' },
 ];
 
 const tech = [
@@ -101,7 +101,7 @@ const tech = [
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
-    <meta name="theme-color" content="#ffe566" />
+    <meta name="theme-color" content="#000000" />
     <link rel="canonical" href={site} />
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
@@ -120,7 +120,7 @@ const tech = [
             <li><a href="#screens">Screens</a></li>
             <li><a href="#algorithms">Algorithms</a></li>
             <li><a href="#download">Download</a></li>
-            <li><a class="accent" href={obtainium}>Add to Obtainium</a></li>
+            <li><a href={obtainium}>Add to Obtainium</a></li>
           </ul>
         </nav>
       </div>
@@ -138,13 +138,21 @@ const tech = [
               logging, and keep your data on the device.
             </p>
             <div class="btn-row">
-              <a class="btn btn-coral" href={apk}>Download latest APK</a>
-              <a class="btn btn-sky" href={obtainium}>Add to Obtainium</a>
+              <a class="btn" href={apk}>Download latest APK</a>
+              <a class="btn btn-ghost" href={obtainium}>Add to Obtainium</a>
               <a class="btn btn-ghost" href={repo}>GitHub repository</a>
             </div>
           </div>
           <div class="hero-card">
-            <img src="/shots/fuel-log.svg" width="280" height="560" alt="FuelLog fuel log screen mockup showing mileage summary, next fill-up prediction, and fill history" />
+            <img
+              class="zoomable"
+              src="/shots/fuel-log.svg"
+              width="280"
+              height="560"
+              data-zoom-src="/shots/fuel-log.svg"
+              data-zoom-caption="Fuel log and prediction"
+              alt="FuelLog fuel log screen mockup showing mileage summary, next fill-up prediction, and fill history"
+            />
           </div>
         </div>
       </section>
@@ -171,14 +179,24 @@ const tech = [
         <div class="wrap">
           <h2>Screens</h2>
           <p class="section-intro">
-            Interface mockups based on the in-app layout. The product UI is Compose with the same
-            structure: vehicles, per-vehicle log, insights, tools, and nearby pumps.
+            Interface mockups based on the in-app layout. Click any screen to open it full size.
+            Replace files in <code>website/public/shots/</code> with real device screenshots when you have them.
           </p>
           <div class="shots">
             {shots.map((s) => (
-              <figure class="shot">
-                <img src={s.src} width="280" height="560" loading="lazy" alt={`${s.cap} mockup`} />
-                <figcaption>{s.cap}</figcaption>
+              <figure
+                class="shot zoomable"
+                data-zoom-src={s.src}
+                data-zoom-caption={s.cap}
+                role="button"
+                tabindex="0"
+                aria-label={`Open ${s.cap} full size`}
+              >
+                <img src={s.src} width="560" height="1120" loading="lazy" alt={s.alt} />
+                <figcaption>
+                  {s.cap}
+                  <span class="shot-hint">Click to enlarge</span>
+                </figcaption>
               </figure>
             ))}
           </div>
@@ -193,7 +211,7 @@ const tech = [
             sent to a server for mileage or prediction.
           </p>
           <div class="algo">
-            <article class="card yellow">
+            <article class="card">
               <h3>Per-fill mileage</h3>
               <ol>
                 <li>Sort fuel entries for a vehicle by odometer.</li>
@@ -203,16 +221,16 @@ const tech = [
               </ol>
               <div class="formula">mileage = (odometer[i] − odometer[i−1]) / volume[i]</div>
             </article>
-            <article class="card mint">
+            <article class="card card-solid">
               <h3>Recency-weighted efficiency</h3>
               <ol>
                 <li>Build the list of valid adjacent mileage pairs.</li>
                 <li>Apply an exponentially weighted moving average (EWMA).</li>
                 <li>Recent tanks influence the average more than old ones.</li>
               </ol>
-              <div class="formula">EWMA = α · mileageₜ + (1 − α) · EWMAₜ₋₁<br />α = 2 / (window + 1), default window = 5</div>
+              <div class="formula">EWMA = α · mileage[t] + (1 − α) · EWMA[t−1]<br />α = 2 / (window + 1), default window = 5</div>
             </article>
-            <article class="card sky">
+            <article class="card">
               <h3>Next fill prediction</h3>
               <ol>
                 <li>Estimate fuel or energy in the tank after the last fill.</li>
@@ -223,7 +241,7 @@ const tech = [
               </ol>
               <div class="formula">usable = capacity − reserve<br />remaining = usable × EWMA_mileage − distance_since_fill</div>
             </article>
-            <article class="card lilac">
+            <article class="card card-solid">
               <h3>Tank capacity learning</h3>
               <ol>
                 <li>Take consecutive full-tank fills.</li>
@@ -233,7 +251,7 @@ const tech = [
               </ol>
               <div class="formula">capacity ≈ median(volume added between full fills)</div>
             </article>
-            <article class="card pink">
+            <article class="card">
               <h3>Trip cost</h3>
               <ol>
                 <li>Read recent mileage (EWMA) and the last rate you paid.</li>
@@ -242,7 +260,7 @@ const tech = [
               </ol>
               <div class="formula">energy = distance / mileage<br />cost = round(energy × rate, 2)</div>
             </article>
-            <article class="card coral">
+            <article class="card card-solid">
               <h3>Nearby pumps</h3>
               <ol>
                 <li>Request device location permission and a single location fix.</li>
@@ -281,13 +299,13 @@ const tech = [
             <div>
               <h3>Direct download</h3>
               <p>Always points at the newest GitHub release asset named app-release.apk.</p>
-              <a class="btn btn-yellow" href={apk} style="background: var(--yellow); color: var(--ink)">Download APK</a>
+              <a class="btn btn-invert" href={apk}>Download APK</a>
               <code class="code">{apk}</code>
             </div>
             <div>
               <h3>Obtainium</h3>
               <p>Use the link below in Obtainium, or tap Add to Obtainium on a device that handles the scheme.</p>
-              <a class="btn btn-mint" href={obtainium} style="background: var(--mint); color: var(--ink)">Add to Obtainium</a>
+              <a class="btn btn-invert" href={obtainium}>Add to Obtainium</a>
               <code class="code">{obtainium}</code>
             </div>
           </div>
@@ -307,5 +325,62 @@ const tech = [
         </p>
       </div>
     </footer>
+
+    <dialog id="lightbox" class="lightbox" aria-label="Screenshot preview">
+      <div class="lightbox-frame">
+        <img id="lightbox-img" src="" alt="" />
+        <div class="lightbox-bar">
+          <span id="lightbox-caption"></span>
+          <button type="button" class="lightbox-close" id="lightbox-close">Close</button>
+        </div>
+      </div>
+    </dialog>
+
+    <script is:inline>
+      (function () {
+        var dialog = document.getElementById('lightbox');
+        var img = document.getElementById('lightbox-img');
+        var caption = document.getElementById('lightbox-caption');
+        var closeBtn = document.getElementById('lightbox-close');
+        if (!dialog || !img) return;
+
+        function openZoom(src, cap, alt) {
+          img.src = src;
+          img.alt = alt || cap || 'Screenshot';
+          caption.textContent = cap || '';
+          if (typeof dialog.showModal === 'function') dialog.showModal();
+          else dialog.setAttribute('open', '');
+        }
+
+        function closeZoom() {
+          if (dialog.open && typeof dialog.close === 'function') dialog.close();
+          else dialog.removeAttribute('open');
+        }
+
+        document.querySelectorAll('.zoomable').forEach(function (el) {
+          el.addEventListener('click', function () {
+            openZoom(
+              el.getAttribute('data-zoom-src') || el.querySelector('img')?.getAttribute('src') || el.getAttribute('src'),
+              el.getAttribute('data-zoom-caption') || '',
+              el.getAttribute('alt') || el.querySelector('img')?.getAttribute('alt') || ''
+            );
+          });
+          el.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+              e.preventDefault();
+              el.click();
+            }
+          });
+        });
+
+        closeBtn && closeBtn.addEventListener('click', closeZoom);
+        dialog.addEventListener('click', function (e) {
+          if (e.target === dialog) closeZoom();
+        });
+        document.addEventListener('keydown', function (e) {
+          if (e.key === 'Escape') closeZoom();
+        });
+      })();
+    </script>
   </body>
 </html>

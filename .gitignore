@@ -20,6 +20,11 @@ release/
 .gradle/
 build/
 
+# Website (Astro)
+website/node_modules/
+website/dist/
+website/.astro/
+
 # Local configuration file (sdk path, etc)
 local.properties
 

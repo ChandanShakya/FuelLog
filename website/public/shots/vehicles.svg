@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 560" fill="none">
+  <rect width="280" height="560" rx="0" fill="#FFF8E7"/>
+  <rect x="8" y="8" width="264" height="544" fill="#fff" stroke="#111" stroke-width="3"/>
+  <rect x="8" y="8" width="264" height="48" fill="#FFE566" stroke="#111" stroke-width="3"/>
+  <text x="24" y="38" font-family="system-ui,sans-serif" font-size="16" font-weight="800" fill="#111">Vehicles</text>
+  <circle cx="244" cy="32" r="10" fill="#111"/>
+  <text x="240" y="37" font-family="system-ui,sans-serif" font-size="14" font-weight="800" fill="#fff">+</text>
+  <rect x="24" y="72" width="232" height="72" fill="#fff" stroke="#111" stroke-width="3"/>
+  <rect x="28" y="76" width="64" height="64" fill="#7CFFB2" stroke="#111" stroke-width="2"/>
+  <text x="40" y="115" font-family="system-ui,sans-serif" font-size="18" font-weight="800" fill="#111">Car</text>
+  <text x="104" y="100" font-family="system-ui,sans-serif" font-size="14" font-weight="800" fill="#111">Nexon</text>
+  <text x="104" y="120" font-family="system-ui,sans-serif" font-size="11" fill="#333">Petrol · km/L</text>
+  <rect x="24" y="156" width="232" height="72" fill="#fff" stroke="#111" stroke-width="3"/>
+  <rect x="28" y="160" width="64" height="64" fill="#7EC8FF" stroke="#111" stroke-width="2"/>
+  <text x="42" y="199" font-family="system-ui,sans-serif" font-size="16" font-weight="800" fill="#111">EV</text>
+  <text x="104" y="184" font-family="system-ui,sans-serif" font-size="14" font-weight="800" fill="#111">Electric Scooter</text>
+  <text x="104" y="204" font-family="system-ui,sans-serif" font-size="11" fill="#333">Electric · km/kWh</text>
+  <rect x="24" y="240" width="232" height="72" fill="#fff" stroke="#111" stroke-width="3"/>
+  <rect x="28" y="244" width="64" height="64" fill="#FFB4E0" stroke="#111" stroke-width="2"/>
+  <text x="40" y="283" font-family="system-ui,sans-serif" font-size="14" font-weight="800" fill="#111">Bus</text>
+  <text x="104" y="268" font-family="system-ui,sans-serif" font-size="14" font-weight="800" fill="#111">City Bus</text>
+  <text x="104" y="288" font-family="system-ui,sans-serif" font-size="11" fill="#333">Diesel · km/L</text>
+  <rect x="220" y="480" width="40" height="40" fill="#FF6B4A" stroke="#111" stroke-width="3"/>
+  <text x="232" y="507" font-family="system-ui,sans-serif" font-size="22" font-weight="800" fill="#111">+</text>
+</svg>

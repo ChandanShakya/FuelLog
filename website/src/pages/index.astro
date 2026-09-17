@@ -1,0 +1,311 @@
+---
+import '../styles/global.css';
+
+const site = 'https://fuellog.chandanshakya.com.np';
+const repo = 'https://github.com/ChandanShakya/FuelLog';
+const apk = 'https://github.com/ChandanShakya/FuelLog/releases/latest/download/app-release.apk';
+const obtainium = 'obtainium://app/https://github.com/ChandanShakya/FuelLog';
+
+const title = 'FuelLog — Offline fuel and EV charge tracker for Android';
+const description =
+  'FuelLog is a small Android app to log fill-ups and EV charges, track mileage, predict the next fill, export CSV, and find nearby fuel pumps. Open source on GitHub.';
+
+const features = [
+  {
+    title: 'Multiple vehicles',
+    body: 'Separate logs for cars, bikes, buses, trucks, jeeps, and scooters. Each vehicle keeps its own history, units, and capacity.',
+  },
+  {
+    title: 'Fuel and EV support',
+    body: 'Petrol, diesel, CNG, or electric. Electric vehicles use kWh, battery capacity, and charge wording throughout the app.',
+  },
+  {
+    title: 'Fill-up logging',
+    body: 'Odometer, volume or energy, cost, date, full-tank or full-charge flag, and optional pump name with autocomplete.',
+  },
+  {
+    title: 'Any-two auto calc',
+    body: 'Enter any two of volume, rate, and cost. The third is computed so you can log from a receipt quickly.',
+  },
+  {
+    title: 'Mileage tracking',
+    body: 'Per-fill efficiency from the previous odometer reading. The newest fill stays empty until that tank or charge is finished.',
+  },
+  {
+    title: 'Insights and charts',
+    body: 'Average, best, and worst mileage, fuel price trend, cost totals, and a monthly summary of distance, volume, and spend.',
+  },
+  {
+    title: 'Next fill prediction',
+    body: 'Recency-weighted mileage plus tank or battery state. Odometer check-ins between fills shorten remaining range immediately.',
+  },
+  {
+    title: 'Reserve threshold',
+    body: 'Set a reserve volume. Prediction targets when you will hit that level, not theoretical empty.',
+  },
+  {
+    title: 'Tank capacity learning',
+    body: 'Median of consecutive full-tank fill volumes suggests capacity with confidence. You apply it yourself; the app never overwrites.',
+  },
+  {
+    title: 'Per-pump statistics',
+    body: 'Compare efficiency after fills at each station. Rename or delete pumps; entries keep history safely.',
+  },
+  {
+    title: 'Trip cost calculator',
+    body: 'Planned distance becomes estimated energy and cost using your recent mileage and the last rate you paid.',
+  },
+  {
+    title: 'Nearby fuel pumps',
+    body: 'List OpenStreetMap stations within about five kilometres. Open the system maps app to navigate. No map SDK in the APK.',
+  },
+  {
+    title: 'Units and currency',
+    body: 'Kilometres or miles, litres, gallons, or kWh. Changing vehicle units converts history. Global currency for display.',
+  },
+  {
+    title: 'Odometer check-ins',
+    body: 'Log distance without buying fuel so predictions stay honest between fill-ups.',
+  },
+  {
+    title: 'Backup and export',
+    body: 'Transactional JSON backup and restore. Failed imports keep existing data. CSV export for spreadsheets.',
+  },
+  {
+    title: 'Small and offline-first',
+    body: 'Room database on device, Compose UI, manual dependency injection. No account required for core logging.',
+  },
+];
+
+const shots = [
+  { src: '/shots/vehicles.svg', cap: 'Vehicles list' },
+  { src: '/shots/fuel-log.svg', cap: 'Fuel log and prediction' },
+  { src: '/shots/insights.svg', cap: 'Insights and monthly summary' },
+  { src: '/shots/nearby.svg', cap: 'Nearby pumps list' },
+  { src: '/shots/trip.svg', cap: 'Trip cost calculator' },
+  { src: '/shots/add-vehicle.svg', cap: 'Vehicle form and EV options' },
+];
+
+const tech = [
+  { title: 'UI', body: 'Jetpack Compose and Material 3' },
+  { title: 'Data', body: 'Room with explicit schema migrations' },
+  { title: 'Logic', body: 'MVVM with Kotlin Flows and pure calculators' },
+  { title: 'Maps data', body: 'OpenStreetMap Overpass HTTP only' },
+];
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{title}</title>
+    <meta name="description" content={description} />
+    <meta name="theme-color" content="#ffe566" />
+    <link rel="canonical" href={site} />
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={site} />
+    <meta property="og:type" content="website" />
+    <meta name="twitter:card" content="summary" />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+  </head>
+  <body>
+    <header class="nav">
+      <div class="wrap nav-inner">
+        <a class="brand" href={site}>FuelLog</a>
+        <nav aria-label="Primary">
+          <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#screens">Screens</a></li>
+            <li><a href="#algorithms">Algorithms</a></li>
+            <li><a href="#download">Download</a></li>
+            <li><a class="accent" href={obtainium}>Add to Obtainium</a></li>
+          </ul>
+        </nav>
+      </div>
+    </header>
+
+    <main>
+      <section class="hero">
+        <div class="wrap hero-grid">
+          <div>
+            <span class="kicker">Android · Open source · Offline-first</span>
+            <h1>Track fuel and EV charges without the noise.</h1>
+            <p class="lead">
+              FuelLog is a compact Android app for logging fill-ups and charges, measuring mileage,
+              predicting the next stop, and seeing cost trends. Built to stay small, work offline for
+              logging, and keep your data on the device.
+            </p>
+            <div class="btn-row">
+              <a class="btn btn-coral" href={apk}>Download latest APK</a>
+              <a class="btn btn-sky" href={obtainium}>Add to Obtainium</a>
+              <a class="btn btn-ghost" href={repo}>GitHub repository</a>
+            </div>
+          </div>
+          <div class="hero-card">
+            <img src="/shots/fuel-log.svg" width="280" height="560" alt="FuelLog fuel log screen mockup showing mileage summary, next fill-up prediction, and fill history" />
+          </div>
+        </div>
+      </section>
+
+      <section id="features">
+        <div class="wrap">
+          <h2>Features</h2>
+          <p class="section-intro">
+            Everything in the app is built around daily logging: record what you bought, see how far
+            it took you, and know when you should stop again.
+          </p>
+          <ul class="feature-list">
+            {features.map((f) => (
+              <li>
+                <strong>{f.title}</strong>
+                <span>{f.body}</span>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      <section id="screens" class="alt">
+        <div class="wrap">
+          <h2>Screens</h2>
+          <p class="section-intro">
+            Interface mockups based on the in-app layout. The product UI is Compose with the same
+            structure: vehicles, per-vehicle log, insights, tools, and nearby pumps.
+          </p>
+          <div class="shots">
+            {shots.map((s) => (
+              <figure class="shot">
+                <img src={s.src} width="280" height="560" loading="lazy" alt={`${s.cap} mockup`} />
+                <figcaption>{s.cap}</figcaption>
+              </figure>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="algorithms">
+        <div class="wrap">
+          <h2>How the algorithms work</h2>
+          <p class="section-intro">
+            Calculators are pure functions in the codebase. They run on device data only; nothing is
+            sent to a server for mileage or prediction.
+          </p>
+          <div class="algo">
+            <article class="card yellow">
+              <h3>Per-fill mileage</h3>
+              <ol>
+                <li>Sort fuel entries for a vehicle by odometer.</li>
+                <li>For each pair of consecutive entries, take the odometer difference.</li>
+                <li>Divide that distance by the volume or energy added at the later fill.</li>
+                <li>Show that value on the earlier fill; the newest fill has no finished segment yet.</li>
+              </ol>
+              <div class="formula">mileage = (odometer[i] − odometer[i−1]) / volume[i]</div>
+            </article>
+            <article class="card mint">
+              <h3>Recency-weighted efficiency</h3>
+              <ol>
+                <li>Build the list of valid adjacent mileage pairs.</li>
+                <li>Apply an exponentially weighted moving average (EWMA).</li>
+                <li>Recent tanks influence the average more than old ones.</li>
+              </ol>
+              <div class="formula">EWMA = α · mileageₜ + (1 − α) · EWMAₜ₋₁<br />α = 2 / (window + 1), default window = 5</div>
+            </article>
+            <article class="card sky">
+              <h3>Next fill prediction</h3>
+              <ol>
+                <li>Estimate fuel or energy in the tank after the last fill.</li>
+                <li>Full fill sets level to capacity; partial fills add volume up to capacity.</li>
+                <li>Subtract reserve once so prediction targets your reserve zone.</li>
+                <li>Subtract distance driven since the last fill using the latest odometer point.</li>
+                <li>Projected date uses average distance per day over the last 30 days of points.</li>
+              </ol>
+              <div class="formula">usable = capacity − reserve<br />remaining = usable × EWMA_mileage − distance_since_fill</div>
+            </article>
+            <article class="card lilac">
+              <h3>Tank capacity learning</h3>
+              <ol>
+                <li>Take consecutive full-tank fills.</li>
+                <li>Volume added at the second fill approximates how much was used.</li>
+                <li>Use the median of those volumes as the suggestion.</li>
+                <li>Confidence rises with more full-tank pairs; apply manually if you want.</li>
+              </ol>
+              <div class="formula">capacity ≈ median(volume added between full fills)</div>
+            </article>
+            <article class="card pink">
+              <h3>Trip cost</h3>
+              <ol>
+                <li>Read recent mileage (EWMA) and the last rate you paid.</li>
+                <li>Energy needed is planned distance divided by mileage.</li>
+                <li>Cost is energy times rate, rounded to two decimal places.</li>
+              </ol>
+              <div class="formula">energy = distance / mileage<br />cost = round(energy × rate, 2)</div>
+            </article>
+            <article class="card coral">
+              <h3>Nearby pumps</h3>
+              <ol>
+                <li>Request device location permission and a single location fix.</li>
+                <li>Query OpenStreetMap Overpass for amenity=fuel within about 5 km.</li>
+                <li>Sort by haversine distance.</li>
+                <li>Open the system maps app for navigation; FuelLog does not embed a map engine.</li>
+              </ol>
+              <div class="formula">Overpass around:5000 · sort by haversine metres</div>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="stack" class="alt">
+        <div class="wrap">
+          <h2>Stack</h2>
+          <div class="grid-3">
+            {tech.map((t) => (
+              <div class="card">
+                <h3>{t.title}</h3>
+                <p>{t.body}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="download" class="cta-band">
+        <div class="wrap">
+          <h2>Get FuelLog</h2>
+          <p class="section-intro">
+            Download the latest release APK from GitHub, or add the repository in Obtainium for
+            update checks without a Play Store listing.
+          </p>
+          <div class="cta-panel">
+            <div>
+              <h3>Direct download</h3>
+              <p>Always points at the newest GitHub release asset named app-release.apk.</p>
+              <a class="btn btn-yellow" href={apk} style="background: var(--yellow); color: var(--ink)">Download APK</a>
+              <code class="code">{apk}</code>
+            </div>
+            <div>
+              <h3>Obtainium</h3>
+              <p>Use the link below in Obtainium, or tap Add to Obtainium on a device that handles the scheme.</p>
+              <a class="btn btn-mint" href={obtainium} style="background: var(--mint); color: var(--ink)">Add to Obtainium</a>
+              <code class="code">{obtainium}</code>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <div class="wrap footer-row">
+        <p>
+          FuelLog source on
+          <a href={repo}>GitHub</a>
+          · MIT License
+        </p>
+        <p>
+          <a href={site}>fuellog.chandanshakya.com.np</a>
+        </p>
+      </div>
+    </footer>
+  </body>
+</html>

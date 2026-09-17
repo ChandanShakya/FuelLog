@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 560" fill="none">
+  <rect width="280" height="560" fill="#E8FFE8"/>
+  <rect x="8" y="8" width="264" height="544" fill="#fff" stroke="#111" stroke-width="3"/>
+  <rect x="8" y="8" width="264" height="48" fill="#7CFFB2" stroke="#111" stroke-width="3"/>
+  <text x="24" y="38" font-family="system-ui,sans-serif" font-size="16" font-weight="800" fill="#111">Trip Cost</text>
+  <rect x="24" y="80" width="232" height="40" fill="#fff" stroke="#111" stroke-width="3"/>
+  <text x="36" y="105" font-family="system-ui,sans-serif" font-size="13" fill="#333">Planned distance (km)</text>
+  <rect x="24" y="140" width="232" height="120" fill="#FFF8E7" stroke="#111" stroke-width="3"/>
+  <text x="36" y="168" font-family="system-ui,sans-serif" font-size="11" font-weight="700" fill="#333">Estimate</text>
+  <text x="36" y="200" font-family="system-ui,sans-serif" font-size="28" font-weight="800" fill="#111">7.04 L</text>
+  <text x="36" y="228" font-family="system-ui,sans-serif" font-size="16" font-weight="800" fill="#111">$17.60</text>
+  <text x="36" y="248" font-family="system-ui,sans-serif" font-size="11" fill="#333">100 km at 14.2 km/L</text>
+  <rect x="24" y="280" width="108" height="44" fill="#fff" stroke="#111" stroke-width="3"/>
+  <text x="48" y="308" font-family="system-ui,sans-serif" font-size="14" font-weight="800" fill="#111">Close</text>
+  <rect x="148" y="280" width="108" height="44" fill="#FF6B4A" stroke="#111" stroke-width="3"/>
+  <text x="168" y="308" font-family="system-ui,sans-serif" font-size="14" font-weight="800" fill="#111">Estimate</text>
+  <text x="36" y="360" font-family="system-ui,sans-serif" font-size="11" fill="#555">Uses recent mileage + last rate</text>
+</svg>

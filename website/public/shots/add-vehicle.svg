@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 560" fill="none">
+  <rect width="280" height="560" fill="#F5F5F5"/>
+  <rect x="8" y="8" width="264" height="544" fill="#fff" stroke="#111" stroke-width="3"/>
+  <rect x="8" y="8" width="264" height="48" fill="#111" stroke="#111" stroke-width="3"/>
+  <text x="24" y="38" font-family="system-ui,sans-serif" font-size="16" font-weight="800" fill="#fff">Add Vehicle</text>
+  <rect x="24" y="72" width="232" height="40" fill="#fff" stroke="#111" stroke-width="3"/>
+  <text x="36" y="97" font-family="system-ui,sans-serif" font-size="12" fill="#333">Vehicle name</text>
+  <text x="36" y="140" font-family="system-ui,sans-serif" font-size="12" font-weight="800" fill="#111">Fuel / Energy</text>
+  <rect x="24" y="152" width="52" height="28" fill="#FFE566" stroke="#111" stroke-width="2"/>
+  <text x="36" y="171" font-family="system-ui,sans-serif" font-size="11" font-weight="800" fill="#111">Petrol</text>
+  <rect x="82" y="152" width="52" height="28" fill="#fff" stroke="#111" stroke-width="2"/>
+  <text x="92" y="171" font-family="system-ui,sans-serif" font-size="11" fill="#111">Diesel</text>
+  <rect x="140" y="152" width="40" height="28" fill="#fff" stroke="#111" stroke-width="2"/>
+  <text x="150" y="171" font-family="system-ui,sans-serif" font-size="11" fill="#111">CNG</text>
+  <rect x="186" y="152" width="70" height="28" fill="#7EC8FF" stroke="#111" stroke-width="2"/>
+  <text x="196" y="171" font-family="system-ui,sans-serif" font-size="11" font-weight="800" fill="#111">Electric</text>
+  <text x="36" y="210" font-family="system-ui,sans-serif" font-size="12" font-weight="800" fill="#111">Distance unit</text>
+  <rect x="24" y="222" width="48" height="28" fill="#FFE566" stroke="#111" stroke-width="2"/>
+  <text x="38" y="241" font-family="system-ui,sans-serif" font-size="12" font-weight="800" fill="#111">km</text>
+  <rect x="80" y="222" width="64" height="28" fill="#fff" stroke="#111" stroke-width="2"/>
+  <text x="92" y="241" font-family="system-ui,sans-serif" font-size="12" fill="#111">miles</text>
+  <rect x="24" y="272" width="232" height="40" fill="#fff" stroke="#111" stroke-width="3"/>
+  <text x="36" y="297" font-family="system-ui,sans-serif" font-size="12" fill="#333">Tank / battery capacity</text>
+  <rect x="24" y="328" width="232" height="40" fill="#fff" stroke="#111" stroke-width="3"/>
+  <text x="36" y="353" font-family="system-ui,sans-serif" font-size="12" fill="#333">Reserve (optional)</text>
+  <rect x="24" y="400" width="108" height="44" fill="#fff" stroke="#111" stroke-width="3"/>
+  <text x="48" y="428" font-family="system-ui,sans-serif" font-size="14" font-weight="800" fill="#111">Cancel</text>
+  <rect x="148" y="400" width="108" height="44" fill="#FFE566" stroke="#111" stroke-width="3"/>
+  <text x="180" y="428" font-family="system-ui,sans-serif" font-size="14" font-weight="800" fill="#111">Save</text>
+</svg>

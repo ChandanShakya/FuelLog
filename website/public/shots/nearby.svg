@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 280 560" fill="none">
+  <rect width="280" height="560" fill="#FFE8F0"/>
+  <rect x="8" y="8" width="264" height="544" fill="#fff" stroke="#111" stroke-width="3"/>
+  <rect x="8" y="8" width="264" height="48" fill="#FFB4E0" stroke="#111" stroke-width="3"/>
+  <text x="24" y="38" font-family="system-ui,sans-serif" font-size="14" font-weight="800" fill="#111">Nearby Fuel Pumps</text>
+  <rect x="24" y="72" width="232" height="64" fill="#FFF8E7" stroke="#111" stroke-width="3"/>
+  <text x="36" y="96" font-family="system-ui,sans-serif" font-size="11" font-weight="700" fill="#333">Your average mileage</text>
+  <text x="36" y="120" font-family="system-ui,sans-serif" font-size="18" font-weight="800" fill="#111">14.2 km/L</text>
+  <rect x="24" y="152" width="232" height="64" fill="#fff" stroke="#111" stroke-width="3"/>
+  <text x="36" y="178" font-family="system-ui,sans-serif" font-size="13" font-weight="800" fill="#111">Shell Thamel</text>
+  <text x="36" y="198" font-family="system-ui,sans-serif" font-size="11" fill="#333">Shell · 420 m</text>
+  <rect x="180" y="168" width="60" height="32" fill="#FFE566" stroke="#111" stroke-width="2"/>
+  <text x="198" y="189" font-family="system-ui,sans-serif" font-size="12" font-weight="800" fill="#111">Go</text>
+  <rect x="24" y="228" width="232" height="64" fill="#fff" stroke="#111" stroke-width="3"/>
+  <text x="36" y="254" font-family="system-ui,sans-serif" font-size="13" font-weight="800" fill="#111">Nepal Oil Lazimpat</text>
+  <text x="36" y="274" font-family="system-ui,sans-serif" font-size="11" fill="#333">NOC · 1.1 km</text>
+  <rect x="180" y="244" width="60" height="32" fill="#FFE566" stroke="#111" stroke-width="2"/>
+  <text x="198" y="265" font-family="system-ui,sans-serif" font-size="12" font-weight="800" fill="#111">Go</text>
+  <rect x="24" y="304" width="232" height="64" fill="#fff" stroke="#111" stroke-width="3"/>
+  <text x="36" y="330" font-family="system-ui,sans-serif" font-size="13" font-weight="800" fill="#111">CNO Baluwatar</text>
+  <text x="36" y="350" font-family="system-ui,sans-serif" font-size="11" fill="#333">CNO · 2.4 km</text>
+  <rect x="180" y="320" width="60" height="32" fill="#FFE566" stroke="#111" stroke-width="2"/>
+  <text x="198" y="341" font-family="system-ui,sans-serif" font-size="12" font-weight="800" fill="#111">Go</text>
+  <text x="36" y="420" font-family="system-ui,sans-serif" font-size="11" fill="#555">OpenStreetMap data · list only</text>
+</svg>

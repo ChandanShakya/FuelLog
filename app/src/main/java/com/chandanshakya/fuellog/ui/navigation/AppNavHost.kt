@@ -16,6 +16,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import com.chandanshakya.fuellog.ui.screens.FuelLogScreen
 import com.chandanshakya.fuellog.ui.screens.InsightsScreen
+import com.chandanshakya.fuellog.ui.screens.NearbyPumpsScreen
 import com.chandanshakya.fuellog.ui.screens.OdometerLogsScreen
 import com.chandanshakya.fuellog.ui.screens.PumpDetailScreen
 import com.chandanshakya.fuellog.ui.screens.SettingsScreen
@@ -27,6 +28,7 @@ private fun encodeRoute(screen: Screen): String = when (screen) {
     is Screen.Insights -> "I:${screen.vehicleId}"
     is Screen.OdometerLogs -> "O:${screen.vehicleId}"
     is Screen.PumpDetail -> "P:${screen.vehicleId}:${screen.pumpId ?: -1}"
+    is Screen.NearbyPumps -> "N:${screen.vehicleId}"
     is Screen.Settings -> "S"
 }
 
@@ -43,6 +45,7 @@ private fun decodeRoute(str: String): Screen {
             if (vehicleId != null) Screen.PumpDetail(vehicleId, pumpId?.takeIf { it != -1L })
             else Screen.Vehicles
         }
+        "N" -> parts.getOrNull(1)?.toLongOrNull()?.let { Screen.NearbyPumps(it) } ?: Screen.Vehicles
         "S" -> Screen.Settings
         else -> Screen.Vehicles
     }
@@ -107,7 +110,14 @@ fun AppNavHost() {
                 },
                 onNavigateToOdometerLogs = {
                     navigate(Screen.OdometerLogs(screen.vehicleId))
+                },
+                onNavigateToNearby = {
+                    navigate(Screen.NearbyPumps(screen.vehicleId))
                 }
+            )
+
+            is Screen.NearbyPumps -> NearbyPumpsScreen(
+                onNavigateBack = { popBack() }
             )
 
             is Screen.Insights -> InsightsScreen(

@@ -10,5 +10,6 @@ sealed class Screen {
     data class Insights(val vehicleId: Long) : Screen()
     data class OdometerLogs(val vehicleId: Long) : Screen()
     data class PumpDetail(val vehicleId: Long, val pumpId: Long?) : Screen()
+    data class NearbyPumps(val vehicleId: Long) : Screen()
     data object Settings : Screen()
 }

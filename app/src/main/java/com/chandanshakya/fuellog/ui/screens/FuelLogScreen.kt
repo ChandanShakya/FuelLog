@@ -72,6 +72,7 @@ fun FuelLogScreen(
     onNavigateToInsights: () -> Unit,
     onNavigateToVehicles: () -> Unit,
     onNavigateToOdometerLogs: () -> Unit = {},
+    onNavigateToNearby: () -> Unit = {},
     viewModel: FuelLogViewModel = viewModel(
         key = "FuelLogViewModel_$vehicleId",
         factory = FuelLogViewModel.factory(vehicleId)
@@ -99,6 +100,9 @@ fun FuelLogScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = onNavigateToNearby) {
+                        Icon(painter = painterResource(R.drawable.ic_local_gas_station), contentDescription = "Nearby pumps")
+                    }
                     IconButton(onClick = { showTripDialog = true }) {
                         Icon(painter = painterResource(R.drawable.ic_road), contentDescription = "Trip cost")
                     }

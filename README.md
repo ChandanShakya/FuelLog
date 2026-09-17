@@ -26,6 +26,7 @@ Built with Jetpack Compose, Room, and manual dependency injection. Ships at ~1.2
 - EV support: fuel type (petrol/diesel/CNG/electric/hybrid), kWh volume, battery capacity, charge wording
 - Reserve threshold: prediction stops at your reserve level, not theoretical empty
 - Trip cost calculator: planned distance → energy and cost from recent mileage + last rate
+- Nearby fuel pumps: OSM list within ~5 km (location + internet); tap **Go** to open your maps app — no map SDK in the APK
 - Global currency setting applied across all vehicles
 - Backup/restore via JSON (transactional) and CSV export for spreadsheets
 - Clear all data option with confirmation

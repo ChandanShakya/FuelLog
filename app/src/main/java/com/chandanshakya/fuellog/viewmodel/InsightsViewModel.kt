@@ -97,6 +97,9 @@ class InsightsViewModel(
 
         val totalFuelRaw = sortedEntries.sumOf { it.fuelVolume }
         val totalCost = Money.sumCents(sortedEntries.map { it.fuelCost })
+        val monthly = com.chandanshakya.fuellog.data.backup.MonthlySummary.byMonth(sortedEntries)
+            .takeLast(6)
+            .reversed()
 
         InsightsState(
             vehicle = v,
@@ -112,7 +115,8 @@ class InsightsViewModel(
             entriesCount = sortedEntries.size,
             mileageDataPoints = dataPoints,
             priceDataPoints = priceDataPoints,
-            currency = settings?.defaultCurrency ?: "USD"
+            currency = settings?.defaultCurrency ?: "USD",
+            monthly = monthly
         )
     }.flowOn(Dispatchers.Default).stateIn(
         scope = viewModelScope,
@@ -183,7 +187,8 @@ data class InsightsState(
     val entriesCount: Int = 0,
     val mileageDataPoints: List<ChartDataPoint> = emptyList(),
     val priceDataPoints: List<PriceChartDataPoint> = emptyList(),
-    val currency: String = "USD"
+    val currency: String = "USD",
+    val monthly: List<com.chandanshakya.fuellog.data.backup.MonthlySummary.MonthBucket> = emptyList()
 )
 
 enum class MileageTrend {

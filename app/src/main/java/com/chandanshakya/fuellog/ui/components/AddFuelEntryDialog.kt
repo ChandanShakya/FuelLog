@@ -88,6 +88,7 @@ fun AddFuelEntryDialog(
 
     val volumeLabel = UnitConverter.getVolumeUnitLabel(volumeUnit)
     val distanceLabel = UnitConverter.getDistanceUnitLabel(distanceUnit)
+    val isEv = volumeUnit == VolumeUnit.KWH
 
     var showDeleteConfirm by remember { mutableStateOf(false) }
 
@@ -150,7 +151,10 @@ fun AddFuelEntryDialog(
 
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     Checkbox(checked = isFullTank, onCheckedChange = { isFullTank = it })
-                    Text(text = "Full tank?", style = MaterialTheme.typography.bodyMedium)
+                    Text(
+                        text = if (isEv) "Full charge?" else "Full tank?",
+                        style = MaterialTheme.typography.bodyMedium
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))

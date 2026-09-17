@@ -12,11 +12,27 @@ enum class DistanceUnit {
 }
 
 /**
- * Volume units for fuel quantity.
+ * Volume / energy units for fuel quantity. [KWH] is used for electric vehicles.
  */
 enum class VolumeUnit {
     LITERS,
-    GALLONS
+    GALLONS,
+    KWH;
+
+    val isEnergy: Boolean get() = this == KWH
+}
+
+/**
+ * Fuel / energy type for a vehicle.
+ */
+enum class FuelType(val label: String) {
+    PETROL("Petrol"),
+    DIESEL("Diesel"),
+    CNG("CNG"),
+    ELECTRIC("Electric"),
+    HYBRID("Hybrid");
+
+    val isElectric: Boolean get() = this == ELECTRIC
 }
 
 /**

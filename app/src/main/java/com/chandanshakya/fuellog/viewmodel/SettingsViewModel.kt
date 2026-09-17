@@ -56,6 +56,7 @@ class SettingsViewModel(
     private val backupManager = BackupManager(
         database, vehicleDao, fuelEntryDao, fuelPumpDao, odometerReadingDao, userSettingsDao
     )
+    private val csvExporter = com.chandanshakya.fuellog.data.backup.CsvExporter(vehicleDao, fuelEntryDao)
 
     val settingsState: StateFlow<SettingsState> = userSettingsDao.getSettings()
         .map { settings ->
@@ -107,6 +108,19 @@ class SettingsViewModel(
                 _message.value = "Data exported successfully"
             } catch (e: Exception) {
                 _message.value = "Export failed: ${e.message}"
+            }
+        }
+    }
+
+    fun exportCsv(context: Context, uri: Uri) {
+        viewModelScope.launch {
+            try {
+                context.contentResolver.openOutputStream(uri)?.use { stream ->
+                    csvExporter.exportToStream(stream)
+                }
+                _message.value = "CSV exported successfully"
+            } catch (e: Exception) {
+                _message.value = "CSV export failed: ${e.message}"
             }
         }
     }

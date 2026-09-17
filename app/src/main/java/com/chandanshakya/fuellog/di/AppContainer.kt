@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.chandanshakya.fuellog.data.db.AppDatabase
 import com.chandanshakya.fuellog.data.db.FuelEntryDao
 import com.chandanshakya.fuellog.data.db.FuelPumpDao
+import com.chandanshakya.fuellog.data.db.MIGRATION_11_12
 import com.chandanshakya.fuellog.data.db.OdometerReadingDao
 import com.chandanshakya.fuellog.data.db.UserSettingsDao
 import com.chandanshakya.fuellog.data.db.VehicleDao
@@ -15,6 +16,7 @@ class AppContainer(context: Context) {
         AppDatabase::class.java,
         "fuellog-db"
     )
+        .addMigrations(MIGRATION_11_12)
         // Only wipe on OS/app downgrade. Missing migrations on upgrade throw —
         // ship a real Migration when bumping AppDatabase.version.
         .fallbackToDestructiveMigrationOnDowngrade()

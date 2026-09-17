@@ -10,6 +10,7 @@ import com.chandanshakya.fuellog.data.db.VehicleDao
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.FuelPump
+import com.chandanshakya.fuellog.data.model.FuelType
 import com.chandanshakya.fuellog.data.model.OdometerReading
 import com.chandanshakya.fuellog.data.model.UserSettings
 import com.chandanshakya.fuellog.data.model.Vehicle
@@ -58,10 +59,12 @@ class BackupManager(
                         put("id", v.id)
                         put("name", v.name)
                         put("vehicleType", v.vehicleType.name)
+                        put("fuelType", v.fuelType.name)
                         put("distanceUnit", v.distanceUnit.name)
                         put("volumeUnit", v.volumeUnit.name)
                         put("createdAt", v.createdAt)
                         put("tankCapacity", v.tankCapacity ?: JSONObject.NULL)
+                        put("reserveAmount", v.reserveAmount ?: JSONObject.NULL)
                     })
                 }
             })
@@ -168,10 +171,15 @@ class BackupManager(
                 id = obj.getLong("id"),
                 name = obj.getString("name"),
                 vehicleType = parseEnum(VehicleType::class.java, obj.getString("vehicleType"), "vehicleType"),
+                fuelType = if (obj.has("fuelType") && !obj.isNull("fuelType")) {
+                    parseEnum(FuelType::class.java, obj.getString("fuelType"), "fuelType")
+                } else FuelType.PETROL,
                 distanceUnit = parseEnum(DistanceUnit::class.java, obj.getString("distanceUnit"), "distanceUnit"),
                 volumeUnit = parseEnum(VolumeUnit::class.java, obj.getString("volumeUnit"), "volumeUnit"),
                 createdAt = obj.getLong("createdAt"),
-                tankCapacity = if (obj.isNull("tankCapacity")) null else obj.getDouble("tankCapacity")
+                tankCapacity = if (obj.isNull("tankCapacity")) null else obj.getDouble("tankCapacity"),
+                reserveAmount = if (!obj.has("reserveAmount") || obj.isNull("reserveAmount")) null
+                else obj.getDouble("reserveAmount")
             )
         }
 
@@ -238,6 +246,6 @@ class BackupManager(
     }
 
     companion object {
-        const val BACKUP_VERSION = 1
+        const val BACKUP_VERSION = 2
     }
 }

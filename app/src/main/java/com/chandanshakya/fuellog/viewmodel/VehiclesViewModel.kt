@@ -61,23 +61,19 @@ class VehiclesViewModel(
         initialValue = VehiclesState()
     )
 
-    fun addVehicle(
-        name: String,
-        vehicleType: VehicleType = VehicleType.CAR,
-        distanceUnit: DistanceUnit? = null,
-        volumeUnit: VolumeUnit? = null,
-        tankCapacity: Double? = null
-    ) {
-        if (!Validation.validateVehicleName(name)) return
+    fun addVehicle(form: com.chandanshakya.fuellog.ui.components.VehicleFormResult) {
+        if (!Validation.validateVehicleName(form.name)) return
 
         viewModelScope.launch {
             val settings = userSettingsDao.getSettingsSuspend()
             val vehicle = Vehicle(
-                name = name,
-                vehicleType = vehicleType,
-                distanceUnit = distanceUnit ?: settings?.defaultDistanceUnit ?: DistanceUnit.KM,
-                volumeUnit = volumeUnit ?: settings?.defaultVolumeUnit ?: VolumeUnit.LITERS,
-                tankCapacity = tankCapacity
+                name = form.name,
+                vehicleType = form.vehicleType,
+                fuelType = form.fuelType,
+                distanceUnit = form.distanceUnit,
+                volumeUnit = form.volumeUnit,
+                tankCapacity = form.tankCapacity,
+                reserveAmount = form.reserveAmount
             )
             vehicleDao.insert(vehicle)
         }

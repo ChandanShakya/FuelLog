@@ -3,6 +3,7 @@ package com.chandanshakya.fuellog.util
 import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.OdometerReading
+import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit
@@ -12,7 +13,10 @@ data class FillUpPrediction(
     val predictedDate: LocalDate?,
     val predictedOdometer: Double?,
     val recentMileage: Double,
-    val tankCapacity: Double
+    val tankCapacity: Double,
+    val reserveAmount: Double = 0.0,
+    /** Remaining distance until the reserve zone (usually same as remaining when reserve is set). */
+    val remainingToReserve: Double = 0.0
 )
 
 /**
@@ -41,16 +45,14 @@ fun computeRecencyWeightedMileage(
 }
 
 /**
- * Estimate fuel left in the tank at [latestOdo] by walking fill history.
- *
- * Full-tank fills reset the tank to [tankCapacity]. Partial fills add volume
- * (capped at capacity). Standalone odometer readings after the last fill reduce
- * remaining range by distance driven / mileage.
+ * Estimate fuel left at latest odometer. Full fills use usable capacity
+ * (tank − reserve) so prediction targets "fill by reserve", not theoretical empty.
  */
 internal fun estimateRemainingDistance(
     entries: List<FuelEntry>,
     odometerReadings: List<OdometerReading>,
     tankCapacity: Double,
+    usableCapacity: Double,
     recentMileage: Double
 ): Pair<Double, Double>? {
     if (recentMileage <= 0 || tankCapacity <= 0) return null
@@ -63,16 +65,13 @@ internal fun estimateRemainingDistance(
     val latestOdo = maxOf(latestFuelOdo ?: 0.0, latestReadingOdo ?: 0.0)
     if (latestOdo <= 0.0 && fills.isEmpty()) return null
 
-    // Track estimated fuel in tank at the last fuel event.
     var fuelInTank: Double? = null
     var lastFillOdo = 0.0
     for (fill in fills) {
         val previousFuel = fuelInTank
         fuelInTank = when {
-            fill.isFullTank -> tankCapacity
+            fill.isFullTank -> usableCapacity
             previousFuel != null -> minOf(tankCapacity, previousFuel + fill.fuelVolume)
-            // Partial fill with unknown prior level: treat added volume as current fuel
-            // (optimistic lower bound on range after that fill).
             else -> minOf(tankCapacity, fill.fuelVolume)
         }
         lastFillOdo = fill.odometer
@@ -80,27 +79,27 @@ internal fun estimateRemainingDistance(
 
     val fuelAtLastFill = fuelInTank ?: return null
     val distanceSinceLastFill = (latestOdo - lastFillOdo).coerceAtLeast(0.0)
-    val remaining = fuelAtLastFill * recentMileage - distanceSinceLastFill
+    // Usable fuel above reserve
+    val reserve = (tankCapacity - usableCapacity).coerceAtLeast(0.0)
+    val usableFuel = (fuelAtLastFill - reserve).coerceAtLeast(0.0)
+    val remaining = usableFuel * recentMileage - distanceSinceLastFill
     return latestOdo to remaining.coerceAtLeast(0.0)
 }
 
-/**
- * Predict the next fill-up from recency-weighted mileage, tank capacity,
- * the latest odometer point (fuel entry **or** standalone reading), and fuel
- * estimated to be left after that point.
- *
- * Logging a new odometer reading after a fill reduces remaining distance and
- * moves the predicted date/odometer earlier.
- */
 fun predictNextFillUp(
     entries: List<FuelEntry>,
     odometerReadings: List<OdometerReading>,
     tankCapacity: Double?,
     distanceUnit: DistanceUnit,
     volumeUnit: VolumeUnit,
+    reserveAmount: Double? = null,
     recentWindowSize: Int = 5
 ): FillUpPrediction? {
     if (tankCapacity == null || tankCapacity <= 0) return null
+
+    val reserve = reserveAmount?.coerceAtLeast(0.0) ?: 0.0
+    val usableCapacity = (tankCapacity - reserve).coerceAtLeast(0.0)
+    if (usableCapacity <= 0) return null
 
     val usableEntries = entries.filter { it.fuelVolume > 0 }.sortedBy { it.odometer }
     val recentMileage = computeRecencyWeightedMileage(
@@ -111,6 +110,7 @@ fun predictNextFillUp(
         entries = usableEntries,
         odometerReadings = odometerReadings,
         tankCapacity = tankCapacity,
+        usableCapacity = usableCapacity,
         recentMileage = recentMileage
     ) ?: return null
 
@@ -151,6 +151,63 @@ fun predictNextFillUp(
         predictedDate = predictedDate,
         predictedOdometer = if (latestOdo > 0) latestOdo + remainingDistance else null,
         recentMileage = recentMileage,
-        tankCapacity = tankCapacity
+        tankCapacity = tankCapacity,
+        reserveAmount = reserve,
+        remainingToReserve = remainingDistance
     )
+}
+
+fun predictNextFillUp(
+    entries: List<FuelEntry>,
+    odometerReadings: List<OdometerReading>,
+    vehicle: Vehicle,
+    recentWindowSize: Int = 5
+): FillUpPrediction? = predictNextFillUp(
+    entries = entries,
+    odometerReadings = odometerReadings,
+    tankCapacity = vehicle.tankCapacity,
+    distanceUnit = vehicle.distanceUnit,
+    volumeUnit = vehicle.volumeUnit,
+    reserveAmount = vehicle.reserveAmount,
+    recentWindowSize = recentWindowSize
+)
+
+data class TripEstimate(
+    val distance: Double,
+    val energyNeeded: Double,
+    val cost: Double,
+    val mileage: Double,
+    val rate: Double,
+    val distanceUnit: DistanceUnit,
+    val volumeUnit: VolumeUnit
+)
+
+/**
+ * Estimate energy/fuel and cost for a planned trip using recent mileage and last rate.
+ */
+fun estimateTrip(
+    distance: Double,
+    recentMileage: Double?,
+    lastRate: Double?,
+    distanceUnit: DistanceUnit,
+    volumeUnit: VolumeUnit
+): TripEstimate? {
+    if (distance <= 0 || recentMileage == null || recentMileage <= 0) return null
+    val energy = distance / recentMileage
+    val rate = lastRate ?: 0.0
+    return TripEstimate(
+        distance = distance,
+        energyNeeded = energy,
+        cost = Money.roundToCents(energy * rate),
+        mileage = recentMileage,
+        rate = Money.roundToCents(rate),
+        distanceUnit = distanceUnit,
+        volumeUnit = volumeUnit
+    )
+}
+
+/** Last price per unit from the most recent fill with volume > 0. */
+fun lastFuelRate(entries: List<FuelEntry>): Double? {
+    val last = entries.filter { it.fuelVolume > 0 }.maxByOrNull { it.odeter } ?: return null
+    return Money.rate(last.fuelVolume, last.fuelCost)
 }

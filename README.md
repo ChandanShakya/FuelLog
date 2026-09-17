@@ -22,9 +22,12 @@ Built with Jetpack Compose, Room, and manual dependency injection. Ships at ~1.2
 
 **Practical tools**
 - Auto-calculation: enter any two of volume, rate, cost and the third is computed
-- Unit support: km/miles, liters/gallons; changing a vehicle's units converts fill history, odometer readings, and tank capacity
+- Unit support: km/miles, liters/gallons/kWh; changing a vehicle's units converts fill history, odometer readings, and tank capacity
+- EV support: fuel type (petrol/diesel/CNG/electric/hybrid), kWh volume, battery capacity, charge wording
+- Reserve threshold: prediction stops at your reserve level, not theoretical empty
+- Trip cost calculator: planned distance → energy and cost from recent mileage + last rate
 - Global currency setting applied across all vehicles
-- Backup and restore via JSON export/import (Storage Access Framework, transactional — a failed import keeps existing data)
+- Backup/restore via JSON (transactional) and CSV export for spreadsheets
 - Clear all data option with confirmation
 
 ## Tech stack

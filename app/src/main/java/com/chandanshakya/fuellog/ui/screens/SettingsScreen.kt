@@ -91,6 +91,12 @@ fun SettingsScreen(
         uri?.let { viewModel.exportData(context, it) }
     }
 
+    val csvExportLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.CreateDocument("text/csv")
+    ) { uri ->
+        uri?.let { viewModel.exportCsv(context, it) }
+    }
+
     val importLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.OpenDocument()
     ) { uri ->
@@ -309,6 +315,30 @@ fun SettingsScreen(
                         ) {
                             Text("Export", fontSize = 12.sp)
                         }
+                    }
+                },
+                colors = ListItemDefaults.colors(containerColor = Color.Transparent)
+            )
+
+            ListItem(
+                headlineContent = { Text("Export CSV") },
+                supportingContent = { Text("One row per fill-up for spreadsheets") },
+                leadingContent = {
+                    Icon(
+                        painter = painterResource(R.drawable.ic_point_of_sale),
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                },
+                trailingContent = {
+                    Button(
+                        onClick = {
+                            csvExportLauncher.launch("fuellog_${LocalDate.now()}.csv")
+                        },
+                        modifier = Modifier.height(32.dp),
+                        contentPadding = ButtonDefaults.ContentPadding
+                    ) {
+                        Text("CSV", fontSize = 12.sp)
                     }
                 },
                 colors = ListItemDefaults.colors(containerColor = Color.Transparent)

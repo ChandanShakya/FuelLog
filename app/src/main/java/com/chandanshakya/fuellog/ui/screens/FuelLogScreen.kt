@@ -54,9 +54,11 @@ import com.chandanshakya.fuellog.ui.components.AppButtonOutlined
 import com.chandanshakya.fuellog.ui.components.AppTextField
 import com.chandanshakya.fuellog.ui.components.EmptyState
 import com.chandanshakya.fuellog.ui.components.InfoCard
+import com.chandanshakya.fuellog.ui.components.TripCostDialog
 import com.chandanshakya.fuellog.ui.theme.Dimens
 import com.chandanshakya.fuellog.util.CurrencyFormatter
 import com.chandanshakya.fuellog.util.FillUpPrediction
+import com.chandanshakya.fuellog.util.FuelLabels
 import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.viewmodel.FuelLogViewModel
 import java.time.LocalDate
@@ -76,8 +78,10 @@ fun FuelLogScreen(
     val prediction by viewModel.nextFillUpPrediction.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }
     var showOdometerDialog by remember { mutableStateOf(false) }
+    var showTripDialog by remember { mutableStateOf(false) }
     var entryToEdit by remember { mutableStateOf<FuelEntry?>(null) }
     var pumpToEdit by remember { mutableStateOf<com.chandanshakya.fuellog.data.model.FuelPump?>(null) }
+    val tripInputs by viewModel.tripInputs.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -89,6 +93,9 @@ fun FuelLogScreen(
                     }
                 },
                 actions = {
+                    IconButton(onClick = { showTripDialog = true }) {
+                        Icon(painter = painterResource(R.drawable.ic_road), contentDescription = "Trip cost")
+                    }
                     IconButton(onClick = onNavigateToOdometerLogs) {
                         Icon(painter = painterResource(R.drawable.ic_speed), contentDescription = "Odometer Logs")
                     }
@@ -143,7 +150,13 @@ fun FuelLogScreen(
                     Spacer(modifier = Modifier.height(Dimens.spacingSm))
 
                     if (prediction != null) {
-                        NextFillUpCard(prediction = prediction!!, distanceUnit = vehicle.distanceUnit, volumeUnit = vehicle.volumeUnit, entryCount = state.entries.size)
+                        NextFillUpCard(
+                            prediction = prediction!!,
+                            distanceUnit = vehicle.distanceUnit,
+                            volumeUnit = vehicle.volumeUnit,
+                            entryCount = state.entries.size,
+                            isEv = vehicle.isElectric
+                        )
                     } else if (vehicle.tankCapacity == null || vehicle.tankCapacity!! <= 0) {
                         Card(
                             modifier = Modifier.fillMaxWidth(),
@@ -151,7 +164,10 @@ fun FuelLogScreen(
                             elevation = Dimens.cardElevation()
                         ) {
                             Text(
-                                text = "Set tank capacity in vehicle settings to see next fill-up prediction",
+                                text = if (vehicle.isElectric)
+                                    "Set battery capacity in vehicle settings to see next charge prediction"
+                                else
+                                    "Set tank capacity in vehicle settings to see next fill-up prediction",
                                 style = MaterialTheme.typography.bodySmall,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 modifier = Modifier.padding(Dimens.spacingMd)
@@ -243,6 +259,18 @@ fun FuelLogScreen(
         )
     }
 
+    if (showTripDialog) {
+        val vehicle = state.vehicle
+        TripCostDialog(
+            distanceUnit = vehicle?.distanceUnit ?: DistanceUnit.KM,
+            volumeUnit = vehicle?.volumeUnit ?: VolumeUnit.LITERS,
+            currency = state.currency,
+            recentMileage = tripInputs?.recentMileage ?: state.averageMileage,
+            lastRate = tripInputs?.lastRate,
+            onDismiss = { showTripDialog = false }
+        )
+    }
+
     if (pumpToEdit != null) {
         var editName by remember { mutableStateOf(pumpToEdit!!.name) }
         AlertDialog(
@@ -280,6 +308,7 @@ fun NextFillUpCard(
     distanceUnit: DistanceUnit,
     volumeUnit: VolumeUnit,
     entryCount: Int = 0,
+    isEv: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     val distanceLabel = UnitConverter.getDistanceUnitLabel(distanceUnit)
@@ -309,9 +338,16 @@ fun NextFillUpCard(
                 .padding(Dimens.spacingMd)
         ) {
             Text(
-                text = "Next Fill-Up",
+                text = FuelLabels.nextFillTitle(isEv),
                 style = MaterialTheme.typography.titleMedium
             )
+            if (prediction.reserveAmount > 0) {
+                Text(
+                    text = "Reserve: ${"%.2f".format(prediction.reserveAmount)} ${UnitConverter.getVolumeUnitLabel(volumeUnit)}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
             Spacer(modifier = Modifier.height(Dimens.spacingSm))
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -319,7 +355,7 @@ fun NextFillUpCard(
             ) {
                 Column {
                     Text(
-                        text = "Refuel after",
+                        text = FuelLabels.refuelAfter(isEv),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -355,7 +391,7 @@ fun NextFillUpCard(
                 ) {
                     Column {
                         Text(
-                            text = "Refuel at odometer",
+                            text = FuelLabels.predictedChargeOdo(isEv),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

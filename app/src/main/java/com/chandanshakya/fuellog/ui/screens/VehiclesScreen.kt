@@ -117,8 +117,8 @@ fun VehiclesScreen(
             defaultDistanceUnit = state.defaultDistanceUnit,
             defaultVolumeUnit = state.defaultVolumeUnit,
             onDismiss = { showAddDialog = false },
-            onSave = { name, vehicleType, distanceUnit, volumeUnit, tankCapacity ->
-                viewModel.addVehicle(name, vehicleType, distanceUnit, volumeUnit, tankCapacity)
+            onSave = { form ->
+                viewModel.addVehicle(form)
                 showAddDialog = false
             }
         )
@@ -130,15 +130,19 @@ fun VehiclesScreen(
             defaultDistanceUnit = state.defaultDistanceUnit,
             defaultVolumeUnit = state.defaultVolumeUnit,
             onDismiss = { vehicleToEdit = null },
-            onSave = { name, vehicleType, distanceUnit, volumeUnit, tankCapacity ->
+            onSave = { form ->
                 vehicleToEdit?.let { existing ->
-                    viewModel.updateVehicle(existing.copy(
-                        name = name,
-                        vehicleType = vehicleType,
-                        distanceUnit = distanceUnit,
-                        volumeUnit = volumeUnit,
-                        tankCapacity = tankCapacity
-                    ))
+                    viewModel.updateVehicle(
+                        existing.copy(
+                            name = form.name,
+                            vehicleType = form.vehicleType,
+                            fuelType = form.fuelType,
+                            distanceUnit = form.distanceUnit,
+                            volumeUnit = form.volumeUnit,
+                            tankCapacity = form.tankCapacity,
+                            reserveAmount = form.reserveAmount
+                        )
+                    )
                 }
                 vehicleToEdit = null
             }

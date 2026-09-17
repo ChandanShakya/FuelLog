@@ -24,6 +24,8 @@ import com.chandanshakya.fuellog.util.Money
 import com.chandanshakya.fuellog.util.adjacentMileagePairs
 import com.chandanshakya.fuellog.util.MileageCalculator
 import com.chandanshakya.fuellog.util.Validation
+import com.chandanshakya.fuellog.util.computeRecencyWeightedMileage
+import com.chandanshakya.fuellog.util.lastFuelRate
 import com.chandanshakya.fuellog.util.predictNextFillUp
 import com.chandanshakya.fuellog.util.observeCapacitySuggestion
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -112,13 +114,13 @@ class FuelLogViewModel(
         val volumeUnit = v?.volumeUnit ?: VolumeUnit.LITERS
         val pairs = sortedEntries.adjacentMileagePairs({ it.entry.odometer }, { it.entry.fuelVolume }, distanceUnit, volumeUnit)
 
-        // pairs[i] is the mileage for the segment ending at entry i+1
-        // (distance since previous fill / volume added at this fill).
-        // Align it so each card shows "what this refuel earned".
+        // pairs[i] = distance(entry[i] → entry[i+1]) / volume at entry[i+1].
+        // That efficiency is what the earlier fill earned once the tank was used up,
+        // so show it on entry[i]. The newest fill has no completed segment yet.
         val entriesWithMileage = sortedEntries.mapIndexed { index, entryWithPump ->
             EntryWithMileage(
                 entry = entryWithPump.entry,
-                mileage = pairs.getOrNull(index - 1)?.mileage,
+                mileage = pairs.getOrNull(index)?.mileage,
                 pumpName = entryWithPump.pumpName
             )
         }.reversed()
@@ -149,9 +151,30 @@ class FuelLogViewModel(
         predictNextFillUp(
             entries = entries,
             odometerReadings = readings,
-            tankCapacity = vehicle.tankCapacity,
+            vehicle = vehicle
+        )
+    }.flowOn(Dispatchers.Default).stateIn(
+        scope = viewModelScope,
+        started = SharingStarted.WhileSubscribed(5000),
+        initialValue = null
+    )
+
+    /** Last price/unit and recent mileage for the trip calculator. */
+    val tripInputs: StateFlow<TripInputs?> = combine(
+        allEntries,
+        vehicleFlow
+    ) { entries, vehicle ->
+        if (vehicle == null) return@combine null
+        val sorted = entries.sortedBy { it.odometer }
+        val mileage = computeRecencyWeightedMileage(
+            sorted.filter { it.fuelVolume > 0 },
             distanceUnit = vehicle.distanceUnit,
             volumeUnit = vehicle.volumeUnit
+        )
+        TripInputs(
+            recentMileage = mileage,
+            lastRate = lastFuelRate(sorted),
+            currency = null
         )
     }.flowOn(Dispatchers.Default).stateIn(
         scope = viewModelScope,
@@ -262,6 +285,12 @@ data class FuelLogState(
     val totalFuel: Double = 0.0,
     val totalCost: Double = 0.0,
     val currency: String = "USD"
+)
+
+data class TripInputs(
+    val recentMileage: Double?,
+    val lastRate: Double?,
+    val currency: String?
 )
 
 data class EntryWithMileage(

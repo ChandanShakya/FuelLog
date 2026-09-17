@@ -112,6 +112,10 @@ fun InsightsScreen(
                     capacitySuggestion = capacitySuggestion,
                     recentMileage = recentMileage,
                     onApplyCapacity = { viewModel.applySuggestedCapacity(it) },
+                    monthly = state.monthly,
+                    currency = state.currency,
+                    volumeUnit = volumeUnit,
+                    distanceUnit = distanceUnit,
                     modifier = Modifier.fillMaxSize()
                 )
             }
@@ -141,6 +145,7 @@ fun StatisticsGrid(
     capacitySuggestion: com.chandanshakya.fuellog.util.CapacitySuggestion? = null,
     recentMileage: Double? = null,
     onApplyCapacity: (Double) -> Unit = {},
+    monthly: List<com.chandanshakya.fuellog.data.backup.MonthlySummary.MonthBucket> = emptyList(),
     modifier: Modifier = Modifier
 ) {
     val efficiencyLabel = UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)
@@ -150,6 +155,46 @@ fun StatisticsGrid(
         contentPadding = PaddingValues(bottom = Dimens.spacingXl),
         verticalArrangement = Arrangement.spacedBy(Dimens.spacingMd)
     ) {
+        if (monthly.isNotEmpty()) {
+            item {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    elevation = Dimens.cardElevation()
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth().padding(Dimens.spacingMd)) {
+                        Text("Monthly Summary", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            "Last ${monthly.size} month${if (monthly.size != 1) "s" else ""}",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(Dimens.spacingSm))
+                        monthly.forEach { m ->
+                            Row(
+                                modifier = Modifier.fillMaxWidth().padding(vertical = 4.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Text(m.yearMonth, style = MaterialTheme.typography.bodyMedium)
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        CurrencyFormatter.formatCurrency(m.cost, currency),
+                                        style = MaterialTheme.typography.bodyLarge
+                                    )
+                                    Text(
+                                        "${"%.0f".format(m.distance)} ${UnitConverter.getDistanceUnitLabel(distanceUnit)} · " +
+                                                "${"%.2f".format(m.volume)} ${UnitConverter.getVolumeUnitLabel(volumeUnit)}" +
+                                                (m.mileage?.let { " · ${"%.2f".format(it)} $efficiencyLabel" } ?: ""),
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
         if (mileageDataPoints.isNotEmpty()) {
             item {
                 Card(

@@ -55,7 +55,7 @@ class FuelLogViewModelTest {
     fun resolveOrCreatePump_newPump_insertsAndReturnsId() = runTest {
         val vm = createViewModel()
         val id = vm.resolveOrCreatePump("Shell")
-        assertTrue(id > 0)
+        assertTrue(id != null && id > 0)
         assertEquals("Shell", fakeFuelPumpDao.pumps.first().name)
     }
 
@@ -71,24 +71,24 @@ class FuelLogViewModelTest {
     }
 
     @Test
-    fun resolveOrCreatePump_emptyString_returnsZero() = runTest {
+    fun resolveOrCreatePump_emptyString_returnsNull() = runTest {
         val vm = createViewModel()
         val id = vm.resolveOrCreatePump("")
-        assertEquals(0L, id)
+        assertNull(id)
     }
 
     @Test
-    fun resolveOrCreatePump_whitespaceOnly_returnsZero() = runTest {
+    fun resolveOrCreatePump_whitespaceOnly_returnsNull() = runTest {
         val vm = createViewModel()
         val id = vm.resolveOrCreatePump("   ")
-        assertEquals(0L, id)
+        assertNull(id)
     }
 
     @Test
     fun resolveOrCreatePump_trimsWhitespace() = runTest {
         val vm = createViewModel()
         val id = vm.resolveOrCreatePump("  Shell  ")
-        assertTrue(id > 0)
+        assertTrue(id != null && id > 0)
         assertEquals("Shell", fakeFuelPumpDao.pumps.first().name)
     }
 
@@ -269,7 +269,12 @@ class FakeFuelPumpDao : FuelPumpDao {
 class FakeOdometerReadingDao : OdometerReadingDao {
     val readings = mutableListOf<OdometerReading>()
     override fun getByVehicle(vehicleId: Long) = flowOf(readings.filter { it.vehicleId == vehicleId })
+    override suspend fun getByVehicleList(vehicleId: Long) = readings.filter { it.vehicleId == vehicleId }
     override suspend fun insert(reading: OdometerReading): Long { readings.add(reading); return reading.id }
+    override suspend fun updateAll(readings: List<OdometerReading>) {
+        this.readings.clear()
+        this.readings.addAll(readings)
+    }
     override suspend fun deleteById(id: Long) { readings.removeAll { it.id == id } }
     override suspend fun deleteAll() { readings.clear() }
     override suspend fun getAll() = readings.toList()

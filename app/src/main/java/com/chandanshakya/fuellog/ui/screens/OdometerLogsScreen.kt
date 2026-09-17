@@ -13,12 +13,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -49,13 +49,13 @@ import java.time.temporal.ChronoUnit
 fun OdometerLogsScreen(
     vehicleId: Long,
     onNavigateBack: () -> Unit,
-    onAddReading: () -> Unit,
     viewModel: FuelLogViewModel = viewModel(factory = FuelLogViewModel.factory(vehicleId))
 ) {
     val readings by viewModel.odometerReadings.collectAsStateWithLifecycle()
     val vehicle = viewModel.fuelLogState.collectAsStateWithLifecycle().value.vehicle
     val distanceUnit = vehicle?.distanceUnit ?: DistanceUnit.KM
     var readingToDelete by remember { mutableStateOf<OdometerReading?>(null) }
+    var showAddDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -67,6 +67,14 @@ fun OdometerLogsScreen(
                     }
                 }
             )
+        },
+        floatingActionButton = {
+            FloatingActionButton(
+                onClick = { showAddDialog = true },
+                containerColor = MaterialTheme.colorScheme.primary
+            ) {
+                Icon(painter = painterResource(R.drawable.ic_add), contentDescription = "Log odometer reading")
+            }
         }
     ) { paddingValues ->
         Box(
@@ -79,7 +87,7 @@ fun OdometerLogsScreen(
                 EmptyState(
                     icon = painterResource(R.drawable.ic_speed),
                     title = "No Odometer Readings",
-                    description = "Tap the odometer button on the fuel log screen to record readings"
+                    description = "Tap + to record a check-in without a fuel purchase. New readings update next fill-up prediction."
                 )
             } else {
                 LazyColumn(
@@ -96,6 +104,17 @@ fun OdometerLogsScreen(
                 }
             }
         }
+    }
+
+    if (showAddDialog) {
+        OdometerReadingDialog(
+            distanceUnit = distanceUnit,
+            onDismiss = { showAddDialog = false },
+            onSave = { date, odometer ->
+                viewModel.addOdometerReading(date, odometer)
+                showAddDialog = false
+            }
+        )
     }
 
     readingToDelete?.let { reading ->

@@ -24,6 +24,17 @@ data class PumpMileageStat(
     val worstMileage: Double
 )
 
+/**
+ * Per-fill history for one pump.
+ *
+ * Mileage is **forward-looking and attributed to the earlier fill**: the
+ * distance driven after filling at this pump, divided by the volume added at
+ * the *next* fill (the fuel that covered that distance). This answers
+ * "what efficiency did I get after buying fuel here?" and only makes sense
+ * when the earlier fill was full/near-full — otherwise prior tank fuel mixes in.
+ *
+ * UI labels should say something like "efficiency after fills at this pump".
+ */
 fun computePumpFillHistory(
     entriesSortedByOdometer: List<FuelEntryWithPump>,
     pumpId: Long?,
@@ -37,6 +48,11 @@ fun computePumpFillHistory(
         .map { it.detail }
 }
 
+/**
+ * Aggregate stats per pump. See [computePumpFillHistory] for mileage attribution.
+ * [distanceUnit]/[volumeUnit] document that values are already in user units
+ * (raw odometer/volume are not converted here).
+ */
 fun computePumpMileageStats(
     entriesSortedByOdometer: List<FuelEntryWithPump>,
     distanceUnit: DistanceUnit = DistanceUnit.KM,

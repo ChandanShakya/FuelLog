@@ -16,8 +16,8 @@ data class FillUpPrediction(
 )
 
 /**
- * Compute recency-weighted mileage from full-tank pairs using an EWMA.
- * Only full-tank entries where fuelVolume > 0 and distance > 0 are considered.
+ * Compute recency-weighted mileage from adjacent fill pairs using an EWMA.
+ * Only pairs where fuelVolume > 0 and distance > 0 are considered.
  */
 fun computeRecencyWeightedMileage(
     entries: List<FuelEntry>,
@@ -27,7 +27,9 @@ fun computeRecencyWeightedMileage(
 ): Double? {
     if (entries.size < 2) return null
 
-    val mileages = entries.adjacentMileagePairs({ it.odometer }, { it.fuelVolume }, distanceUnit, volumeUnit).map { it.mileage }
+    val mileages = entries
+        .adjacentMileagePairs({ it.odometer }, { it.fuelVolume }, distanceUnit, volumeUnit)
+        .map { it.mileage }
     if (mileages.isEmpty()) return null
 
     val alpha = 2.0 / (effectiveWindow + 1)
@@ -39,15 +41,56 @@ fun computeRecencyWeightedMileage(
 }
 
 /**
- * Predict the next fill-up based on recency-weighted mileage, tank capacity,
- * and the most recent odometer point (fuel entry or standalone reading).
+ * Estimate fuel left in the tank at [latestOdo] by walking fill history.
  *
- * @param entries all fuel entries sorted by odometer ASC
- * @param odometerReadings standalone readings sorted by odometer ASC
- * @param tankCapacity in the vehicle's volume unit
- * @param distanceUnit for the result
- * @param volumeUnit for capacity conversion
- * @param recentWindowSize EWMA effective window for mileage (default 5)
+ * Full-tank fills reset the tank to [tankCapacity]. Partial fills add volume
+ * (capped at capacity). Standalone odometer readings after the last fill reduce
+ * remaining range by distance driven / mileage.
+ */
+internal fun estimateRemainingDistance(
+    entries: List<FuelEntry>,
+    odometerReadings: List<OdometerReading>,
+    tankCapacity: Double,
+    recentMileage: Double
+): Pair<Double, Double>? {
+    if (recentMileage <= 0 || tankCapacity <= 0) return null
+
+    val fills = entries.filter { it.fuelVolume > 0 }.sortedBy { it.odometer }
+    val readings = odometerReadings.sortedBy { it.odometer }
+
+    val latestFuelOdo = fills.lastOrNull()?.odometer
+    val latestReadingOdo = readings.lastOrNull()?.odometer
+    val latestOdo = maxOf(latestFuelOdo ?: 0.0, latestReadingOdo ?: 0.0)
+    if (latestOdo <= 0.0 && fills.isEmpty()) return null
+
+    // Track estimated fuel in tank at the last fuel event.
+    var fuelInTank: Double? = null
+    var lastFillOdo = 0.0
+    for (fill in fills) {
+        val previousFuel = fuelInTank
+        fuelInTank = when {
+            fill.isFullTank -> tankCapacity
+            previousFuel != null -> minOf(tankCapacity, previousFuel + fill.fuelVolume)
+            // Partial fill with unknown prior level: treat added volume as current fuel
+            // (optimistic lower bound on range after that fill).
+            else -> minOf(tankCapacity, fill.fuelVolume)
+        }
+        lastFillOdo = fill.odometer
+    }
+
+    val fuelAtLastFill = fuelInTank ?: return null
+    val distanceSinceLastFill = (latestOdo - lastFillOdo).coerceAtLeast(0.0)
+    val remaining = fuelAtLastFill * recentMileage - distanceSinceLastFill
+    return latestOdo to remaining.coerceAtLeast(0.0)
+}
+
+/**
+ * Predict the next fill-up from recency-weighted mileage, tank capacity,
+ * the latest odometer point (fuel entry **or** standalone reading), and fuel
+ * estimated to be left after that point.
+ *
+ * Logging a new odometer reading after a fill reduces remaining distance and
+ * moves the predicted date/odometer earlier.
  */
 fun predictNextFillUp(
     entries: List<FuelEntry>,
@@ -60,22 +103,20 @@ fun predictNextFillUp(
     if (tankCapacity == null || tankCapacity <= 0) return null
 
     val usableEntries = entries.filter { it.fuelVolume > 0 }.sortedBy { it.odometer }
-    val recentMileage = computeRecencyWeightedMileage(usableEntries, recentWindowSize, distanceUnit, volumeUnit) ?: return null
+    val recentMileage = computeRecencyWeightedMileage(
+        usableEntries, recentWindowSize, distanceUnit, volumeUnit
+    ) ?: return null
 
-    // Find the most recent odometer point (highest odometer from any source)
-    val latestFuelOdo = entries.maxOfOrNull { it.odometer } ?: 0.0
-    val latestReadingOdo = odometerReadings.maxOfOrNull { it.odometer } ?: 0.0
-    val latestOdo = maxOf(latestFuelOdo, latestReadingOdo)
+    val (latestOdo, remainingDistance) = estimateRemainingDistance(
+        entries = usableEntries,
+        odometerReadings = odometerReadings,
+        tankCapacity = tankCapacity,
+        recentMileage = recentMileage
+    ) ?: return null
 
-    // Mileage is in user's units (e.g. km/L or mi/gal), capacity is in user's volume unit.
-    // remaining distance = capacity * mileage, both in user units.
-    val remainingDistance = tankCapacity * recentMileage
-
-    // Estimate driving frequency: average km/day over the last 30 days
     val today = LocalDate.now()
     val thirtyDaysAgo = today.minusDays(30)
 
-    // Collect all odometer points (entries + readings) from last 30 days
     val recentPoints = mutableListOf<Pair<LocalDate, Double>>()
     for (entry in entries) {
         if (!entry.date.isBefore(thirtyDaysAgo)) {
@@ -88,7 +129,9 @@ fun predictNextFillUp(
         }
     }
 
-    val predictedDate = if (recentPoints.size >= 2) {
+    val predictedDate = if (remainingDistance <= 0) {
+        today
+    } else if (recentPoints.size >= 2) {
         val sorted = recentPoints.sortedBy { it.first }
         val earliest = sorted.first()
         val latest = sorted.last()
@@ -96,7 +139,9 @@ fun predictNextFillUp(
         val distanceDriven = latest.second - earliest.second
         if (distanceDriven > 0) {
             val avgDistancePerDay = distanceDriven / daysBetween
-            val daysUntilEmpty = if (avgDistancePerDay > 0) (remainingDistance / avgDistancePerDay).toLong() else 0L
+            val daysUntilEmpty = if (avgDistancePerDay > 0) {
+                (remainingDistance / avgDistancePerDay).toLong()
+            } else 0L
             today.plusDays(daysUntilEmpty)
         } else null
     } else null

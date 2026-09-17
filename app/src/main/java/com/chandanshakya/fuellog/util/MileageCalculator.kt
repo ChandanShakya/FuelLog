@@ -62,5 +62,6 @@ object MileageCalculator {
         return entries.sumOf { it.fuelVolume }
     }
 
-    fun calculateTotalCost(entries: List<FuelEntry>): Double = entries.sumOf { it.fuelCost }
+    fun calculateTotalCost(entries: List<FuelEntry>): Double =
+        Money.sumCents(entries.map { it.fuelCost })
 }

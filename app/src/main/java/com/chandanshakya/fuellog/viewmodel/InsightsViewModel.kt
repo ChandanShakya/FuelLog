@@ -1,6 +1,5 @@
 package com.chandanshakya.fuellog.viewmodel
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -14,6 +13,7 @@ import com.chandanshakya.fuellog.data.db.VehicleDao
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.util.CapacitySuggestion
+import com.chandanshakya.fuellog.util.Money
 import com.chandanshakya.fuellog.util.adjacentMileagePairs
 import com.chandanshakya.fuellog.util.MileageCalculator
 import com.chandanshakya.fuellog.util.computeRecencyWeightedMileage
@@ -96,7 +96,7 @@ class InsightsViewModel(
         } else 0.0
 
         val totalFuelRaw = sortedEntries.sumOf { it.fuelVolume }
-        val totalCost = sortedEntries.sumOf { it.fuelCost }
+        val totalCost = Money.sumCents(sortedEntries.map { it.fuelCost })
 
         InsightsState(
             vehicle = v,

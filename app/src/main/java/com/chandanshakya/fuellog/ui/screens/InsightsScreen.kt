@@ -281,7 +281,7 @@ fun StatisticsGrid(
                 )
 
                 InfoCard(
-                    label = "Cost per km",
+                    label = "Cost per ${UnitConverter.getDistanceUnitLabel(distanceUnit)}",
                     value = costPerKm?.let { CurrencyFormatter.formatCurrency(it, currency) } ?: "N/A",
                     icon = painterResource(R.drawable.ic_point_of_sale),
                     modifier = Modifier.weight(1f)
@@ -332,6 +332,11 @@ fun StatisticsGrid(
                     Text(
                         text = "Mileage by Fuel Pump",
                         style = MaterialTheme.typography.titleMedium
+                    )
+                    Text(
+                        text = "Avg efficiency after fills at each pump (segment uses the next fill's volume)",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
                     Spacer(modifier = Modifier.height(Dimens.spacingMd))

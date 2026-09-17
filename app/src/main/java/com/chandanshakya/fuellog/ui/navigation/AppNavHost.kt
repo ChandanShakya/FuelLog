@@ -32,12 +32,17 @@ private fun encodeRoute(screen: Screen): String = when (screen) {
 
 private fun decodeRoute(str: String): Screen {
     val parts = str.split(":")
-    return when (parts[0]) {
+    return when (parts.getOrNull(0)) {
         "V" -> Screen.Vehicles
-        "F" -> Screen.FuelLog(parts[1].toLong())
-        "I" -> Screen.Insights(parts[1].toLong())
-        "O" -> Screen.OdometerLogs(parts[1].toLong())
-        "P" -> Screen.PumpDetail(parts[1].toLong(), parts[2].toLong().takeIf { it != -1L })
+        "F" -> parts.getOrNull(1)?.toLongOrNull()?.let { Screen.FuelLog(it) } ?: Screen.Vehicles
+        "I" -> parts.getOrNull(1)?.toLongOrNull()?.let { Screen.Insights(it) } ?: Screen.Vehicles
+        "O" -> parts.getOrNull(1)?.toLongOrNull()?.let { Screen.OdometerLogs(it) } ?: Screen.Vehicles
+        "P" -> {
+            val vehicleId = parts.getOrNull(1)?.toLongOrNull()
+            val pumpId = parts.getOrNull(2)?.toLongOrNull()
+            if (vehicleId != null) Screen.PumpDetail(vehicleId, pumpId?.takeIf { it != -1L })
+            else Screen.Vehicles
+        }
         "S" -> Screen.Settings
         else -> Screen.Vehicles
     }
@@ -48,16 +53,20 @@ fun AppNavHost() {
     var backStackStr by rememberSaveable { mutableStateOf("V") }
 
     val routes = remember(backStackStr) {
-        backStackStr.split("|").map { decodeRoute(it) }
+        backStackStr.split("|").mapNotNull { token ->
+            token.takeIf { it.isNotBlank() }?.let { decodeRoute(it) }
+        }.ifEmpty { listOf(Screen.Vehicles) }
     }
     val currentScreen = routes.last()
 
     fun navigate(screen: Screen) {
-        backStackStr = backStackStr + "|" + encodeRoute(screen)
+        val encoded = encodeRoute(screen)
+        if (encodeRoute(currentScreen) == encoded) return
+        backStackStr = backStackStr + "|" + encoded
     }
 
     fun popBack(): Boolean {
-        val parts = backStackStr.split("|")
+        val parts = backStackStr.split("|").filter { it.isNotBlank() }
         if (parts.size > 1) {
             backStackStr = parts.dropLast(1).joinToString("|")
             return true
@@ -66,7 +75,7 @@ fun AppNavHost() {
     }
 
     BackHandler(enabled = routes.size > 1) {
-        backStackStr = backStackStr.split("|").dropLast(1).joinToString("|")
+        popBack()
     }
 
     AnimatedContent(
@@ -114,8 +123,7 @@ fun AppNavHost() {
                 vehicleId = screen.vehicleId,
                 onNavigateBack = {
                     popBack()
-                },
-                onAddReading = {}
+                }
             )
 
             is Screen.PumpDetail -> PumpDetailScreen(

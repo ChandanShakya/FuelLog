@@ -1,6 +1,5 @@
 package com.chandanshakya.fuellog.viewmodel
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -13,12 +12,15 @@ import com.chandanshakya.fuellog.data.db.FuelPumpDao
 import com.chandanshakya.fuellog.data.db.OdometerReadingDao
 import com.chandanshakya.fuellog.data.db.UserSettingsDao
 import com.chandanshakya.fuellog.data.db.VehicleDao
+import com.chandanshakya.fuellog.data.model.DistanceUnit
 import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.FuelPump
 import com.chandanshakya.fuellog.data.model.OdometerReading
 import com.chandanshakya.fuellog.data.model.Vehicle
+import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.util.CapacitySuggestion
 import com.chandanshakya.fuellog.util.FillUpPrediction
+import com.chandanshakya.fuellog.util.Money
 import com.chandanshakya.fuellog.util.adjacentMileagePairs
 import com.chandanshakya.fuellog.util.MileageCalculator
 import com.chandanshakya.fuellog.util.Validation
@@ -33,6 +35,7 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.flatMapLatest
 import kotlinx.coroutines.flow.flowOn
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.time.LocalDate
@@ -67,8 +70,9 @@ class FuelLogViewModel(
     private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }
     private val settingsFlow = userSettingsDao.getSettings().distinctUntilChanged()
 
-    private val allEntries: StateFlow<List<FuelEntry>> = currentVehicleId
-        .flatMapLatest { fuelEntryDao.getAllByVehicle(it) }
+    // Single joined query; plain entries derived from it (one DB subscription, not two).
+    private val allEntriesWithPump = currentVehicleId
+        .flatMapLatest { fuelEntryDao.getAllByVehicleWithPump(it) }
         .flowOn(Dispatchers.Default)
         .stateIn(
             scope = viewModelScope,
@@ -76,9 +80,8 @@ class FuelLogViewModel(
             initialValue = emptyList()
         )
 
-    private val allEntriesWithPump = currentVehicleId
-        .flatMapLatest { fuelEntryDao.getAllByVehicleWithPump(it) }
-        .flowOn(Dispatchers.Default)
+    private val allEntries: StateFlow<List<FuelEntry>> = allEntriesWithPump
+        .map { list -> list.map { it.entry } }
         .stateIn(
             scope = viewModelScope,
             started = SharingStarted.WhileSubscribed(5000),
@@ -105,12 +108,19 @@ class FuelLogViewModel(
         settingsFlow
     ) { entriesWithPump, v, settings ->
         val sortedEntries = entriesWithPump.sortedBy { it.entry.odometer }
-        val distanceUnit = v?.distanceUnit ?: com.chandanshakya.fuellog.data.model.DistanceUnit.KM
-        val volumeUnit = v?.volumeUnit ?: com.chandanshakya.fuellog.data.model.VolumeUnit.LITERS
+        val distanceUnit = v?.distanceUnit ?: DistanceUnit.KM
+        val volumeUnit = v?.volumeUnit ?: VolumeUnit.LITERS
         val pairs = sortedEntries.adjacentMileagePairs({ it.entry.odometer }, { it.entry.fuelVolume }, distanceUnit, volumeUnit)
 
+        // pairs[i] is the mileage for the segment ending at entry i+1
+        // (distance since previous fill / volume added at this fill).
+        // Align it so each card shows "what this refuel earned".
         val entriesWithMileage = sortedEntries.mapIndexed { index, entryWithPump ->
-            EntryWithMileage(entry = entryWithPump.entry, mileage = pairs.getOrNull(index)?.mileage, pumpName = entryWithPump.pumpName)
+            EntryWithMileage(
+                entry = entryWithPump.entry,
+                mileage = pairs.getOrNull(index - 1)?.mileage,
+                pumpName = entryWithPump.pumpName
+            )
         }.reversed()
 
         val rawEntries = sortedEntries.map { it.entry }
@@ -121,7 +131,7 @@ class FuelLogViewModel(
             averageMileage = if (v != null) MileageCalculator.calculateAverageMileage(rawEntries, v.distanceUnit, v.volumeUnit) else null,
             totalDistance = if (v != null) MileageCalculator.calculateTotalDistance(rawEntries) else 0.0,
             totalFuel = if (v != null) MileageCalculator.calculateTotalFuel(rawEntries) else 0.0,
-            totalCost = MileageCalculator.calculateTotalCost(rawEntries),
+            totalCost = Money.sumCents(rawEntries.map { it.fuelCost }),
             currency = settings?.defaultCurrency ?: "USD"
         )
     }.flowOn(Dispatchers.Default).stateIn(
@@ -158,9 +168,9 @@ class FuelLogViewModel(
         initialValue = null
     )
 
-    suspend fun resolveOrCreatePump(name: String): Long {
+    suspend fun resolveOrCreatePump(name: String): Long? {
         val trimmed = name.trim()
-        if (trimmed.isEmpty()) return 0
+        if (trimmed.isEmpty()) return null
         val existing = fuelPumpDao.findByName(trimmed)
         if (existing != null) return existing.id
         return fuelPumpDao.insert(FuelPump(name = trimmed))
@@ -186,8 +196,8 @@ class FuelLogViewModel(
     ) {
         viewModelScope.launch {
             val vehicle = vehicleDao.getById(currentVehicleId.value)
-            val distanceUnit = vehicle?.distanceUnit ?: com.chandanshakya.fuellog.data.model.DistanceUnit.KM
-            val volumeUnit = vehicle?.volumeUnit ?: com.chandanshakya.fuellog.data.model.VolumeUnit.LITERS
+            val distanceUnit = vehicle?.distanceUnit ?: DistanceUnit.KM
+            val volumeUnit = vehicle?.volumeUnit ?: VolumeUnit.LITERS
             if (!Validation.validateFuelEntry(odometer, fuelVolume, fuelCost, distanceUnit, volumeUnit)) return@launch
             val resolvedPumpId = if (!pumpName.isNullOrBlank()) {
                 resolveOrCreatePump(pumpName)
@@ -199,7 +209,7 @@ class FuelLogViewModel(
                 date = date,
                 odometer = odometer,
                 fuelVolume = fuelVolume,
-                fuelCost = fuelCost,
+                fuelCost = Money.roundToCents(fuelCost),
                 fuelPumpId = resolvedPumpId,
                 isFullTank = isFullTank
             )

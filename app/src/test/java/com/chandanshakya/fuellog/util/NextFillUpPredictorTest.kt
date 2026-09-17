@@ -100,7 +100,7 @@ class NextFillUpPredictorTest {
         )
 
         // recentMileage = 10 km/L, tankCapacity = 40 L
-        // remainingDistance = 40 * 10 = 400 km
+        // tank full at 2000 → remainingDistance = 40 * 10 = 400 km
         val result = predictNextFillUp(
             entries = entries,
             odometerReadings = emptyList(),
@@ -113,6 +113,7 @@ class NextFillUpPredictorTest {
         assertEquals(400.0, result!!.remainingDistance, 0.001)
         assertEquals(10.0, result.recentMileage, 0.001)
         assertEquals(40.0, result.tankCapacity, 0.001)
+        assertEquals(2400.0, result.predictedOdometer!!, 0.001)
     }
 
     @Test
@@ -147,13 +148,13 @@ class NextFillUpPredictorTest {
     }
 
     @Test
-    fun `predictNextFillUp - uses odometer reading when more recent`() {
+    fun `predictNextFillUp - odometer reading after fill reduces remaining distance`() {
         val entries = listOf(
             fullEntry(1, 1000.0, 50.0, LocalDate.of(2024, 1, 1)),
             fullEntry(2, 1500.0, 50.0, LocalDate.of(2024, 1, 15))
         )
         val readings = listOf(
-            reading(1, 1800.0, LocalDate.of(2024, 2, 1))  // more recent than last entry
+            reading(1, 1800.0, LocalDate.of(2024, 2, 1))  // 300 km after full tank at 1500
         )
 
         val result = predictNextFillUp(
@@ -165,8 +166,32 @@ class NextFillUpPredictorTest {
         )
 
         assertNotNull(result)
-        // recentMileage = 500/50 = 10, remainingDistance = 40*10 = 400
-        assertEquals(400.0, result!!.remainingDistance, 0.001)
+        // full-tank range = 40 * 10 = 400; already drove 300 → remaining = 100
+        assertEquals(100.0, result!!.remainingDistance, 0.001)
+        assertEquals(1900.0, result.predictedOdometer!!, 0.001)
+    }
+
+    @Test
+    fun `predictNextFillUp - reading past empty clamps remaining to zero`() {
+        val entries = listOf(
+            fullEntry(1, 1000.0, 50.0, LocalDate.of(2024, 1, 1)),
+            fullEntry(2, 1500.0, 50.0, LocalDate.of(2024, 1, 15))
+        )
+        val readings = listOf(
+            reading(1, 2000.0, LocalDate.of(2024, 2, 1))  // beyond 400 km range
+        )
+
+        val result = predictNextFillUp(
+            entries = entries,
+            odometerReadings = readings,
+            tankCapacity = 40.0,
+            distanceUnit = DistanceUnit.KM,
+            volumeUnit = VolumeUnit.LITERS
+        )
+
+        assertNotNull(result)
+        assertEquals(0.0, result!!.remainingDistance, 0.001)
+        assertEquals(2000.0, result.predictedOdometer!!, 0.001)
     }
 
     @Test

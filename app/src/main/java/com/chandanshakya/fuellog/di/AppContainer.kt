@@ -10,15 +10,19 @@ import com.chandanshakya.fuellog.data.db.UserSettingsDao
 import com.chandanshakya.fuellog.data.db.VehicleDao
 
 class AppContainer(context: Context) {
-    private val db: AppDatabase = Room.databaseBuilder(
+    val database: AppDatabase = Room.databaseBuilder(
         context.applicationContext,
         AppDatabase::class.java,
         "fuellog-db"
-    ).fallbackToDestructiveMigration().build()
+    )
+        // Only wipe on OS/app downgrade. Missing migrations on upgrade throw —
+        // ship a real Migration when bumping AppDatabase.version.
+        .fallbackToDestructiveMigrationOnDowngrade()
+        .build()
 
-    val vehicleDao: VehicleDao = db.vehicleDao()
-    val fuelEntryDao: FuelEntryDao = db.fuelEntryDao()
-    val fuelPumpDao: FuelPumpDao = db.fuelPumpDao()
-    val odometerReadingDao: OdometerReadingDao = db.odometerReadingDao()
-    val userSettingsDao: UserSettingsDao = db.userSettingsDao()
+    val vehicleDao: VehicleDao = database.vehicleDao()
+    val fuelEntryDao: FuelEntryDao = database.fuelEntryDao()
+    val fuelPumpDao: FuelPumpDao = database.fuelPumpDao()
+    val odometerReadingDao: OdometerReadingDao = database.odometerReadingDao()
+    val userSettingsDao: UserSettingsDao = database.userSettingsDao()
 }

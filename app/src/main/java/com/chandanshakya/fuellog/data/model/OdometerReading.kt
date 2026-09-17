@@ -22,7 +22,7 @@ import java.time.LocalDate
 )
 data class OdometerReading(
     @PrimaryKey(autoGenerate = true) val id: Long = 0,
-    var vehicleId: Long,
-    var date: LocalDate,
-    var odometer: Double
+    val vehicleId: Long,
+    val date: LocalDate,
+    val odometer: Double
 )

@@ -1,6 +1,5 @@
 package com.chandanshakya.fuellog.viewmodel
 
-import android.app.Application
 import android.content.Context
 import android.net.Uri
 import androidx.lifecycle.ViewModel
@@ -10,7 +9,9 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.chandanshakya.fuellog.FuelLogApplication
+import com.chandanshakya.fuellog.data.backup.BackupException
 import com.chandanshakya.fuellog.data.backup.BackupManager
+import com.chandanshakya.fuellog.data.db.AppDatabase
 import com.chandanshakya.fuellog.data.db.FuelEntryDao
 import com.chandanshakya.fuellog.data.db.FuelPumpDao
 import com.chandanshakya.fuellog.data.db.OdometerReadingDao
@@ -32,20 +33,28 @@ class SettingsViewModel(
     private val vehicleDao: VehicleDao,
     private val fuelEntryDao: FuelEntryDao,
     private val fuelPumpDao: FuelPumpDao,
-    private val odometerReadingDao: OdometerReadingDao
+    private val odometerReadingDao: OdometerReadingDao,
+    private val database: AppDatabase
 ) : ViewModel() {
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as FuelLogApplication
-                SettingsViewModel(app.container.userSettingsDao, app.container.vehicleDao, app.container.fuelEntryDao, app.container.fuelPumpDao, app.container.odometerReadingDao)
+                SettingsViewModel(
+                    app.container.userSettingsDao,
+                    app.container.vehicleDao,
+                    app.container.fuelEntryDao,
+                    app.container.fuelPumpDao,
+                    app.container.odometerReadingDao,
+                    app.container.database
+                )
             }
         }
     }
 
     private val backupManager = BackupManager(
-        vehicleDao, fuelEntryDao, fuelPumpDao, odometerReadingDao, userSettingsDao
+        database, vehicleDao, fuelEntryDao, fuelPumpDao, odometerReadingDao, userSettingsDao
     )
 
     val settingsState: StateFlow<SettingsState> = userSettingsDao.getSettings()
@@ -109,8 +118,10 @@ class SettingsViewModel(
                     backupManager.importFromStream(stream)
                 }
                 _message.value = "Data imported successfully"
+            } catch (e: BackupException) {
+                _message.value = "Import failed: ${e.message}. Existing data was kept."
             } catch (e: Exception) {
-                _message.value = "Import failed: ${e.message}"
+                _message.value = "Import failed: ${e.message}. Existing data was kept."
             }
         }
     }

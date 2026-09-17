@@ -54,27 +54,69 @@ jobs:
 
       - name: Decode keystore
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$RELEASE_KEYSTORE_BASE64" ]; then
+            echo "RELEASE_KEYSTORE_BASE64 secret is missing" >&2
+            exit 1
+          fi
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > release.keystore
+          ls -la release.keystore
 
       - name: Build release APK and bundle
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        run: ./gradlew assembleRelease bundleRelease --no-daemon
+        env:
+          FUELLOG_STORE_FILE: ${{ github.workspace }}/release.keystore
+          FUELLOG_STORE_PASSWORD: ${{ secrets.FUELLOG_STORE_PASSWORD }}
+          FUELLOG_KEY_ALIAS: ${{ secrets.FUELLOG_KEY_ALIAS }}
+          FUELLOG_KEY_PASSWORD: ${{ secrets.FUELLOG_KEY_PASSWORD }}
+        run: |
+          if [ -z "$FUELLOG_STORE_PASSWORD" ] || [ -z "$FUELLOG_KEY_PASSWORD" ]; then
+            echo "FUELLOG_STORE_PASSWORD / FUELLOG_KEY_PASSWORD secrets are required for release signing" >&2
+            exit 1
+          fi
+          ./gradlew assembleRelease bundleRelease --no-daemon
 
       - name: Get version info
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         id: version
         run: |
-          VERSION_NAME=$(grep 'versionName' app/build.gradle.kts | grep -o '"[0-9.]*"' | tr -d '"' | head -1)
-          echo "VERSION_NAME=$VERSION_NAME" >> $GITHUB_OUTPUT
+          VERSION_NAME=$(sed -n 's/.*versionName = "\([^"]*\)".*/\1/p' app/build.gradle.kts | head -1)
+          VERSION_CODE=$(sed -n 's/.*versionCode = \([0-9]*\).*/\1/p' app/build.gradle.kts | head -1)
+          if [ -z "$VERSION_NAME" ]; then
+            echo "Could not read versionName from app/build.gradle.kts" >&2
+            exit 1
+          fi
+          echo "VERSION_NAME=$VERSION_NAME" >> "$GITHUB_OUTPUT"
+          echo "VERSION_CODE=$VERSION_CODE" >> "$GITHUB_OUTPUT"
+          echo "Resolved version: $VERSION_NAME (code $VERSION_CODE)"
 
-      - name: Find APK and AAB paths
+      - name: Locate release artifacts
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
         id: paths
         run: |
-          APK_PATH=$(find app/build/outputs -name "*.apk" -path "*/release/*" | head -1)
+          APK_PATH=$(find app/build/outputs \( -name "*-release.apk" -o -name "app-release.apk" \) | head -1)
+          if [ -z "$APK_PATH" ]; then
+            APK_PATH=$(find app/build/outputs -name "*.apk" -path "*/release/*" | head -1)
+          fi
           AAB_PATH=$(find app/build/outputs -name "*.aab" -path "*/release/*" | head -1)
-          echo "APK_PATH=$APK_PATH" >> $GITHUB_OUTPUT
-          echo "AAB_PATH=$AAB_PATH" >> $GITHUB_OUTPUT
+
+          if [ -z "$APK_PATH" ] || [ ! -f "$APK_PATH" ]; then
+            echo "Release APK not found under app/build/outputs" >&2
+            find app/build/outputs -type f | head -100 >&2 || true
+            exit 1
+          fi
+          if [ -z "$AAB_PATH" ] || [ ! -f "$AAB_PATH" ]; then
+            echo "Release AAB not found under app/build/outputs" >&2
+            exit 1
+          fi
+
+          echo "APK_PATH=$APK_PATH" >> "$GITHUB_OUTPUT"
+          echo "AAB_PATH=$AAB_PATH" >> "$GITHUB_OUTPUT"
+          echo "Will publish:"
+          echo "  $APK_PATH"
+          echo "  $AAB_PATH"
 
       - name: Create GitHub Release
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
@@ -82,10 +124,21 @@ jobs:
         with:
           tag_name: v${{ steps.version.outputs.VERSION_NAME }}
           name: FuelLog v${{ steps.version.outputs.VERSION_NAME }}
-          body: "FuelLog Android Fuel Tracker v${{ steps.version.outputs.VERSION_NAME }}"
+          body: |
+            FuelLog Android Fuel Tracker v${{ steps.version.outputs.VERSION_NAME }}
+
+            ## Install
+            - Download `app-release.apk` and install on a device (minSdk 26).
+            - Or use the `.aab` for Play / bundle tooling.
+
+            ## Notes
+            - Signing credentials are supplied via CI secrets only.
+            - Backup is transactional; failed imports keep existing data.
           files: |
             ${{ steps.paths.outputs.APK_PATH }}
             ${{ steps.paths.outputs.AAB_PATH }}
-          fail_on_unmatched_files: false
+          fail_on_unmatched_files: true
+          generate_release_notes: true
+          make_latest: true
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

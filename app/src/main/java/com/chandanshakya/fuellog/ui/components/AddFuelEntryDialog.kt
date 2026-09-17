@@ -41,6 +41,7 @@ import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.FuelPump
 import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.ui.theme.Dimens
+import com.chandanshakya.fuellog.util.Money
 import com.chandanshakya.fuellog.util.UnitConverter
 import com.chandanshakya.fuellog.util.Validation
 import java.time.LocalDate
@@ -234,7 +235,7 @@ fun AddFuelEntryDialog(
                                 val vol = newValue.toDoubleOrNull()
                                 val r = rate.toDoubleOrNull()
                                 if (vol != null && vol > 0 && r != null && r > 0) {
-                                    totalCost = "%.2f".format(vol * r)
+                                    totalCost = "%.2f".format(Money.cost(vol, r))
                                 }
                             },
                             label = "Fuel Volume ($volumeLabel)",
@@ -250,7 +251,7 @@ fun AddFuelEntryDialog(
                                 val vol = fuelVolume.toDoubleOrNull()
                                 val r = newValue.toDoubleOrNull()
                                 if (vol != null && vol > 0 && r != null && r > 0) {
-                                    totalCost = "%.2f".format(vol * r)
+                                    totalCost = "%.2f".format(Money.cost(vol, r))
                                 }
                             },
                             label = "Rate ($currency/$volumeLabel)",
@@ -273,7 +274,7 @@ fun AddFuelEntryDialog(
                                 val vol = newValue.toDoubleOrNull()
                                 val cost = totalCost.toDoubleOrNull()
                                 if (vol != null && vol > 0 && cost != null && cost > 0) {
-                                    rate = "%.2f".format(cost / vol)
+                                    rate = "%.2f".format(Money.rate(vol, cost) ?: 0.0)
                                 }
                             },
                             label = "Fuel Volume ($volumeLabel)",
@@ -290,7 +291,7 @@ fun AddFuelEntryDialog(
                                 val vol = fuelVolume.toDoubleOrNull()
                                 val cost = newValue.toDoubleOrNull()
                                 if (vol != null && vol > 0 && cost != null && cost > 0) {
-                                    rate = "%.2f".format(cost / vol)
+                                    rate = "%.2f".format(Money.rate(vol, cost) ?: 0.0)
                                 }
                             },
                             label = "Total Cost ($currency)",

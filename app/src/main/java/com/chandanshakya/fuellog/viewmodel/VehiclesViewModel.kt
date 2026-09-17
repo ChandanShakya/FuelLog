@@ -1,6 +1,5 @@
 package com.chandanshakya.fuellog.viewmodel
 
-import android.app.Application
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.ViewModelProvider.AndroidViewModelFactory.Companion.APPLICATION_KEY
@@ -28,14 +27,20 @@ import kotlinx.coroutines.launch
 class VehiclesViewModel(
     private val vehicleDao: VehicleDao,
     private val userSettingsDao: UserSettingsDao,
-    private val fuelEntryDao: FuelEntryDao
+    private val fuelEntryDao: FuelEntryDao,
+    private val odometerReadingDao: OdometerReadingDao
 ) : ViewModel() {
 
     companion object {
         val Factory: ViewModelProvider.Factory = viewModelFactory {
             initializer {
                 val app = this[APPLICATION_KEY] as FuelLogApplication
-                VehiclesViewModel(app.container.vehicleDao, app.container.userSettingsDao, app.container.fuelEntryDao)
+                VehiclesViewModel(
+                    app.container.vehicleDao,
+                    app.container.userSettingsDao,
+                    app.container.fuelEntryDao,
+                    app.container.odometerReadingDao
+                )
             }
         }
     }
@@ -97,9 +102,40 @@ class VehiclesViewModel(
                         entry.copy(odometer = newOdometer, fuelVolume = newFuelVolume)
                     }
                     fuelEntryDao.updateAll(convertedEntries)
+
+                    if (distanceChanged) {
+                        val readings = odometerReadingDao.getByVehicleList(vehicle.id)
+                        val convertedReadings = readings.map { reading ->
+                            reading.copy(
+                                odometer = UnitConverter.convertDistance(
+                                    reading.odometer, oldVehicle.distanceUnit, vehicle.distanceUnit
+                                )
+                            )
+                        }
+                        odometerReadingDao.updateAll(convertedReadings)
+                    }
                 }
+
+                // Capacity in the dialog is already converted when the user toggles volume unit.
+                // Still convert here when the numeric value is unchanged (covers any path that
+                // swaps units without rewriting the capacity field).
+                val tankCapacityNeedsConversion = volumeChanged &&
+                        oldVehicle.tankCapacity != null &&
+                        vehicle.tankCapacity != null &&
+                        oldVehicle.tankCapacity == vehicle.tankCapacity
+                val updatedVehicle = if (tankCapacityNeedsConversion) {
+                    vehicle.copy(
+                        tankCapacity = UnitConverter.convertVolume(
+                            oldVehicle.tankCapacity!!, oldVehicle.volumeUnit, vehicle.volumeUnit
+                        )
+                    )
+                } else {
+                    vehicle
+                }
+                vehicleDao.update(updatedVehicle)
+            } else {
+                vehicleDao.update(vehicle)
             }
-            vehicleDao.update(vehicle)
         }
     }
 

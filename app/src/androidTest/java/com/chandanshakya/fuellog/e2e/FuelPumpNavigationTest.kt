@@ -60,7 +60,8 @@ class FuelPumpNavigationTest {
         vehiclesViewModel = VehiclesViewModel(
             vehicleDao = database.vehicleDao(),
             userSettingsDao = database.userSettingsDao(),
-            fuelEntryDao = database.fuelEntryDao()
+            fuelEntryDao = database.fuelEntryDao(),
+            odometerReadingDao = database.odometerReadingDao()
         )
     }
 

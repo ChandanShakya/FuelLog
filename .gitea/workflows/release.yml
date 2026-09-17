@@ -44,8 +44,14 @@ jobs:
 
       - name: Build release APK and bundle
         if: forgejo.ref == 'refs/heads/main' && forgejo.event_name == 'push'
+        env:
+          RELEASE_KEYSTORE_BASE64: ${{ secrets.RELEASE_KEYSTORE_BASE64 }}
+          FUELLOG_STORE_FILE: release.keystore
+          FUELLOG_STORE_PASSWORD: ${{ secrets.FUELLOG_STORE_PASSWORD }}
+          FUELLOG_KEY_ALIAS: ${{ secrets.FUELLOG_KEY_ALIAS }}
+          FUELLOG_KEY_PASSWORD: ${{ secrets.FUELLOG_KEY_PASSWORD }}
         run: |
-          echo "${{ secrets.RELEASE_KEYSTORE_BASE64 }}" | base64 -d > release.keystore
+          echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > release.keystore
           ./gradlew assembleRelease bundleRelease --no-daemon
 
       - name: Get version info

@@ -19,6 +19,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -50,6 +51,20 @@ fun AddVehicleDialog(
     var volumeUnit by remember { mutableStateOf(vehicle?.volumeUnit ?: defaultVolumeUnit) }
     var tankCapacityText by remember { mutableStateOf(vehicle?.tankCapacity?.let { "%.2f".format(it) } ?: "") }
     var nameError by remember { mutableStateOf<String?>(null) }
+
+    // Keep the capacity field consistent when the user toggles volume unit in this dialog.
+    val previousVolumeUnit = remember { mutableStateOf(volumeUnit) }
+    LaunchedEffect(volumeUnit) {
+        val from = previousVolumeUnit.value
+        if (from != volumeUnit) {
+            val current = tankCapacityText.toDoubleOrNull()
+            if (current != null && current > 0) {
+                val converted = UnitConverter.convertVolume(current, from, volumeUnit)
+                tankCapacityText = "%.2f".format(converted)
+            }
+            previousVolumeUnit.value = volumeUnit
+        }
+    }
 
     val volumeLabel = UnitConverter.getVolumeUnitLabel(volumeUnit)
 

@@ -2,7 +2,7 @@
 
 A fuel tracking app for Android. Log fill-ups, track mileage across multiple vehicles, and get predictions for your next refuel.
 
-Built with Jetpack Compose, Room, and manual dependency injection. Ships at 1.2MB.
+Built with Jetpack Compose, Room, and manual dependency injection. Ships at ~1.2MB.
 
 ## Features
 
@@ -17,13 +17,14 @@ Built with Jetpack Compose, Room, and manual dependency injection. Ships at 1.2M
 - Next fill-up prediction: remaining distance and estimated date
 - Mileage trends, cost analysis, and fuel price tracking over time
 - Per-pump mileage comparisons with drill-down detail view
-- Standalone odometer check-ins to keep predictions accurate between fill-ups
+- Standalone odometer check-ins — a new reading reduces remaining range and updates the predicted date/odometer
+- Each fuel log card shows the efficiency earned by *that* refuel (distance since previous fill ÷ volume added at this fill)
 
 **Practical tools**
 - Auto-calculation: enter any two of volume, rate, cost and the third is computed
-- Unit support: km/miles, liters/gallons with automatic conversion on unit change
+- Unit support: km/miles, liters/gallons; changing a vehicle's units converts fill history, odometer readings, and tank capacity
 - Global currency setting applied across all vehicles
-- Backup and restore via JSON export/import (Storage Access Framework)
+- Backup and restore via JSON export/import (Storage Access Framework, transactional — a failed import keeps existing data)
 - Clear all data option with confirmation
 
 ## Tech stack
@@ -53,10 +54,28 @@ Install the debug APK on a device or emulator.
 
 ```bash
 ./gradlew assembleDebug      # debug build
-./gradlew assembleRelease    # release build (requires release.keystore)
+./gradlew test               # unit tests
 ```
 
-Release builds use R8 minification, resource shrinking, and locale stripping (English only).
+### Release signing
+
+Release credentials are **never** in source. Set these environment variables (or CI secrets):
+
+| Variable | Purpose |
+|----------|---------|
+| `FUELLOG_STORE_FILE` | Path to the keystore (defaults to `<root>/release.keystore`) |
+| `FUELLOG_STORE_PASSWORD` | Keystore password |
+| `FUELLOG_KEY_ALIAS` | Key alias (defaults to `fuellog`) |
+| `FUELLOG_KEY_PASSWORD` | Key password |
+
+```bash
+export FUELLOG_STORE_PASSWORD=...
+export FUELLOG_KEY_PASSWORD=...
+export FUELLOG_KEY_ALIAS=fuellog
+./gradlew assembleRelease
+```
+
+CI (GitHub Actions / Forgejo) injects the same names from repository secrets. Release builds use R8 minification, resource shrinking, and locale stripping (English only).
 
 ## Testing
 
@@ -67,15 +86,15 @@ Release builds use R8 minification, resource shrinking, and locale stripping (En
 ```
 
 Test coverage:
-- Unit tests: mileage calculators, tank capacity learner, fill-up predictor, currency formatting, unit conversion, validation, ViewModel logic
-- Instrumentation tests: Room operations, Compose UI interactions, full navigation flows across all screens
+- Unit tests: mileage calculators and per-entry attribution, tank capacity learner, fill-up predictor (including odometer-driven remaining range), money rounding, currency formatting (incl. concurrency), unit conversion, validation, ViewModel logic
+- Instrumentation tests: Room operations, Compose UI interactions, navigation flows
 
 ## Project structure
 
 ```
 app/src/main/java/com/chandanshakya/fuellog/
   data/
-    backup/       JSON export/import for backup/restore
+    backup/       JSON export/import (validated, transactional)
     db/           Room database, DAOs, type converters
     model/        Entity classes and enums
   ui/
@@ -84,7 +103,7 @@ app/src/main/java/com/chandanshakya/fuellog/
     navigation/   Screen sealed class, manual nav host with AnimatedContent
     screens/      Screen composables
   viewmodel/      ViewModels with factory-based instantiation
-  util/           Unit converter, currency formatter, mileage calculator,
+  util/           Unit converter, currency/money helpers, mileage calculator,
                   tank capacity learner, fill-up predictor
   di/             AppContainer (manual dependency injection)
 ```
@@ -101,11 +120,31 @@ Five tables with foreign key constraints:
 | `odometer_readings` | Standalone odometer check-ins between fill-ups |
 | `user_settings` | Global defaults: currency, distance unit, volume unit |
 
-Migrations are handled explicitly. `fallbackToDestructiveMigration()` is kept as a safety net for development builds.
+### Migrations
+
+Schema version is 11. **Do not bump the version without adding a real `Migration`.** The app uses `fallbackToDestructiveMigrationOnDowngrade()` only — upgrades with a missing migration fail loudly instead of silently wiping user data. Export Room schemas when adding migrations (`exportSchema` is currently false; enable it and commit schemas before the next version bump).
 
 ## How capacity learning works
 
-When you mark a fill-up as "full tank", the app records the fuel volume added. Between two consecutive full-tank fill-ups, the volume added approximates the actual tank capacity. The algorithm computes a median-based suggestion with confidence levels (low/medium/high) based on how many full-tank pairs are available. Suggestions appear on the Insights screen and are applied manually -- the app never overwrites your value.
+When you mark a fill-up as "full tank", the app records the fuel volume added. Between two consecutive full-tank fill-ups, the volume added approximates the actual tank capacity. The algorithm computes a median-based suggestion with confidence levels (low/medium/high) based on how many full-tank pairs are available. Suggestions appear on the Insights screen and are applied manually — the app never overwrites your value.
+
+## How next-fill prediction works
+
+1. Recency-weighted mileage (EWMA) from adjacent fill pairs.
+2. Estimated fuel in the tank at the last fill (full tank → capacity; partial → prior + volume, capped).
+3. Latest odometer point = max(last fill, standalone readings).
+4. Remaining distance = (fuel at last fill × mileage) − distance driven since that fill.
+5. Predicted date uses average daily distance over the last 30 days of points.
+
+Logging a new odometer reading without buying fuel immediately shortens remaining range and moves the predicted date earlier.
+
+## Money handling
+
+Costs are stored as `Double` for Room/JSON compatibility but are always rounded to 2 decimal places on save and when summing (`Money.roundToCents` / `Money.sumCents`). Display uses a per-thread `DecimalFormat` (thread-safe under concurrent Flow collection).
+
+## Backup
+
+Export writes versioned JSON. Import validates the entire payload first, then clears and inserts inside a single Room transaction — a parse/validation error leaves existing data untouched. Android Auto Backup is disabled; use in-app export for backups.
 
 ## License
 

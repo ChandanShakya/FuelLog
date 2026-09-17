@@ -117,7 +117,7 @@ const tech = [
   <body>
     <header class="nav">
       <div class="wrap nav-inner">
-        <a class="brand" href={site}>FuelLog</a>
+        <a class="brand" href={site}><span>FL</span>FuelLog</a>
         <nav aria-label="Primary">
           <ul class="nav-links">
             <li><a href="#features">Features</a></li>
@@ -142,28 +142,48 @@ const tech = [
               logging, and keep your data on the device.
             </p>
             <div class="btn-row">
-              <a class="btn" href={apk}>Download latest APK</a>
+              <a class="btn btn-primary" href={apk}>Download latest APK</a>
               <a class="btn btn-ghost" href={obtainium}>Add to Obtainium</a>
               <a class="btn btn-ghost" href={repo}>GitHub repository</a>
             </div>
           </div>
-          <div class="hero-card">
+          <div
+            class="hero-phone zoomable"
+            data-zoom-src="/shots/fuel-log.webp"
+            data-zoom-caption="Fuel log and prediction"
+            role="button"
+            tabindex="0"
+            aria-label="Open fuel log screenshot full size"
+          >
             <img
-              class="zoomable"
               src="/shots/fuel-log.webp"
               width="900"
               height="1930"
-              data-zoom-src="/shots/fuel-log.webp"
-              data-zoom-caption="Fuel log and prediction"
               alt="FuelLog fuel log screen showing average mileage, next fill-up prediction, and fill history"
             />
+            <div class="hero-phone-bar">
+              <strong>Fuel log</strong>
+              <span>Tap to zoom</span>
+            </div>
+          </div>
+        </div>
+        <div class="meta-strip">
+          <div class="wrap">
+            <span>Jetpack Compose</span>
+            <span>Room DB</span>
+            <span>Offline-first</span>
+            <span>~1.2 MB APK</span>
+            <span>MIT License</span>
           </div>
         </div>
       </section>
 
       <section id="features">
         <div class="wrap">
-          <h2>Features</h2>
+          <div class="section-head">
+            <h2>Features</h2>
+            <span class="section-tag">16 tools</span>
+          </div>
           <p class="section-intro">
             Everything in the app is built around daily logging: record what you bought, see how far
             it took you, and know when you should stop again.
@@ -181,10 +201,12 @@ const tech = [
 
       <section id="screens" class="alt">
         <div class="wrap">
-          <h2>Screens</h2>
+          <div class="section-head">
+            <h2>Screens</h2>
+            <span class="section-tag">Device shots</span>
+          </div>
           <p class="section-intro">
-            Real device screenshots from the app. Click any screen to open it full size.
-            Files live in <code>website/public/shots/</code> as WebP.
+            Real screenshots from the app. Click any card for the full screen.
           </p>
           <div class="shots">
             {shots.map((s) => (
@@ -196,7 +218,9 @@ const tech = [
                 tabindex="0"
                 aria-label={`Open ${s.cap} full size`}
               >
-                <img src={s.src} width="900" height="1930" loading="lazy" alt={s.alt} />
+                <div class="shot-frame">
+                  <img src={s.src} width="900" height="1930" loading="lazy" alt={s.alt} />
+                </div>
                 <figcaption>
                   {s.cap}
                   <span class="shot-hint">Click to enlarge</span>
@@ -209,7 +233,10 @@ const tech = [
 
       <section id="algorithms">
         <div class="wrap">
-          <h2>How the algorithms work</h2>
+          <div class="section-head">
+            <h2>How the algorithms work</h2>
+            <span class="section-tag">On-device math</span>
+          </div>
           <p class="section-intro">
             Calculators are pure functions in the codebase. They run on device data only; nothing is
             sent to a server for mileage or prediction.
@@ -280,7 +307,10 @@ const tech = [
 
       <section id="stack" class="alt">
         <div class="wrap">
-          <h2>Stack</h2>
+          <div class="section-head">
+            <h2>Stack</h2>
+            <span class="section-tag">Keep it small</span>
+          </div>
           <div class="grid-3">
             {tech.map((t) => (
               <div class="card">
@@ -294,7 +324,9 @@ const tech = [
 
       <section id="download" class="cta-band">
         <div class="wrap">
-          <h2>Get FuelLog</h2>
+          <div class="section-head">
+            <h2>Get FuelLog</h2>
+          </div>
           <p class="section-intro">
             Download the latest release APK from GitHub, or add the repository in Obtainium for
             update checks without a Play Store listing.

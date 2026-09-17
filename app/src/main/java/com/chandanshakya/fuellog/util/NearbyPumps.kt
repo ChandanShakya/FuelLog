@@ -46,8 +46,11 @@ object OverpassFuelPumps {
     private const val ENDPOINT = "https://overpass-api.de/api/interpreter"
     private const val USER_AGENT = "FuelLog/1.2 (Android; nearby pumps)"
 
+    /** Search radius for nearby stations (7 km). */
+    const val DEFAULT_RADIUS_METERS = 7000
+
     @Throws(Exception::class)
-    fun fetchNearby(lat: Double, lon: Double, radiusMeters: Int = 5000, limit: Int = 30): List<NearbyPump> {
+    fun fetchNearby(lat: Double, lon: Double, radiusMeters: Int = DEFAULT_RADIUS_METERS, limit: Int = 40): List<NearbyPump> {
         val query = """
             [out:json][timeout:25];
             (

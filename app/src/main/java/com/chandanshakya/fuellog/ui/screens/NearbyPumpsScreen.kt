@@ -89,11 +89,6 @@ fun NearbyPumpsScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(painter = painterResource(R.drawable.ic_arrow_back), contentDescription = "Back")
                     }
-                },
-                actions = {
-                    IconButton(onClick = { viewModel.refresh(context) }) {
-                        Icon(painter = painterResource(R.drawable.ic_analytics), contentDescription = "Refresh")
-                    }
                 }
             )
         }
@@ -166,7 +161,7 @@ fun NearbyPumpsScreen(
                         EmptyState(
                             icon = painterResource(R.drawable.ic_local_gas_station),
                             title = "No pumps found",
-                            description = "No fuel stations in OSM within ~5 km. Try again when you have a better signal."
+                            description = "No fuel stations in OSM within 7 km. Try again when you have a better signal."
                         )
                     }
 

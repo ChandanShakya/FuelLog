@@ -58,7 +58,7 @@ const features = [
   },
   {
     title: 'Nearby fuel pumps',
-    body: 'List OpenStreetMap stations within about five kilometres. Open the system maps app to navigate. No map SDK in the APK.',
+    body: 'List OpenStreetMap stations within about seven kilometres. Open the system maps app to navigate. No map SDK in the APK.',
   },
   {
     title: 'Units and currency',
@@ -82,6 +82,8 @@ const shots = [
   { src: '/shots/vehicles.webp', cap: 'Vehicles list', alt: 'FuelLog vehicles list with Dio scooter and Santro Magna car' },
   { src: '/shots/fuel-log.webp', cap: 'Fuel log and prediction', alt: 'Dio fuel log with average mileage, next fill-up prediction, and fill history' },
   { src: '/shots/add-fuel-entry.webp', cap: 'Add fuel entry', alt: 'Add Fuel Entry dialog with odometer, full tank, pump, and auto cost modes' },
+  { src: '/shots/odometer-logs.webp', cap: 'Odometer logs', alt: 'Odometer Logs list with dated distance check-ins' },
+  { src: '/shots/odometer-dialog.webp', cap: 'Log odometer reading', alt: 'Log Odometer Reading dialog without a fuel purchase' },
   { src: '/shots/insights-monthly.webp', cap: 'Monthly summary and trend', alt: 'Insights monthly summary and mileage trend chart' },
   { src: '/shots/insights-stats.webp', cap: 'Insights statistics', alt: 'Insights average mileage, fuel, cost, distance, and fuel price trend' },
   { src: '/shots/insights-pumps-tank.webp', cap: 'Pump stats and tank learning', alt: 'Mileage by fuel pump and tank capacity suggestion' },
@@ -298,11 +300,11 @@ const tech = [
               <h3>Nearby pumps</h3>
               <ol>
                 <li>Request device location permission and a single location fix.</li>
-                <li>Query OpenStreetMap Overpass for amenity=fuel within about 5 km.</li>
+                <li>Query OpenStreetMap Overpass for amenity=fuel within 7 km.</li>
                 <li>Sort by haversine distance.</li>
                 <li>Open the system maps app for navigation; FuelLog does not embed a map engine.</li>
               </ol>
-              <div class="formula">Overpass around:5000 · sort by haversine metres</div>
+              <div class="formula">Overpass around:7000 · sort by haversine metres</div>
             </article>
           </div>
         </div>

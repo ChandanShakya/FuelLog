@@ -78,12 +78,15 @@ const features = [
 ];
 
 const shots = [
-  { src: '/shots/vehicles.svg', cap: 'Vehicles list', alt: 'Vehicles list mockup' },
-  { src: '/shots/fuel-log.svg', cap: 'Fuel log and prediction', alt: 'Fuel log screen mockup' },
-  { src: '/shots/insights.svg', cap: 'Insights and monthly summary', alt: 'Insights screen mockup' },
-  { src: '/shots/nearby.svg', cap: 'Nearby pumps list', alt: 'Nearby fuel pumps mockup' },
-  { src: '/shots/trip.svg', cap: 'Trip cost calculator', alt: 'Trip cost dialog mockup' },
-  { src: '/shots/add-vehicle.svg', cap: 'Vehicle form and EV options', alt: 'Add vehicle form mockup' },
+  { src: '/shots/vehicles.webp', cap: 'Vehicles list', alt: 'FuelLog vehicles list with Dio scooter and Santro Magna car' },
+  { src: '/shots/fuel-log.webp', cap: 'Fuel log and prediction', alt: 'Dio fuel log with average mileage, next fill-up prediction, and fill history' },
+  { src: '/shots/add-fuel-entry.webp', cap: 'Add fuel entry', alt: 'Add Fuel Entry dialog with odometer, full tank, pump, and auto cost modes' },
+  { src: '/shots/insights-monthly.webp', cap: 'Monthly summary and trend', alt: 'Insights monthly summary and mileage trend chart' },
+  { src: '/shots/insights-stats.webp', cap: 'Insights statistics', alt: 'Insights average mileage, fuel, cost, distance, and fuel price trend' },
+  { src: '/shots/insights-pumps-tank.webp', cap: 'Pump stats and tank learning', alt: 'Mileage by fuel pump and tank capacity suggestion' },
+  { src: '/shots/nearby-pumps.webp', cap: 'Nearby fuel pumps', alt: 'Nearby fuel pumps list from OpenStreetMap with Go buttons' },
+  { src: '/shots/trip-cost.webp', cap: 'Trip cost calculator', alt: 'Trip cost dialog estimating fuel and cost for planned distance' },
+  { src: '/shots/add-vehicle.webp', cap: 'Add vehicle and EV options', alt: 'Add Vehicle form with vehicle type, fuel energy, units, and capacity' },
 ];
 
 const tech = [
@@ -146,12 +149,12 @@ const tech = [
           <div class="hero-card">
             <img
               class="zoomable"
-              src="/shots/fuel-log.svg"
-              width="280"
-              height="560"
-              data-zoom-src="/shots/fuel-log.svg"
+              src="/shots/fuel-log.webp"
+              width="900"
+              height="1930"
+              data-zoom-src="/shots/fuel-log.webp"
               data-zoom-caption="Fuel log and prediction"
-              alt="FuelLog fuel log screen mockup showing mileage summary, next fill-up prediction, and fill history"
+              alt="FuelLog fuel log screen showing average mileage, next fill-up prediction, and fill history"
             />
           </div>
         </div>
@@ -179,8 +182,8 @@ const tech = [
         <div class="wrap">
           <h2>Screens</h2>
           <p class="section-intro">
-            Interface mockups based on the in-app layout. Click any screen to open it full size.
-            Replace files in <code>website/public/shots/</code> with real device screenshots when you have them.
+            Real device screenshots from the app. Click any screen to open it full size.
+            Files live in <code>website/public/shots/</code> as WebP.
           </p>
           <div class="shots">
             {shots.map((s) => (
@@ -192,7 +195,7 @@ const tech = [
                 tabindex="0"
                 aria-label={`Open ${s.cap} full size`}
               >
-                <img src={s.src} width="560" height="1120" loading="lazy" alt={s.alt} />
+                <img src={s.src} width="900" height="1930" loading="lazy" alt={s.alt} />
                 <figcaption>
                   {s.cap}
                   <span class="shot-hint">Click to enlarge</span>

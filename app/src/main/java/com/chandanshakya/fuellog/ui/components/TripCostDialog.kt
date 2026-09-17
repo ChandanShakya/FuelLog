@@ -39,13 +39,14 @@ fun TripCostDialog(
     val distanceLabel = UnitConverter.getDistanceUnitLabel(distanceUnit)
     val volumeLabel = UnitConverter.getVolumeUnitLabel(volumeUnit)
     val efficiencyLabel = UnitConverter.getEfficiencyLabel(distanceUnit, volumeUnit)
+    val canEstimate = recentMileage != null && recentMileage > 0
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Trip Cost", style = MaterialTheme.typography.titleLarge) },
         text = {
             Column(modifier = Modifier.padding(vertical = Dimens.spacingSm)) {
-                if (recentMileage == null || recentMileage <= 0) {
+                if (!canEstimate) {
                     Text(
                         text = "Add at least two fill-ups so recent mileage can be estimated.",
                         style = MaterialTheme.typography.bodyMedium,
@@ -54,8 +55,8 @@ fun TripCostDialog(
                 } else {
                     Text(
                         text = "Using $efficiencyLabel recent average" +
-                                (lastRate?.let { " and ${CurrencyFormatter.formatCurrency(it, currency)}/$volumeLabel last rate" }
-                                    ?: " (no rate yet — cost will be $0)") + ".",
+                                (lastRate?.let { " · ${CurrencyFormatter.formatCurrency(it, currency)}/$volumeLabel last rate" }
+                                    ?: " · no rate yet (cost shows $0)"),
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -71,24 +72,6 @@ fun TripCostDialog(
                         error = error,
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                         decimalPlaces = 2
-                    )
-                    Spacer(modifier = Modifier.height(Dimens.spacingMd))
-                    AppButton(
-                        text = "Estimate",
-                        onClick = {
-                            val d = distanceText.toDoubleOrNull()
-                            if (d == null || d <= 0) {
-                                error = "Enter a distance greater than 0"
-                            } else {
-                                estimate = estimateTrip(
-                                    distance = d,
-                                    recentMileage = recentMileage,
-                                    lastRate = lastRate,
-                                    distanceUnit = distanceUnit,
-                                    volumeUnit = volumeUnit
-                                )
-                            }
-                        }
                     )
                     estimate?.let { t ->
                         Spacer(modifier = Modifier.height(Dimens.spacingMd))
@@ -111,7 +94,31 @@ fun TripCostDialog(
             }
         },
         confirmButton = {
-            AppButtonOutlined(text = "Close", onClick = onDismiss)
+            if (!canEstimate) {
+                AppButtonOutlined(text = "Close", onClick = onDismiss, modifier = Modifier.padding(end = Dimens.spacingMd))
+            } else {
+                DialogButtonRow(
+                    secondaryText = "Close",
+                    primaryText = "Estimate",
+                    onSecondary = onDismiss,
+                    onPrimary = {
+                        val d = distanceText.toDoubleOrNull()
+                        if (d == null || d <= 0) {
+                            error = "Enter a distance greater than 0"
+                            estimate = null
+                        } else {
+                            error = null
+                            estimate = estimateTrip(
+                                distance = d,
+                                recentMileage = recentMileage,
+                                lastRate = lastRate,
+                                distanceUnit = distanceUnit,
+                                volumeUnit = volumeUnit
+                            )
+                        }
+                    }
+                )
+            }
         }
     )
 }

@@ -1,6 +1,10 @@
-# Room - keep only DAOs and entities
+# Room
 -keep class * extends androidx.room.RoomDatabase { *; }
 -keep @androidx.room.Entity class * { <fields>; }
 
-# Kotlin - strip builtins metadata (not used - no reflection/serialization)
+# Kotlin metadata not needed at runtime (no reflection/serialization)
 -dontwarn kotlin.**
+-dontwarn kotlinx.**
+
+# Coroutines debug agent not used
+-dontwarn kotlinx.coroutines.debug.**

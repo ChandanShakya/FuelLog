@@ -180,12 +180,14 @@ fun VehicleCard(
             Column(modifier = Modifier.weight(1f)) {
                 Text(text = vehicle.name, style = MaterialTheme.typography.titleLarge, maxLines = 1, overflow = TextOverflow.Ellipsis)
                 Text(
-                    text = "${vehicle.vehicleType.label} • ${UnitConverter.getDistanceUnitLabel(vehicle.distanceUnit)} / ${UnitConverter.getVolumeUnitLabel(vehicle.volumeUnit)}",
+                    text = "${vehicle.vehicleType.label} · ${vehicle.fuelType.label}",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 Text(
-                    text = "Added ${java.time.Instant.ofEpochMilli(vehicle.createdAt).atZone(java.time.ZoneId.systemDefault()).toLocalDate().format(java.time.format.DateTimeFormatter.ofPattern("MMM yyyy"))}",
+                    text = "${UnitConverter.getDistanceUnitLabel(vehicle.distanceUnit)}/${UnitConverter.getVolumeUnitLabel(vehicle.volumeUnit)}" +
+                            (vehicle.tankCapacity?.let { " · cap ${"%.1f".format(it)} ${UnitConverter.getVolumeUnitLabel(vehicle.volumeUnit)}" } ?: "") +
+                            (vehicle.reserveAmount?.let { " · reserve ${"%.1f".format(it)}" } ?: ""),
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )

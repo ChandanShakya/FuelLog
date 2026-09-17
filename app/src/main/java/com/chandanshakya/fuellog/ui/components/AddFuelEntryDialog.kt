@@ -369,7 +369,7 @@ fun AddFuelEntryDialog(
                     }
                     if (odometerError == null && fuelVolumeError == null && totalCostError == null) {
                         val pumpName = pumpText.trim().ifBlank { null }
-                        onSave(date, odo, finalVol, finalCost, pumpName, isFullTank)
+                        onSave(date, odo, finalVol, Money.roundToCents(finalCost), pumpName, isFullTank)
                     }
                 },
                 enabled = odometerError == null && fuelVolumeError == null && totalCostError == null

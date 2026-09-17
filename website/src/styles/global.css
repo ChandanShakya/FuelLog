@@ -239,24 +239,23 @@ h1 {
   color: var(--muted);
 }
 
-/* Hero photo: full image, no inner side padding */
+/* Hero photo: full image, no inner padding, phone-sized not oversized */
 .hero-card {
   border: var(--border);
   background: var(--ink);
   box-shadow: var(--shadow);
   padding: 0;
   width: 100%;
-  margin: 0;
+  max-width: 340px;
+  margin-inline: auto;
   overflow: hidden;
   line-height: 0;
 }
 
 @media (min-width: 900px) {
   .hero-card {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 100%;
+    max-width: 360px;
+    margin-inline: auto;
   }
 }
 
@@ -270,12 +269,12 @@ h1 {
 .hero-card img {
   width: 100%;
   height: auto;
-  max-height: none;
+  max-height: min(52vh, 480px);
   object-fit: contain;
   object-position: center top;
   background: var(--ink);
   border: none;
-  margin: 0;
+  margin: 0 auto;
 }
 
 /* Sections */

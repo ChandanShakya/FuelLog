@@ -49,8 +49,14 @@ import java.time.temporal.ChronoUnit
 fun OdometerLogsScreen(
     vehicleId: Long,
     onNavigateBack: () -> Unit,
-    viewModel: FuelLogViewModel = viewModel(factory = FuelLogViewModel.factory(vehicleId))
+    viewModel: FuelLogViewModel = viewModel(
+        key = "FuelLogViewModel_$vehicleId",
+        factory = FuelLogViewModel.factory(vehicleId)
+    )
 ) {
+    androidx.compose.runtime.LaunchedEffect(vehicleId) {
+        viewModel.setVehicleId(vehicleId)
+    }
     val readings by viewModel.odometerReadings.collectAsStateWithLifecycle()
     val vehicle = viewModel.fuelLogState.collectAsStateWithLifecycle().value.vehicle
     val distanceUnit = vehicle?.distanceUnit ?: DistanceUnit.KM

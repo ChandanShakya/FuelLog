@@ -48,6 +48,10 @@ class PumpInsightsViewModel(
     }
 
     private val currentVehicleId = MutableStateFlow(vehicleId)
+
+    fun setVehicleId(id: Long) {
+        if (currentVehicleId.value != id) currentVehicleId.value = id
+    }
     private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }
 
     private val vehicleState = vehicleFlow.stateIn(

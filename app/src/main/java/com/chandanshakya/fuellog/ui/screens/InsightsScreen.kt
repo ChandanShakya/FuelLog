@@ -54,9 +54,19 @@ fun InsightsScreen(
     vehicleId: Long,
     onNavigateToLog: () -> Unit,
     onNavigateToPumpDetail: (vehicleId: Long, pumpId: Long) -> Unit,
-    viewModel: InsightsViewModel = viewModel(factory = InsightsViewModel.factory(vehicleId)),
-    pumpInsightsViewModel: PumpInsightsViewModel = viewModel(factory = PumpInsightsViewModel.factory(vehicleId))
+    viewModel: InsightsViewModel = viewModel(
+        key = "InsightsViewModel_$vehicleId",
+        factory = InsightsViewModel.factory(vehicleId)
+    ),
+    pumpInsightsViewModel: PumpInsightsViewModel = viewModel(
+        key = "PumpInsightsViewModel_$vehicleId",
+        factory = PumpInsightsViewModel.factory(vehicleId)
+    )
 ) {
+    androidx.compose.runtime.LaunchedEffect(vehicleId) {
+        viewModel.setVehicleId(vehicleId)
+        pumpInsightsViewModel.setVehicleId(vehicleId)
+    }
     val state by viewModel.insightsState.collectAsStateWithLifecycle()
     val pumpStats by pumpInsightsViewModel.pumpStats.collectAsStateWithLifecycle()
     val capacitySuggestion by viewModel.capacitySuggestion.collectAsStateWithLifecycle()

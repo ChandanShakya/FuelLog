@@ -50,6 +50,10 @@ class InsightsViewModel(
 
     private val currentVehicleId = MutableStateFlow(vehicleId)
     private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }
+
+    fun setVehicleId(id: Long) {
+        if (currentVehicleId.value != id) currentVehicleId.value = id
+    }
     private val settingsFlow = userSettingsDao.getSettings().distinctUntilChanged()
 
     private val allEntries: StateFlow<List<FuelEntry>> = currentVehicleId

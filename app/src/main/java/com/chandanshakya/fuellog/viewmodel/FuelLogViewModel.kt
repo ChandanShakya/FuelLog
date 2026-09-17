@@ -70,6 +70,11 @@ class FuelLogViewModel(
 
     private val currentVehicleId = MutableStateFlow(vehicleId)
     private val vehicleFlow = currentVehicleId.flatMapLatest { vehicleDao.getByIdFlow(it) }
+
+    /** Rebind this VM if the screen opens a different vehicle (keys normally prevent reuse). */
+    fun setVehicleId(id: Long) {
+        if (currentVehicleId.value != id) currentVehicleId.value = id
+    }
     private val settingsFlow = userSettingsDao.getSettings().distinctUntilChanged()
 
     // Single joined query; plain entries derived from it (one DB subscription, not two).

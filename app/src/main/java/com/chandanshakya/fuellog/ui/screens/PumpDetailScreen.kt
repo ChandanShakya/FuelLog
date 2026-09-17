@@ -58,8 +58,14 @@ fun PumpDetailScreen(
     vehicleId: Long,
     pumpId: Long?,
     onNavigateBack: () -> Unit,
-    pumpInsightsViewModel: PumpInsightsViewModel = viewModel(factory = PumpInsightsViewModel.factory(vehicleId))
+    pumpInsightsViewModel: PumpInsightsViewModel = viewModel(
+        key = "PumpInsightsViewModel_$vehicleId",
+        factory = PumpInsightsViewModel.factory(vehicleId)
+    )
 ) {
+    androidx.compose.runtime.LaunchedEffect(vehicleId) {
+        pumpInsightsViewModel.setVehicleId(vehicleId)
+    }
     val pumpStats by pumpInsightsViewModel.pumpStats.collectAsStateWithLifecycle()
     val currency by pumpInsightsViewModel.currency.collectAsStateWithLifecycle()
     val distanceUnit by pumpInsightsViewModel.distanceUnit.collectAsStateWithLifecycle()

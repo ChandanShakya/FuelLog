@@ -72,8 +72,14 @@ fun FuelLogScreen(
     onNavigateToInsights: () -> Unit,
     onNavigateToVehicles: () -> Unit,
     onNavigateToOdometerLogs: () -> Unit = {},
-    viewModel: FuelLogViewModel = viewModel(factory = FuelLogViewModel.factory(vehicleId))
+    viewModel: FuelLogViewModel = viewModel(
+        key = "FuelLogViewModel_$vehicleId",
+        factory = FuelLogViewModel.factory(vehicleId)
+    )
 ) {
+    androidx.compose.runtime.LaunchedEffect(vehicleId) {
+        viewModel.setVehicleId(vehicleId)
+    }
     val state by viewModel.fuelLogState.collectAsStateWithLifecycle()
     val prediction by viewModel.nextFillUpPrediction.collectAsStateWithLifecycle()
     var showAddDialog by remember { mutableStateOf(false) }

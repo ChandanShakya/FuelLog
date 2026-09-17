@@ -1,12 +1,12 @@
 # FuelLog
 
-**[Website](https://fuellog.chandanshakya.com.np)** · **[Download latest APK](https://github.com/ChandanShakya/FuelLog/releases/latest/download/app-release.apk)** · **[Add to Obtainium](obtainium://app/https://github.com/ChandanShakya/FuelLog)** · **[Repository](https://github.com/ChandanShakya/FuelLog)**
+**[Website](https://fuellog.chandanshakya.com.np)** · **[Download latest APK](https://github.com/ChandanShakya/FuelLog/releases/latest/download/app-release.apk)** · **[Add to Obtainium](obtainium://app/https://github.com/ChandanShakya/FuelLog)** · **[GitHub](https://github.com/ChandanShakya/FuelLog)** · **[Codeberg](https://codeberg.org/ChandanShakya/FuelLog)**
 
 A fuel tracking app for Android. Log fill-ups, track mileage across multiple vehicles, and get predictions for your next refuel.
 
 Built with Jetpack Compose, Room, and manual dependency injection. Ships at ~1.2MB.
 
-Landing page source: [`website/`](website/) (Astro, black-and-white neubrutalism). Obtainium URL: `obtainium://app/https://github.com/ChandanShakya/FuelLog`
+Landing page source: [`website/`](website/) (Astro, black-and-white neubrutalism). Obtainium URL: `obtainium://app/https://github.com/ChandanShakya/FuelLog`. Mirrors: [GitHub](https://github.com/ChandanShakya/FuelLog) · [Codeberg](https://codeberg.org/ChandanShakya/FuelLog)
 
 ## Features
 

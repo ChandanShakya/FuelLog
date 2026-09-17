@@ -3,12 +3,13 @@ import '../styles/global.css';
 
 const site = 'https://fuellog.chandanshakya.com.np';
 const repo = 'https://github.com/ChandanShakya/FuelLog';
+const codeberg = 'https://codeberg.org/ChandanShakya/FuelLog';
 const apk = 'https://github.com/ChandanShakya/FuelLog/releases/latest/download/app-release.apk';
 const obtainium = 'obtainium://app/https://github.com/ChandanShakya/FuelLog';
 
 const title = 'FuelLog — Offline fuel and EV charge tracker for Android';
 const description =
-  'FuelLog is a small Android app to log fill-ups and EV charges, track mileage, predict the next fill, export CSV, and find nearby fuel pumps. Open source on GitHub.';
+  'FuelLog is a small Android app to log fill-ups and EV charges, track mileage, predict the next fill, export CSV, and find nearby fuel pumps. Open source on GitHub and Codeberg.';
 
 const features = [
   {
@@ -125,6 +126,7 @@ const tech = [
             <li><a href="#algorithms">Algorithms</a></li>
             <li><a href="#download">Download</a></li>
             <li><a href={obtainium}>Add to Obtainium</a></li>
+            <li><a href={codeberg}>Codeberg</a></li>
           </ul>
         </nav>
       </div>
@@ -144,7 +146,8 @@ const tech = [
             <div class="btn-row">
               <a class="btn btn-primary" href={apk}>Download latest APK</a>
               <a class="btn btn-ghost" href={obtainium}>Add to Obtainium</a>
-              <a class="btn btn-ghost" href={repo}>GitHub repository</a>
+              <a class="btn btn-ghost" href={repo}>GitHub</a>
+              <a class="btn btn-ghost" href={codeberg}>Codeberg</a>
             </div>
           </div>
           <div
@@ -352,8 +355,10 @@ const tech = [
     <footer>
       <div class="wrap footer-row">
         <p>
-          FuelLog source on
+          FuelLog on
           <a href={repo}>GitHub</a>
+          and
+          <a href={codeberg}>Codeberg</a>
           · MIT License
         </p>
         <p>

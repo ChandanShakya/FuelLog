@@ -126,6 +126,7 @@ class NearbyPumpsViewModel(
             override fun onProviderDisabled(provider: String) = Unit
         }
         locationListener = listener
+        @Suppress("DEPRECATION")
         runCatching {
             lm.requestSingleUpdate(provider, listener, Looper.getMainLooper())
         }.onFailure {

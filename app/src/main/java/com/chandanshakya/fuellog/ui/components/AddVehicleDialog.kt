@@ -3,6 +3,8 @@ package com.chandanshakya.fuellog.ui.components
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -53,7 +55,7 @@ data class VehicleFormResult(
     val reserveAmount: Double?
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AddVehicleDialog(
     vehicle: Vehicle? = null,
@@ -168,9 +170,10 @@ fun AddVehicleDialog(
                 Spacer(modifier = Modifier.height(Dimens.spacingMd))
                 Text("Fuel / Energy", style = MaterialTheme.typography.bodyMedium)
                 Spacer(modifier = Modifier.height(Dimens.spacingSm))
-                Row(
+                FlowRow(
                     modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    verticalArrangement = Arrangement.spacedBy(6.dp)
                 ) {
                     FuelType.entries.forEach { type ->
                         FilterChip(

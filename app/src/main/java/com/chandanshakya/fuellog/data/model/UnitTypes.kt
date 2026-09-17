@@ -29,8 +29,7 @@ enum class FuelType(val label: String) {
     PETROL("Petrol"),
     DIESEL("Diesel"),
     CNG("CNG"),
-    ELECTRIC("Electric"),
-    HYBRID("Hybrid");
+    ELECTRIC("Electric");
 
     val isElectric: Boolean get() = this == ELECTRIC
 }

@@ -8,6 +8,7 @@ import androidx.lifecycle.viewmodel.initializer
 import androidx.lifecycle.viewmodel.viewModelFactory
 import com.chandanshakya.fuellog.FuelLogApplication
 import com.chandanshakya.fuellog.data.db.FuelEntryDao
+import com.chandanshakya.fuellog.data.db.OdometerReadingDao
 import com.chandanshakya.fuellog.data.db.UserSettingsDao
 import com.chandanshakya.fuellog.data.db.VehicleDao
 import com.chandanshakya.fuellog.data.model.DistanceUnit

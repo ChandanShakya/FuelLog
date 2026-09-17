@@ -364,10 +364,18 @@ const tech = [
 
     <dialog id="lightbox" class="lightbox" aria-label="Screenshot preview">
       <div class="lightbox-frame">
-        <img id="lightbox-img" src="" alt="" />
+        <div class="lightbox-stage">
+          <img id="lightbox-img" src="" alt="" />
+        </div>
         <div class="lightbox-bar">
-          <span id="lightbox-caption"></span>
-          <button type="button" class="lightbox-close" id="lightbox-close">Close</button>
+          <div class="lightbox-bar-left">
+            <button type="button" class="lightbox-nav" id="lightbox-prev" aria-label="Previous image">Prev</button>
+            <button type="button" class="lightbox-nav" id="lightbox-next" aria-label="Next image">Next</button>
+            <span id="lightbox-caption"></span>
+          </div>
+          <div class="lightbox-bar-right">
+            <button type="button" class="lightbox-close" id="lightbox-close">Close</button>
+          </div>
         </div>
       </div>
     </dialog>
@@ -378,43 +386,88 @@ const tech = [
         var img = document.getElementById('lightbox-img');
         var caption = document.getElementById('lightbox-caption');
         var closeBtn = document.getElementById('lightbox-close');
+        var prevBtn = document.getElementById('lightbox-prev');
+        var nextBtn = document.getElementById('lightbox-next');
         if (!dialog || !img) return;
 
-        function openZoom(src, cap, alt) {
-          img.src = src;
-          img.alt = alt || cap || 'Screenshot';
-          caption.textContent = cap || '';
+        var items = [];
+        document.querySelectorAll('[data-zoom-src]').forEach(function (el) {
+          var src = el.getAttribute('data-zoom-src');
+          if (!src) return;
+          items.push({
+            el: el,
+            src: src,
+            cap: el.getAttribute('data-zoom-caption') || '',
+            alt: el.getAttribute('alt') || el.querySelector('img')?.getAttribute('alt') || ''
+          });
+        });
+
+        var index = 0;
+
+        function show(i) {
+          if (!items.length) return;
+          index = (i + items.length) % items.length;
+          var item = items[index];
+          img.src = item.src;
+          img.alt = item.alt || item.cap || 'Screenshot';
+          caption.textContent = (item.cap ? item.cap + ' · ' : '') + (index + 1) + '/' + items.length;
+          if (prevBtn) prevBtn.disabled = items.length < 2;
+          if (nextBtn) nextBtn.disabled = items.length < 2;
+        }
+
+        function openZoomAt(i) {
+          show(i);
+          document.documentElement.classList.add('lightbox-open');
           if (typeof dialog.showModal === 'function') dialog.showModal();
           else dialog.setAttribute('open', '');
         }
 
+        function openZoomFromEl(el) {
+          var i = 0;
+          for (var n = 0; n < items.length; n++) {
+            if (items[n].el === el) {
+              i = n;
+              break;
+            }
+          }
+          openZoomAt(i);
+        }
+
         function closeZoom() {
+          document.documentElement.classList.remove('lightbox-open');
           if (dialog.open && typeof dialog.close === 'function') dialog.close();
           else dialog.removeAttribute('open');
         }
 
-        document.querySelectorAll('.zoomable').forEach(function (el) {
-          el.addEventListener('click', function () {
-            openZoom(
-              el.getAttribute('data-zoom-src') || el.querySelector('img')?.getAttribute('src') || el.getAttribute('src'),
-              el.getAttribute('data-zoom-caption') || '',
-              el.getAttribute('alt') || el.querySelector('img')?.getAttribute('alt') || ''
-            );
+        items.forEach(function (item) {
+          item.el.addEventListener('click', function () {
+            openZoomFromEl(item.el);
           });
-          el.addEventListener('keydown', function (e) {
+          item.el.addEventListener('keydown', function (e) {
             if (e.key === 'Enter' || e.key === ' ') {
               e.preventDefault();
-              el.click();
+              openZoomFromEl(item.el);
             }
           });
         });
 
+        prevBtn && prevBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          show(index - 1);
+        });
+        nextBtn && nextBtn.addEventListener('click', function (e) {
+          e.stopPropagation();
+          show(index + 1);
+        });
         closeBtn && closeBtn.addEventListener('click', closeZoom);
         dialog.addEventListener('click', function (e) {
           if (e.target === dialog) closeZoom();
         });
         document.addEventListener('keydown', function (e) {
+          if (!dialog.open) return;
           if (e.key === 'Escape') closeZoom();
+          else if (e.key === 'ArrowLeft') show(index - 1);
+          else if (e.key === 'ArrowRight') show(index + 1);
         });
       })();
     </script>

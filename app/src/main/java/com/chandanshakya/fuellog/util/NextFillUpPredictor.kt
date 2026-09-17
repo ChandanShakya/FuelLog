@@ -208,6 +208,6 @@ fun estimateTrip(
 
 /** Last price per unit from the most recent fill with volume > 0. */
 fun lastFuelRate(entries: List<FuelEntry>): Double? {
-    val last = entries.filter { it.fuelVolume > 0 }.maxByOrNull { it.odeter } ?: return null
+    val last = entries.filter { it.fuelVolume > 0 }.maxByOrNull { it.odometer } ?: return null
     return Money.rate(last.fuelVolume, last.fuelCost)
 }

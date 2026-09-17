@@ -113,9 +113,6 @@ fun InsightsScreen(
                     recentMileage = recentMileage,
                     onApplyCapacity = { viewModel.applySuggestedCapacity(it) },
                     monthly = state.monthly,
-                    currency = state.currency,
-                    volumeUnit = volumeUnit,
-                    distanceUnit = distanceUnit,
                     modifier = Modifier.fillMaxSize()
                 )
             }

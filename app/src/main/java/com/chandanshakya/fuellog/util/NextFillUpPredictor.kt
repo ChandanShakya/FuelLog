@@ -45,8 +45,8 @@ fun computeRecencyWeightedMileage(
 }
 
 /**
- * Estimate fuel left at latest odometer. Full fills use usable capacity
- * (tank − reserve) so prediction targets "fill by reserve", not theoretical empty.
+ * Estimate usable range from fill history.
+ * Full fills set tank level to [tankCapacity]; reserve is subtracted once at the end.
  */
 internal fun estimateRemainingDistance(
     entries: List<FuelEntry>,
@@ -70,7 +70,7 @@ internal fun estimateRemainingDistance(
     for (fill in fills) {
         val previousFuel = fuelInTank
         fuelInTank = when {
-            fill.isFullTank -> usableCapacity
+            fill.isFullTank -> tankCapacity
             previousFuel != null -> minOf(tankCapacity, previousFuel + fill.fuelVolume)
             else -> minOf(tankCapacity, fill.fuelVolume)
         }
@@ -79,7 +79,7 @@ internal fun estimateRemainingDistance(
 
     val fuelAtLastFill = fuelInTank ?: return null
     val distanceSinceLastFill = (latestOdo - lastFillOdo).coerceAtLeast(0.0)
-    // Usable fuel above reserve
+    // Subtract reserve once: prediction target is the reserve zone, not empty.
     val reserve = (tankCapacity - usableCapacity).coerceAtLeast(0.0)
     val usableFuel = (fuelAtLastFill - reserve).coerceAtLeast(0.0)
     val remaining = usableFuel * recentMileage - distanceSinceLastFill

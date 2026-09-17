@@ -150,4 +150,4 @@ Export writes versioned JSON. Import validates the entire payload first, then cl
 
 ## License
 
-MIT
+MIT — see [LICENSE](LICENSE).

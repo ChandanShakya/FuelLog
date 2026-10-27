@@ -2,6 +2,8 @@ package com.chandanshakya.fuellog.ui.navigation
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.FastOutLinearInEasing
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -21,6 +23,8 @@ import com.chandanshakya.fuellog.ui.screens.OdometerLogsScreen
 import com.chandanshakya.fuellog.ui.screens.PumpDetailScreen
 import com.chandanshakya.fuellog.ui.screens.SettingsScreen
 import com.chandanshakya.fuellog.ui.screens.VehiclesScreen
+
+private const val NAV_MS = 130
 
 private fun encodeRoute(screen: Screen): String = when (screen) {
     is Screen.Vehicles -> "V"
@@ -84,8 +88,11 @@ fun AppNavHost() {
     AnimatedContent(
         targetState = currentScreen,
         transitionSpec = {
-            fadeIn(tween(200)) + slideInHorizontally(tween(200)) { it } togetherWith
-                    fadeOut(tween(200)) + slideOutHorizontally(tween(200)) { -it / 3 }
+            // Short travel, short duration, decelerating curve: feels instant, not sluggish.
+            fadeIn(tween(NAV_MS, easing = FastOutSlowInEasing)) +
+                    slideInHorizontally(tween(NAV_MS, easing = FastOutSlowInEasing)) { it / 4 } togetherWith
+                    fadeOut(tween(NAV_MS / 2, easing = FastOutLinearInEasing)) +
+                    slideOutHorizontally(tween(NAV_MS, easing = FastOutSlowInEasing)) { -it / 8 }
         },
         contentKey = { screen -> encodeRoute(screen) },
         label = "nav"

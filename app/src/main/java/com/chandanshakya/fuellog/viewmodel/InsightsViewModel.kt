@@ -14,7 +14,7 @@ import com.chandanshakya.fuellog.data.model.FuelEntry
 import com.chandanshakya.fuellog.data.model.Vehicle
 import com.chandanshakya.fuellog.util.CapacitySuggestion
 import com.chandanshakya.fuellog.util.Money
-import com.chandanshakya.fuellog.util.adjacentMileagePairs
+import com.chandanshakya.fuellog.util.mileageSegments
 import com.chandanshakya.fuellog.util.MileageCalculator
 import com.chandanshakya.fuellog.util.computeRecencyWeightedMileage
 import com.chandanshakya.fuellog.util.observeCapacitySuggestion
@@ -74,14 +74,11 @@ class InsightsViewModel(
         val distanceUnit = v?.distanceUnit ?: com.chandanshakya.fuellog.data.model.DistanceUnit.KM
         val volumeUnit = v?.volumeUnit ?: com.chandanshakya.fuellog.data.model.VolumeUnit.LITERS
 
-        val pairs = sortedEntries.adjacentMileagePairs({ it.odometer }, { it.fuelVolume }, distanceUnit, volumeUnit)
-        val mileages = pairs.map { it.mileage }
-        val dataPoints = pairs.mapIndexed { index, pair ->
-            ChartDataPoint(
-                odometer = sortedEntries[index + 1].odometer,
-                mileage = pair.mileage,
-                date = sortedEntries[index + 1].date
-            )
+        val segments = sortedEntries.mileageSegments()
+        val mileages = segments.map { it.mileage }
+        val dataPoints = segments.map { seg ->
+            val end = sortedEntries[seg.endIndex]
+            ChartDataPoint(odometer = end.odometer, mileage = seg.mileage, date = end.date)
         }
 
         val priceDataPoints = sortedEntries.map { entry ->

@@ -21,7 +21,7 @@ import com.chandanshakya.fuellog.data.model.VolumeUnit
 import com.chandanshakya.fuellog.util.CapacitySuggestion
 import com.chandanshakya.fuellog.util.FillUpPrediction
 import com.chandanshakya.fuellog.util.Money
-import com.chandanshakya.fuellog.util.adjacentMileagePairs
+import com.chandanshakya.fuellog.util.mileageSegments
 import com.chandanshakya.fuellog.util.MileageCalculator
 import com.chandanshakya.fuellog.util.Validation
 import com.chandanshakya.fuellog.util.computeRecencyWeightedMileage
@@ -117,15 +117,15 @@ class FuelLogViewModel(
         val sortedEntries = entriesWithPump.sortedBy { it.entry.odometer }
         val distanceUnit = v?.distanceUnit ?: DistanceUnit.KM
         val volumeUnit = v?.volumeUnit ?: VolumeUnit.LITERS
-        val pairs = sortedEntries.adjacentMileagePairs({ it.entry.odometer }, { it.entry.fuelVolume }, distanceUnit, volumeUnit)
-
-        // pairs[i] = distance(entry[i] → entry[i+1]) / volume at entry[i+1].
-        // That efficiency is what the earlier fill earned once the tank was used up,
-        // so show it on entry[i]. The newest fill has no completed segment yet.
+        // A segment's mileage is what the earlier fill earned once the tank was used up,
+        // so show it on the segment's start entry. The newest fill has no completed segment yet.
+        val mileageByIndex = sortedEntries
+            .mileageSegments({ it.entry.odometer }, { it.entry.fuelVolume }, { it.entry.isFullTank })
+            .associate { it.startIndex to it.mileage }
         val entriesWithMileage = sortedEntries.mapIndexed { index, entryWithPump ->
             EntryWithMileage(
                 entry = entryWithPump.entry,
-                mileage = pairs.getOrNull(index)?.mileage,
+                mileage = mileageByIndex[index],
                 pumpName = entryWithPump.pumpName
             )
         }.reversed()

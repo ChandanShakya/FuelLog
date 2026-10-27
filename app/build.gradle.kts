@@ -67,6 +67,11 @@ android {
         compose = true
     }
 
+    lint {
+        // lintVital* on assembleRelease adds time and memory; CI lints separately if needed.
+        checkReleaseBuilds = false
+    }
+
     packaging {
         resources {
             excludes += setOf(

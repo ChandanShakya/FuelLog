@@ -225,6 +225,18 @@ class BackupManager(
             } else null
         } else null
 
+        val vehicleIds = vehicles.map { it.id }.toSet()
+        val pumpIds = pumps.map { it.id }.toSet()
+        entries.forEach { e ->
+            require(e.vehicleId in vehicleIds) { "Backup entry refers to unknown vehicle ${e.vehicleId}" }
+            require(e.fuelPumpId == null || e.fuelPumpId in pumpIds) {
+                "Backup entry refers to unknown pump ${e.fuelPumpId}"
+            }
+        }
+        readings.forEach { r ->
+            require(r.vehicleId in vehicleIds) { "Backup reading refers to unknown vehicle ${r.vehicleId}" }
+        }
+
         return ParsedBackup(pumps, vehicles, entries, readings, settings)
     }
 

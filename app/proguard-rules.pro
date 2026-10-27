@@ -8,3 +8,8 @@
 
 # Coroutines debug agent not used
 -dontwarn kotlinx.coroutines.debug.**
+
+# Smaller dex: flatten packages, allow wider optimization
+-repackageclasses ''
+-allowaccessmodification
+-optimizationpasses 5

@@ -140,7 +140,7 @@ fun AddFuelEntryDialog(
 
                 AppTextField(
                     value = odometer,
-                    onValueChange = { odometer = it; odometerError = Validation.getOdometerError(it.toDoubleOrNull() ?: 0.0) },
+                    onValueChange = { odometer = it; odometerError = Validation.getOdometerError(it.toDoubleOrNull() ?: 0.0, distanceUnit) },
                     label = "Odometer ($distanceLabel)",
                     error = odometerError,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
@@ -252,6 +252,7 @@ fun AddFuelEntryDialog(
                             value = rate,
                             onValueChange = { newValue ->
                                 rate = newValue
+                                totalCostError = null
                                 val vol = fuelVolume.toDoubleOrNull()
                                 val r = newValue.toDoubleOrNull()
                                 if (vol != null && vol > 0 && r != null && r > 0) {
@@ -259,6 +260,7 @@ fun AddFuelEntryDialog(
                                 }
                             },
                             label = "Rate ($currency/$volumeLabel)",
+                            error = totalCostError,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             decimalPlaces = 2
                         )
@@ -315,6 +317,7 @@ fun AddFuelEntryDialog(
                             value = rate,
                             onValueChange = { newValue ->
                                 rate = newValue
+                                totalCostError = null
                                 val r = newValue.toDoubleOrNull()
                                 val cost = totalCost.toDoubleOrNull()
                                 if (r != null && r > 0 && cost != null && cost > 0) {
@@ -322,6 +325,7 @@ fun AddFuelEntryDialog(
                                 }
                             },
                             label = "Rate ($currency/$volumeLabel)",
+                            error = totalCostError,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
                             decimalPlaces = 2
                         )
@@ -367,12 +371,22 @@ fun AddFuelEntryDialog(
                         FuelInputMode.VOLUME_COST -> vol to cost
                         FuelInputMode.RATE_COST -> (if (r > 0) cost / r else vol) to cost
                     }
+                    val odoMissing = odometer.toDoubleOrNull() == null
+                    odometerError = if (odoMissing) "Enter the odometer reading"
+                    else Validation.getOdometerError(odo, distanceUnit)
+                    fuelVolumeError = Validation.getFuelVolumeError(finalVol, volumeUnit)
+                    val costMissing = finalCost <= 0.0 && totalCost.isBlank() &&
+                            (inputMode != FuelInputMode.VOLUME_RATE || rate.isBlank())
+                    totalCostError = if (costMissing) "Enter two of volume, rate and cost"
+                    else Validation.getFuelCostError(finalCost)
+                    if (inputMode == FuelInputMode.RATE_COST && fuelVolumeError != null && totalCostError == null) {
+                        totalCostError = "Enter a rate and total cost to get the volume"
+                    }
                     if (odometerError == null && fuelVolumeError == null && totalCostError == null) {
                         val pumpName = pumpText.trim().ifBlank { null }
                         onSave(date, odo, finalVol, Money.roundToCents(finalCost), pumpName, isFullTank)
                     }
                 },
-                enabled = odometerError == null && fuelVolumeError == null && totalCostError == null
             )
         },
         dismissButton = {

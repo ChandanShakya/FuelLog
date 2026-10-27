@@ -20,8 +20,8 @@ data class FillUpPrediction(
 )
 
 /**
- * Compute recency-weighted mileage from adjacent fill pairs using an EWMA.
- * Only pairs where fuelVolume > 0 and distance > 0 are considered.
+ * Compute recency-weighted mileage from [mileageSegments] using an EWMA.
+ * Only segments where fuel > 0 and distance > 0 are considered.
  */
 fun computeRecencyWeightedMileage(
     entries: List<FuelEntry>,
@@ -31,9 +31,7 @@ fun computeRecencyWeightedMileage(
 ): Double? {
     if (entries.size < 2) return null
 
-    val mileages = entries
-        .adjacentMileagePairs({ it.odometer }, { it.fuelVolume }, distanceUnit, volumeUnit)
-        .map { it.mileage }
+    val mileages = entries.mileageSegments().map { it.mileage }
     if (mileages.isEmpty()) return null
 
     val alpha = 2.0 / (effectiveWindow + 1)

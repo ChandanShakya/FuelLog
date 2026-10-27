@@ -3,10 +3,13 @@ name: Build and Release
 on:
   push:
     branches: [main]
+    paths-ignore: ['website/**', '**.md', 'LICENSE']
   workflow_dispatch:
 
 env:
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx4g -Dorg.gradle.parallel=true"
+  # Modest heap, no parallel workers, Kotlin compiled in-process: keeps the runner container
+  # responsive (a starved podman runner times out copying step files after R8).
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx2g -Dorg.gradle.parallel=false -Pkotlin.compiler.execution.strategy=in-process"
   JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
   ANDROID_HOME: /opt/android-sdk
 
@@ -36,11 +39,8 @@ jobs:
       - name: Grant execute permission for gradlew
         run: chmod +x gradlew
 
-      - name: Build debug APK
-        run: ./gradlew assembleDebug --no-daemon
-
       - name: Run unit tests
-        run: ./gradlew testDebugUnitTest --no-daemon
+        run: ./gradlew testDebugUnitTest --no-daemon --console=plain
 
       - name: Build release APK and bundle
         if: forgejo.ref == 'refs/heads/main' && forgejo.event_name == 'push'
@@ -52,7 +52,9 @@ jobs:
             exit 1
           fi
           echo "$RELEASE_KEYSTORE_BASE64" | base64 -d > release.keystore
-          ./gradlew assembleRelease bundleRelease --no-daemon
+          # APK only: bundleRelease runs R8 a second time and is what overloads the runner.
+          # The AAB for Play Console is attached to the GitHub release.
+          ./gradlew assembleRelease --no-daemon --console=plain -q
 
       - name: Get version info
         if: forgejo.ref == 'refs/heads/main' && forgejo.event_name == 'push'
@@ -66,16 +68,14 @@ jobs:
         id: paths
         run: |
           APK_PATH=$(find app/build/outputs -name "*.apk" -path "*/release/*" | head -1)
-          AAB_PATH=$(find app/build/outputs -name "*.aab" -path "*/release/*" | head -1)
+          if [ -z "$APK_PATH" ]; then echo "Release APK not found" >&2; exit 1; fi
           echo "APK_PATH=$APK_PATH" >> $FORGEJO_OUTPUT
-          echo "AAB_PATH=$AAB_PATH" >> $FORGEJO_OUTPUT
 
       - name: Create Codeberg Release
         if: forgejo.ref == 'refs/heads/main' && forgejo.event_name == 'push'
         run: |
           VERSION="v${{ steps.version.outputs.VERSION_NAME }}"
           APK="${{ steps.paths.outputs.APK_PATH }}"
-          AAB="${{ steps.paths.outputs.AAB_PATH }}"
 
           curl -s -X POST \
             -H "Authorization: token ${{ secrets.CODEBERG_TOKEN }}" \
@@ -96,9 +96,4 @@ jobs:
           curl -s -X POST \
             -H "Authorization: token ${{ secrets.CODEBERG_TOKEN }}" \
             -F "attachment=@$APK" \
-            "https://codeberg.org/api/v1/repos/ChandanShakya/FuelLog/releases/$RELEASE_ID/assets"
-
-          curl -s -X POST \
-            -H "Authorization: token ${{ secrets.CODEBERG_TOKEN }}" \
-            -F "attachment=@$AAB" \
             "https://codeberg.org/api/v1/repos/ChandanShakya/FuelLog/releases/$RELEASE_ID/assets"

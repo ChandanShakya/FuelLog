@@ -13,8 +13,8 @@ android {
         applicationId = "com.chandanshakya.fuellog"
         minSdk = 26
         targetSdk = 35
-        versionCode = 4
-        versionName = "1.3.0"
+        versionCode = 5
+        versionName = "1.4.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -65,6 +65,11 @@ android {
 
     buildFeatures {
         compose = true
+    }
+
+    lint {
+        // lintVital* on assembleRelease adds time and memory; CI lints separately if needed.
+        checkReleaseBuilds = false
     }
 
     packaging {

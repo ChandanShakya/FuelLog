@@ -28,6 +28,56 @@ fun <T> Iterable<T>.adjacentMileagePairs(
     return result
 }
 
+/** One mileage reading between entries [startIndex] and [endIndex] of a list sorted by odometer. */
+data class MileageSegment(
+    val startIndex: Int,
+    val endIndex: Int,
+    val distance: Double,
+    val mileage: Double
+)
+
+/**
+ * Mileage segments for entries sorted by odometer.
+ *
+ * Uses full-tank to full-tank intervals: distance between the two full fills divided by all
+ * fuel added after the first one (partial top-ups included), so partial fills never skew
+ * the result. When no full-to-full interval exists (the user never ticks "Full tank"),
+ * falls back to consecutive fills so mileage still shows.
+ */
+fun <T> List<T>.mileageSegments(
+    odometer: (T) -> Double,
+    fuelVolume: (T) -> Double,
+    isFullTank: (T) -> Boolean
+): List<MileageSegment> {
+    val full = mutableListOf<MileageSegment>()
+    var anchor = -1
+    var fuel = 0.0
+    for (i in indices) {
+        val e = this[i]
+        if (anchor >= 0) fuel += fuelVolume(e)
+        if (isFullTank(e)) {
+            if (anchor >= 0) {
+                val distance = odometer(e) - odometer(this[anchor])
+                if (distance > 0 && fuel > 0) full.add(MileageSegment(anchor, i, distance, distance / fuel))
+            }
+            anchor = i
+            fuel = 0.0
+        }
+    }
+    if (full.isNotEmpty()) return full
+
+    val adjacent = mutableListOf<MileageSegment>()
+    for (i in 1 until size) {
+        val distance = odometer(this[i]) - odometer(this[i - 1])
+        val volume = fuelVolume(this[i])
+        if (distance > 0 && volume > 0) adjacent.add(MileageSegment(i - 1, i, distance, distance / volume))
+    }
+    return adjacent
+}
+
+fun List<FuelEntry>.mileageSegments(): List<MileageSegment> =
+    mileageSegments({ it.odometer }, { it.fuelVolume }, { it.isFullTank })
+
 object MileageCalculator {
     fun calculateMileage(
         current: FuelEntry,
@@ -44,9 +94,9 @@ object MileageCalculator {
         distanceUnit: DistanceUnit,
         volumeUnit: VolumeUnit
     ): Double? {
-        val pairs = entries.adjacentMileagePairs({ it.odometer }, { it.fuelVolume }, distanceUnit, volumeUnit)
-        if (pairs.isEmpty()) return null
-        return pairs.map { it.mileage }.average()
+        val segments = entries.mileageSegments()
+        if (segments.isEmpty()) return null
+        return segments.map { it.mileage }.average()
     }
 
     fun calculateTotalDistance(

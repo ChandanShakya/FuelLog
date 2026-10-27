@@ -3,6 +3,7 @@ name: Build and Release
 on:
   push:
     branches: [ main ]
+    paths-ignore: [ 'website/**', '**.md', 'LICENSE' ]
   pull_request:
     branches: [ main ]
   workflow_dispatch:
@@ -108,27 +109,23 @@ jobs:
           echo "  $APK_PATH"
           echo "  $AAB_PATH"
 
-      - name: Create GitHub Release
+      - name: Publish GitHub Release
         if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: v${{ steps.version.outputs.VERSION_NAME }}
-          name: FuelLog v${{ steps.version.outputs.VERSION_NAME }}
-          body: |
-            FuelLog Android Fuel Tracker v${{ steps.version.outputs.VERSION_NAME }}
-
-            ## Install
-            - Download `app-release.apk` and install on a device (minSdk 26).
-            - Or use the `.aab` for Play / bundle tooling.
-
-            ## Notes
-            - Signing credentials are supplied via CI secrets only.
-            - Backup is transactional; failed imports keep existing data.
-          files: |
-            ${{ steps.paths.outputs.APK_PATH }}
-            ${{ steps.paths.outputs.AAB_PATH }}
-          fail_on_unmatched_files: true
-          generate_release_notes: true
-          make_latest: true
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: v${{ steps.version.outputs.VERSION_NAME }}
+          APK: ${{ steps.paths.outputs.APK_PATH }}
+          AAB: ${{ steps.paths.outputs.AAB_PATH }}
+        run: |
+          # gh creates the git tag at this commit and publishes (never a draft).
+          # Re-runs on the same version refresh the assets instead of failing.
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" "$APK" "$AAB" --clobber
+            gh release edit "$TAG" --draft=false --latest
+          else
+            gh release create "$TAG" "$APK" "$AAB" \
+              --target "$GITHUB_SHA" \
+              --title "FuelLog $TAG" \
+              --generate-notes --latest \
+              --notes "Download \`app-release.apk\` to install (Android 8.0+, minSdk 26). \`app-release.aab\` is for Play Console."
+          fi

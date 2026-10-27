@@ -44,7 +44,7 @@ object GeoMath {
  */
 object OverpassFuelPumps {
     private const val ENDPOINT = "https://overpass-api.de/api/interpreter"
-    private const val USER_AGENT = "FuelLog/1.2 (Android; nearby pumps)"
+    private const val USER_AGENT = "FuelLog/1.3 (Android; nearby pumps)"
 
     /** Search radius for nearby stations (7 km). */
     const val DEFAULT_RADIUS_METERS = 7000

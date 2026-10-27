@@ -9,7 +9,7 @@ on:
 env:
   # Modest heap, no parallel workers, Kotlin compiled in-process: keeps the runner container
   # responsive (a starved podman runner times out copying step files after R8).
-  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx2g -Dorg.gradle.parallel=false -Pkotlin.compiler.execution.strategy=in-process"
+  GRADLE_OPTS: "-Dorg.gradle.daemon=false -Dorg.gradle.jvmargs=-Xmx2g -Dorg.gradle.parallel=false -Dkotlin.compiler.execution.strategy=in-process"
   JAVA_HOME: /usr/lib/jvm/java-17-openjdk-amd64
   ANDROID_HOME: /opt/android-sdk
 
